@@ -1,2 +1,2 @@
-# ValkyrieAI
-This software is part of a larger project that attempts to apply Artificial Intelligence to the problem of drone tuning.
+# Valkyrie AI Drone Tuner
+This software is part of a larger project that attempts to apply Artificial Intelligence to the problem of tuning drones, particularly those of the racing variety. The goal here is more of an academic exercise than anything else, so it will be a continual work in progress and probably not up to the standards of professional development. As more development is completed, this page should be updated. 
