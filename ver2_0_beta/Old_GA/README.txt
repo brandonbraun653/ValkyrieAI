@@ -1,0 +1,1 @@
+This is the code that inspired the whole thing. Don't pay much attention to it. I'm just storing it here for nostalgic purposes.
