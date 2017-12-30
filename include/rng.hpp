@@ -6,16 +6,58 @@
 #include <stdint.h>
 
 /* Boost Includes */
-#include <boost/move/unique_ptr.hpp>
-#include <boost/move/make_unique.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/circular_buffer.hpp>
 #include <boost/random.hpp>
 
-/* Figure something out later I guess...probably will have to do explicit functions for all
-   supported types rather than templates. Oh well. */
+template<typename Engine, typename Distribution>
+class RNGManager
+{
+public:
+	template<typename Scalar>
+	Scalar get()
+	{
+		return (isLocked) ? ((Scalar)dist(eng)) : (Scalar)0;
+	}
+
+	bool acquireEngine()
+	{
+		return (isLocked = rng_mutex.try_lock());
+	}
+	
+	void releaseEngine()
+	{
+		rng_mutex.unlock();
+		isLocked = false;
+	}
+
+	RNGManager(Distribution& distribution)
+	{
+		dist = distribution;
+		isLocked = false;
+
+		/* Reseed and reset so the new object is unique */
+		eng.seed(static_cast<std::uint32_t>(std::time(0)));
+		dist.reset();
+
+		/* Warm up the engine a bit */
+		warmup();
+
+		
+	};
+	
+private:
+	bool isLocked;
+	boost::mutex rng_mutex;
+	Engine eng;
+	Distribution dist;
+
+	void warmup()
+	{
+		for (int i = 0; i < 100; i++)
+			dist(eng);
+	}
+};
+
 
 #endif
 
