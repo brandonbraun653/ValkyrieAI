@@ -16,28 +16,7 @@
 #include "model.h"
 
 
-struct FCSOptimizer_Init_t //TODO: Rename this struct 
-{
-	std::string optimizerName;			/* Use this to give a user friendly unique name to the optimizer */
-	
-	SSModel_sPtr stateSpaceModel;		/* Possible reference to a State Space Model implementation */
-	NNModel_sPtr neuralNetModel;		/* Possible reference to a TensorFlow Neural Network Graph  */
-	
-	
 
-	PID_ControlGoals_sPtr pid;
-	GA_ConverganceCriteria_sPtr ga_convergence;
-	
-};
-
-struct FCSOptimizer_Handle_t
-{
-	FCSOptimizer_Init_t Init;
-
-	FCSOptimizer_sPtr optimizerEngine;				/* Instance of an optimization engine */
-	boost::shared_ptr<boost::thread> threadHandle;	/* Reference to the thread running the optimizerEngine */
-};
-typedef boost::shared_ptr<FCSOptimizer_Handle_t> FCSOptimizer_Handle;
 
 
 class ValkyrieEngine

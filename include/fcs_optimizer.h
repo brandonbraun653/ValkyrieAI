@@ -25,7 +25,7 @@
 #include "host_memory.h"
 
 /*-----------------------------------------------
-* Global Genetic Algorithm "Stuff"
+* Genetic Algorithm "Stuff"
 *-----------------------------------------------*/
 enum GA_Status
 {
@@ -111,6 +111,41 @@ struct GA_RuntimeConfig
 	GA_METHOD_FitnessEvaluation		fitnessType;
 	GA_METHOD_Resolution			resolutionType;
 };
+
+
+/*-----------------------------------------------
+* Input/Output/Referencing Containers 
+*-----------------------------------------------*/
+struct FCSOptimizer_Init_t
+{
+	std::string optimizerName;			/* Use this to give a user friendly unique name to the optimizer */
+
+	SSModel_sPtr stateSpaceModel;		/* Possible reference to a State Space Model implementation */
+	NNModel_sPtr neuralNetModel;		/* Possible reference to a TensorFlow Neural Network Graph  */
+
+
+	//TODO: Either rename or re-categorize how this data is represented 
+	PID_ControlGoals_sPtr pid;
+	GA_ConverganceCriteria_sPtr ga_convergence;
+};
+
+struct FCSOptimizer_Output_t
+{
+	//TODO: Put all the possible output data needed in here
+
+	/* All this data is technically being passed by another thread, so it is going to need a mutex */
+};
+
+struct FCSOptimizer_Handle_t
+{
+	FCSOptimizer_Init_t Init;		/* Initialization settings for the engine */
+	FCSOptimizer_Output_t Output;	/* Output data metrics for the optimization run */
+	FCSOptimizer_sPtr Engine;		/* Instance of an optimization engine */
+	boost::thread Thread;			/* Reference to the thread running the optimizerEngine */
+};
+typedef boost::shared_ptr<FCSOptimizer_Handle_t> FCSOptimizer_Handle;
+
+
 
 //////////////////////////////////////////////////////////////////
 /* Helper Functions */
