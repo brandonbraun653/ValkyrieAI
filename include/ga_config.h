@@ -74,7 +74,7 @@ enum GA_Status
 	GA_ERROR
 };
 
-enum GA_BreedMethod
+enum GA_METHOD_Breed
 {
 	GA_BREED_SIMPLE_CROSSOVER,
 	GA_BREED_DYNAMIC_CROSSOVER,
@@ -82,13 +82,13 @@ enum GA_BreedMethod
 	GA_BREED_SIMULATED_BINARY_CROSSOVER
 };
 
-enum GA_PopulationFilterMethod
+enum GA_METHOD_PopulationFilter
 {
 	GA_POPULATION_STATIC_FILTER,
 	GA_POPULATION_DYNAMIC_FILTER
 };
 
-enum GA_ParentSelectMethod
+enum GA_METHOD_ParentSelection
 {
 	GA_SELECT_RANDOM,
 	GA_SELECT_RANKED,
@@ -98,7 +98,7 @@ enum GA_ParentSelectMethod
 	GA_SELECT_ELITIST
 };
 
-enum GA_MutateProbabilityMethod
+enum GA_METHOD_MutateProbability
 {
 	GA_MUTATE_PROBABILITY_POISSON,
 	GA_MUTATE_PROBABILITY_EXPONENTIAL,
@@ -107,19 +107,19 @@ enum GA_MutateProbabilityMethod
 	GA_MUTATE_PROBABILITY_CHI_SQUARED
 };
 
-enum GA_MutateMethod
+enum GA_METHOD_MutateType
 {
 	GA_MUTATE_BIT_FLIP,
 	GA_MUTATE_ADD_SUB
 };
 
-enum GA_EvaluateFitnessMethod
+enum GA_METHOD_FitnessEvaluation
 {
 	GA_FITNESS_WEIGHTED_SUM,
 	GA_FITNESS_NON_DOMINATED_SORT
 };
 
-enum GA_Resolution
+enum GA_METHOD_Resolution
 {
 	// DP: Decimal Places
 	GA_RESOLUTION_0DP,

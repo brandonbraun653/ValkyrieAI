@@ -208,7 +208,7 @@ void GA_MOP::initModel()
 	{
 		/* Down-cast the generic GA_Model base class into the specific model
 		type used for executing the algorithm. */
-		modelSS = std::dynamic_pointer_cast<SSModel>(modelBase);
+		modelSS = boost::dynamic_pointer_cast<StateSpaceModel>(modelBase);
 		modelSS->init();
 
 		//TODO: Pass this out to the MAIN func.
@@ -321,7 +321,7 @@ void GA_MOP::evaluateModel()
 			#endif
 
 			/* Spawn a new thread to compute system step response for each member */
-			tgroup.create_thread(boost::bind(&SSModel::stepResponseMultiThreaded, modelSS.get(),
+			tgroup.create_thread(boost::bind(&StateSpaceModel::stepResponseMultiThreaded, modelSS.get(),
 				member,
 				ss_system_dynamics,
 				boost::ref(SS_StepPerformance),

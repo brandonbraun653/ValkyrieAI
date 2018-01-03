@@ -101,26 +101,26 @@ GAModel::~GAModel()
 *-----------------------------------------------*/
 
 //////////////////////////////////////////////////////////////////
-/* CLASS: SSModel */
+/* CLASS: StateSpaceModel */
 //////////////////////////////////////////////////////////////////
-std::string SSModelName("SSModel");
+std::string SSModelName("StateSpaceModel");
 
 /*-----------------------------------------------
 * Constructors/Destructor
 *-----------------------------------------------*/
-SSModel::SSModel()
+StateSpaceModel::StateSpaceModel()
 {
 	
 }
 
-SSModel::~SSModel()
+StateSpaceModel::~StateSpaceModel()
 {
 }
 
 /*-----------------------------------------------
 * Public Functions
 *-----------------------------------------------*/
-void SSModel::init()
+void StateSpaceModel::init()
 {
 	sim_dt = 0.0;
 	sim_end_time = 0.0;
@@ -128,11 +128,11 @@ void SSModel::init()
 	total_time_steps = -1;
 }
 
-void SSModel::destroy()
+void StateSpaceModel::destroy()
 {
 }
 
-void SSModel::assignSimulationTimeConstraints(double dt, double start_time, double end_time)
+void StateSpaceModel::assignSimulationTimeConstraints(double dt, double start_time, double end_time)
 {
 	sim_dt = dt;
 	sim_start_time = start_time;
@@ -141,7 +141,7 @@ void SSModel::assignSimulationTimeConstraints(double dt, double start_time, doub
 	total_time_steps = (int)ceil((sim_end_time - sim_start_time) / sim_dt) + 1;
 }
 
-StepPerformance SSModel::stepResponseSingleThreaded(int member_num, SS_NLTIV_Dynamics &model, double Kp, double Ki, double Kd)
+StepPerformance StateSpaceModel::stepResponseSingleThreaded(int member_num, SS_NLTIV_Dynamics &model, double Kp, double Ki, double Kd)
 {
 	#ifdef SS_TRACE
 		
@@ -186,7 +186,7 @@ StepPerformance SSModel::stepResponseSingleThreaded(int member_num, SS_NLTIV_Dyn
 #endif 
 }
 
-void SSModel::stepResponseMultiThreaded(int member_num, SS_NLTIV_Dynamics model, StepPerformance_Vec& output_data, boost::mutex& output_data_mutex,
+void StateSpaceModel::stepResponseMultiThreaded(int member_num, SS_NLTIV_Dynamics model, StepPerformance_Vec& output_data, boost::mutex& output_data_mutex,
 	double Kp, double Ki, double Kd)
 {
 	#ifdef SS_TRACE

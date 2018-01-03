@@ -20,6 +20,20 @@
 *-----------------------------------------------*/
 typedef std::shared_ptr<boost::thread> Thread_sPtr;
 
+
+struct GAOptimizerThread
+{
+	SSModel_sPtr stateSpaceModel;
+	NNModel_sPtr neuralNetModel;
+	
+	GAMOP_sPtr ga_optimizer;
+	PID_ControlGoals_sPtr pid;
+	GA_ConverganceCriteria_sPtr ga_convergence;
+
+	std::string optimizer_name;
+};
+
+
 class GAEngine_PID
 {
 public:

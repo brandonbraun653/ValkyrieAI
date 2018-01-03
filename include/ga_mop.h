@@ -14,6 +14,7 @@
 #include <boost/thread.hpp>
 #include <boost/chrono.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/pointer_cast.hpp>  //TODO: Remove header when finished with removal of old model referencing 
 
 /* Local Includes */
 #include "ga_config.h"
@@ -28,13 +29,13 @@
 *-----------------------------------------------*/
 struct GA_AlgorithmMethods
 {
-	GA_BreedMethod breedType;
-	GA_PopulationFilterMethod filterType;
-	GA_ParentSelectMethod selectType;
-	GA_MutateProbabilityMethod mutateProbabilityType;
-	GA_MutateMethod mutateType;
-	GA_EvaluateFitnessMethod fitnessType;
-	GA_Resolution resolutionType;
+	GA_METHOD_Breed breedType;
+	GA_METHOD_PopulationFilter filterType;
+	GA_METHOD_ParentSelection selectType;
+	GA_METHOD_MutateProbability mutateProbabilityType;
+	GA_METHOD_MutateType mutateType;
+	GA_METHOD_FitnessEvaluation fitnessType;
+	GA_METHOD_Resolution resolutionType;
 };
 
 //////////////////////////////////////////////////////////////////
@@ -112,11 +113,9 @@ private:
 	int currentIteration;
 	GA_Status currentStatus;
 
-	/* Pointers to Model Class Types*/
-	GAModel_sPtr modelBase;
+
 	SSModel_sPtr modelSS;
-	LiveModel_sPtr modelLV;
-	DynamicModel_sPtr modelDY;
+
 
 	SS_NLTIV_ModelBase_sPtr ss_user_system_model;
 
