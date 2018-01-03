@@ -8,29 +8,66 @@
 
 /* Boost Includes */
 #include <boost/thread.hpp>
-#include <boost/chrono.hpp>
+#include <boost/container/vector.hpp>
 
 /* Local Includes */
 #include "data.h"
-#include "ga_mop.h"
+#include "fcs_optimizer.h"
 #include "model.h"
 
-/*-----------------------------------------------
-* Shared Pointer Typedefs
-*-----------------------------------------------*/
-typedef std::shared_ptr<boost::thread> Thread_sPtr;
 
-
-struct GAOptimizerThread
+struct FCSOptimizer_Init_t //TODO: Rename this struct 
 {
-	SSModel_sPtr stateSpaceModel;
-	NNModel_sPtr neuralNetModel;
+	std::string optimizerName;			/* Use this to give a user friendly unique name to the optimizer */
 	
-	GAMOP_sPtr ga_optimizer;
+	SSModel_sPtr stateSpaceModel;		/* Possible reference to a State Space Model implementation */
+	NNModel_sPtr neuralNetModel;		/* Possible reference to a TensorFlow Neural Network Graph  */
+	
+	
+
 	PID_ControlGoals_sPtr pid;
 	GA_ConverganceCriteria_sPtr ga_convergence;
+	
+};
 
-	std::string optimizer_name;
+struct FCSOptimizer_Handle_t
+{
+	FCSOptimizer_Init_t Init;
+
+	FCSOptimizer_sPtr optimizerEngine;				/* Instance of an optimization engine */
+	boost::shared_ptr<boost::thread> threadHandle;	/* Reference to the thread running the optimizerEngine */
+};
+typedef boost::shared_ptr<FCSOptimizer_Handle_t> FCSOptimizer_Handle;
+
+
+class ValkyrieEngine
+{
+public:
+	/*-------------------------------
+	* Initialization and Setup
+	*------------------------------*/
+	FCSOptimizer_Handle newOptimizer(FCSOptimizer_Init_t init);
+
+
+	/*-------------------------------
+	* Basic Runtime Flow Control
+	*------------------------------*/
+	void init(FCSOptimizer_Handle optimizer);
+	void run(FCSOptimizer_Handle optimizer);
+	void pause(FCSOptimizer_Handle optimizer);
+	void stop();
+
+	void initAll();
+	void runAll();
+	void pauseAll();
+	void stopAll();
+
+	void waitForCompletion();
+
+
+private:
+	boost::container::vector<FCSOptimizer_Handle> optimizerInstances;
+
 };
 
 
@@ -74,7 +111,7 @@ private:
 	*----------------------------------------------*/
 	std::vector< GAModel_sPtr > model;
 	std::vector< PID_ControlGoals_sPtr > pid;
-	std::vector< GAMOP_sPtr > ga_optimizer;
+	std::vector< FCSOptimizer_sPtr > ga_optimizer;
 	std::vector< GA_ConverganceCriteria_sPtr> ga_convergence;
 
 	/*----------------------------------------------

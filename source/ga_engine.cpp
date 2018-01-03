@@ -21,7 +21,7 @@ GAEngine_PID::~GAEngine_PID()
 void GAEngine_PID::createOptimizer(std::string optimizer, GA_AlgorithmMethods alg_step_types)
 {
 	//Create a new Multi-Objective Optimizer instance and assign to the vector
-	ga_optimizer.push_back(std::make_shared<GA_MOP>(alg_step_types));
+	ga_optimizer.push_back(std::make_shared<FCSOptimizer>(alg_step_types));
 
 	//Based on the latest index value of the above, map the optimizer to the accessIndex
 	size_t accessIndex = (ga_optimizer.size() - 1);
@@ -260,7 +260,7 @@ void GAEngine_PID::run(std::string optimizer, int trialNum)
 	* Create the function the thread will execute
 	*----------------------------*/
 	auto bindOp = boost::bind(
-		&GA_MOP::run,					//Template of the function to run
+		&FCSOptimizer::run,					//Template of the function to run
 		ga_optimizer[accessIndex],		//Specific instance to bind
 		&statisticsMutex,
 		&threadStatistics,

@@ -27,15 +27,89 @@
 /*-----------------------------------------------
 * Global Genetic Algorithm "Stuff"
 *-----------------------------------------------*/
-struct GA_AlgorithmMethods
+enum GA_Status
 {
-	GA_METHOD_Breed breedType;
-	GA_METHOD_PopulationFilter filterType;
-	GA_METHOD_ParentSelection selectType;
-	GA_METHOD_MutateProbability mutateProbabilityType;
-	GA_METHOD_MutateType mutateType;
-	GA_METHOD_FitnessEvaluation fitnessType;
-	GA_METHOD_Resolution resolutionType;
+	GA_IDLE,
+	GA_OK,
+	GA_READY,
+	GA_HALT,
+	GA_BUSY,
+	GA_SETUP,
+	GA_PAUSED,
+	GA_INPROGRESS,
+	GA_COMPLETE,
+	GA_ERROR
+};
+
+enum GA_METHOD_Breed
+{
+	GA_BREED_SIMPLE_CROSSOVER,
+	GA_BREED_DYNAMIC_CROSSOVER,
+	GA_BREED_FIXED_RATIO_CROSSOVER,
+	GA_BREED_SIMULATED_BINARY_CROSSOVER
+};
+
+enum GA_METHOD_PopulationFilter
+{
+	GA_POPULATION_STATIC_FILTER,
+	GA_POPULATION_DYNAMIC_FILTER
+};
+
+enum GA_METHOD_ParentSelection
+{
+	GA_SELECT_RANDOM,
+	GA_SELECT_RANKED,
+	GA_SELECT_ROULETTE,
+	GA_SELECT_STOCHASTIC_SAMPLING,
+	GA_SELECT_TOURNAMENT,
+	GA_SELECT_ELITIST
+};
+
+enum GA_METHOD_MutateProbability
+{
+	GA_MUTATE_PROBABILITY_POISSON,
+	GA_MUTATE_PROBABILITY_EXPONENTIAL,
+	GA_MUTATE_PROBABILITY_GAMMA,
+	GA_MUTATE_PROBABILITY_WEIBULL,
+	GA_MUTATE_PROBABILITY_CHI_SQUARED
+};
+
+enum GA_METHOD_MutateType
+{
+	GA_MUTATE_BIT_FLIP,
+	GA_MUTATE_ADD_SUB
+};
+
+enum GA_METHOD_FitnessEvaluation
+{
+	GA_FITNESS_WEIGHTED_SUM,
+	GA_FITNESS_NON_DOMINATED_SORT
+};
+
+enum GA_METHOD_Resolution
+{
+	GA_RESOLUTION_0DP, // DP: Decimal Places
+	GA_RESOLUTION_1DP,
+	GA_RESOLUTION_2DP,
+	GA_RESOLUTION_3DP,
+	GA_RESOLUTION_4DP,
+	GA_RESOLUTION_5DP,
+	GA_RESOLUTION_6DP,
+	GA_RESOLUTION_7DP,
+	GA_RESOLUTION_8DP,
+	GA_RESOLUTION_9DP,
+	GA_RESOLUTION_10DP
+};
+
+struct GA_RuntimeConfig
+{
+	GA_METHOD_Breed					breedType;
+	GA_METHOD_PopulationFilter		filterType;
+	GA_METHOD_ParentSelection		selectType;
+	GA_METHOD_MutateProbability		mutateProbabilityType;
+	GA_METHOD_MutateType			mutateType;
+	GA_METHOD_FitnessEvaluation		fitnessType;
+	GA_METHOD_Resolution			resolutionType;
 };
 
 //////////////////////////////////////////////////////////////////
@@ -44,9 +118,9 @@ struct GA_AlgorithmMethods
 extern void calculateMappingCoefficients(mapCoeff_t *mapping, double lower, double upper);
 
 //////////////////////////////////////////////////////////////////
-/* CLASS: GA_MOP */
+/* CLASS: FCSOptimizer */
 //////////////////////////////////////////////////////////////////
-class GA_MOP
+class FCSOptimizer
 {
 public:
 	void init();
@@ -62,8 +136,8 @@ public:
 	void registerModel(GAModel_sPtr modelType, SS_NLTIV_ModelBase_sPtr model, std::string name, int processor);
 	void registerConvergence(GA_ConverganceCriteria_sPtr convLimits, std::string convName);
 
-	GA_MOP(GA_AlgorithmMethods alg_methods);
-	~GA_MOP();
+	FCSOptimizer(GA_RuntimeConfig alg_methods);
+	~FCSOptimizer();
 
 private:
 	/*-----------------------------
@@ -78,7 +152,7 @@ private:
 		ga_instance_convergence_name;
 
 	/* Allows the user to specify how the algorithm runs at each step */
-	GA_AlgorithmMethods ga_instance_step_methods;
+	GA_RuntimeConfig ga_instance_step_methods;
 
 	/* Contains the user's pid goals, constraints, and weightings */
 	PID_ControlGoals_sPtr ga_instance_pid_config_data;
@@ -153,6 +227,6 @@ private:
 	void printResultHighlights(double best_fit, int best_fit_idx);
 
 };
-typedef std::shared_ptr<GA_MOP> GAMOP_sPtr;
+typedef std::shared_ptr<FCSOptimizer> FCSOptimizer_sPtr;
 
 #endif /* !GA_H_ */

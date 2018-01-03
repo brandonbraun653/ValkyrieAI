@@ -5,133 +5,45 @@
 /*-----------------------------------------------
 * Global Genetic Algorithm "Stuff"
 *-----------------------------------------------*/
-#define DEBUGGING_ENABLED
-//#define GA_CPU_SINGLE_THREADED
-#define GA_CPU_MULTI_THREADED
+#define DEBUGGING_ENABLED					0 
+#define MAX_THREADS_ALLOWED_PER_OPTIMIZER	16
 
 /*-----------------------------------------------
 * Runtime Options
 *-----------------------------------------------*/
 /* Initialize Population Function */
-//#define GA_TRACE_INITIALIZE_POPULATION
+#define GA_TRACE_INITIALIZE_POPULATION		0
 
 /* Evaluate Model Function */
-#define GA_TRACE_EVALUATE_MODEL
-//#define FIXED_PID_VALUES
+#define GA_TRACE_EVALUATE_MODEL				0 
+#define FIXED_PID_VALUES					0 
 
 /* Population Filter Function */
-//#define GA_TRACE_FILTER_POPULATION
+#define GA_TRACE_FILTER_POPULATION			0 
 
 /* Evaluate Fitness Function */
-//#define GA_TRACE_EVALUATE_FITNESS
-//#define GA_TRACE_SELECT_PARENTS
+#define GA_TRACE_EVALUATE_FITNESS			0 
+#define GA_TRACE_SELECT_PARENTS				0 
 
 /* Breed Generation Function */
-#define GA_TRACE_BREED_GENERATION
-#define GA_ENFORCE_RESOLUTION_BG
+#define GA_TRACE_BREED_GENERATION			0 
+#define GA_ENFORCE_RESOLUTION_BG			0 
 
-/* Mutate Generation Function */
-#define GA_TRACE_MUTATE_GENERATION
-#define GA_ENFORCE_RESOLUTION_MG
+/* Mutate Generation Function */	
+#define GA_TRACE_MUTATE_GENERATION			0 
+#define GA_ENFORCE_RESOLUTION_MG			0 
 
 /* Check Convergence Function */
-//#define GA_TRACE_CHECK_CONVERGENCE
-#define GA_REPORT_DATA_CHECK_CONVERGENCE
+#define GA_TRACE_CHECK_CONVERGENCE			0 
+#define GA_REPORT_DATA_CHECK_CONVERGENCE	0 
 
-/*-----------------------------------------------
-* model.h
-*-----------------------------------------------*/
+
 /* Debugging Statements */
-//#define SS_TRACE
-//#define SS_TRACE_LOG_COUT
-//#define SS_TRACE_LOG_CSV
-//#define SS_THREAD_TRACE_LOG_COUT
-//#define SS_THREAD_TRACE_LOG_CSV
+#define SS_TRACE							0
+#define SS_TRACE_LOG_COUT					0
+#define SS_TRACE_LOG_CSV					0
+#define SS_THREAD_TRACE_LOG_COUT			0
+#define SS_THREAD_TRACE_LOG_CSV				0
 
 
-/*-----------------------------------------------
-* Useful Enums
-*-----------------------------------------------*/
-enum GA_RunMode
-{
-	SINGLE_THREADED,
-	MULTI_THREADED,
-	SINGLE_THREADED_WITH_CUDA,
-	MULTI_THREADED_WITH_CUDA
-};
-
-enum GA_Status
-{
-	GA_IDLE,
-	GA_OK,
-	GA_READY,
-	GA_HALT,
-	GA_BUSY,
-	GA_SETUP,
-	GA_PAUSED,
-	GA_INPROGRESS,
-	GA_COMPLETE,
-	GA_ERROR
-};
-
-enum GA_METHOD_Breed
-{
-	GA_BREED_SIMPLE_CROSSOVER,
-	GA_BREED_DYNAMIC_CROSSOVER,
-	GA_BREED_FIXED_RATIO_CROSSOVER,
-	GA_BREED_SIMULATED_BINARY_CROSSOVER
-};
-
-enum GA_METHOD_PopulationFilter
-{
-	GA_POPULATION_STATIC_FILTER,
-	GA_POPULATION_DYNAMIC_FILTER
-};
-
-enum GA_METHOD_ParentSelection
-{
-	GA_SELECT_RANDOM,
-	GA_SELECT_RANKED,
-	GA_SELECT_ROULETTE,
-	GA_SELECT_STOCHASTIC_SAMPLING,
-	GA_SELECT_TOURNAMENT,
-	GA_SELECT_ELITIST
-};
-
-enum GA_METHOD_MutateProbability
-{
-	GA_MUTATE_PROBABILITY_POISSON,
-	GA_MUTATE_PROBABILITY_EXPONENTIAL,
-	GA_MUTATE_PROBABILITY_GAMMA,
-	GA_MUTATE_PROBABILITY_WEIBULL,
-	GA_MUTATE_PROBABILITY_CHI_SQUARED
-};
-
-enum GA_METHOD_MutateType
-{
-	GA_MUTATE_BIT_FLIP,
-	GA_MUTATE_ADD_SUB
-};
-
-enum GA_METHOD_FitnessEvaluation
-{
-	GA_FITNESS_WEIGHTED_SUM,
-	GA_FITNESS_NON_DOMINATED_SORT
-};
-
-enum GA_METHOD_Resolution
-{
-	// DP: Decimal Places
-	GA_RESOLUTION_0DP,
-	GA_RESOLUTION_1DP,
-	GA_RESOLUTION_2DP,
-	GA_RESOLUTION_3DP,
-	GA_RESOLUTION_4DP,
-	GA_RESOLUTION_5DP,
-	GA_RESOLUTION_6DP,
-	GA_RESOLUTION_7DP,
-	GA_RESOLUTION_8DP,
-	GA_RESOLUTION_9DP,
-	GA_RESOLUTION_10DP
-};
 #endif

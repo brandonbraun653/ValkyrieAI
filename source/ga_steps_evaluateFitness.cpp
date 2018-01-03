@@ -1,4 +1,4 @@
-#include "ga_mop_steps_evaluateFitness.h"
+#include "ga_evaluateFitness.h"
 
 bool filterData(double input, double abs_threshold)
 {

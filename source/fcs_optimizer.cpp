@@ -1,4 +1,4 @@
-#include "ga_mop.h"
+#include "fcs_optimizer.h"
 
 //////////////////////////////////////////////////////////////////
 /* Helper Functions */
@@ -58,7 +58,7 @@ void writeCSV_StepData(StepPerformance data, std::string filename)
 /*-----------------------------------------------
 * Constructors/Destructor
 *-----------------------------------------------*/
-GA_MOP::GA_MOP(GA_AlgorithmMethods alg_methods)
+FCSOptimizer::FCSOptimizer(GA_AlgorithmMethods alg_methods)
 {
 	ga_instance_step_methods = alg_methods;
 	optimizer_initialized = false;
@@ -66,7 +66,7 @@ GA_MOP::GA_MOP(GA_AlgorithmMethods alg_methods)
 	currentIteration = 0;
 }
 
-GA_MOP::~GA_MOP()
+FCSOptimizer::~FCSOptimizer()
 {
 	this->deInitMemory();
 }
@@ -74,7 +74,7 @@ GA_MOP::~GA_MOP()
 /*-----------------------------------------------
 * Public Functions
 *-----------------------------------------------*/
-void GA_MOP::init()
+void FCSOptimizer::init()
 {
 	/* Allocate memory for CPU and GPU operations */
 	initMemory();
@@ -86,7 +86,7 @@ void GA_MOP::init()
 	optimizer_initialized = true;
 }
 
-void GA_MOP::reset()
+void FCSOptimizer::reset()
 {
 	currentStatus = GA_IDLE;
 	currentIteration = 0;
@@ -94,7 +94,7 @@ void GA_MOP::reset()
 	//Need to reset the CPU memory to zero...GPU I think can just be freed?
 }
 
-void GA_MOP::run(boost::mutex* resultsMutex, GAEngineStatistics_Vec* resultsStatistics, 
+void FCSOptimizer::run(boost::mutex* resultsMutex, GAEngineStatistics_Vec* resultsStatistics, 
 	GAEngineStatistics_Vec* avgResultsStatistics, int threadIndex, int trialNum)
 {
 	currentStatus = GA_OK;
@@ -137,23 +137,23 @@ void GA_MOP::run(boost::mutex* resultsMutex, GAEngineStatistics_Vec* resultsStat
 	resultsMutex->unlock();
 }
 
-void GA_MOP::registerOutputMutex(boost::mutex* printMutex)
+void FCSOptimizer::registerOutputMutex(boost::mutex* printMutex)
 {
 	print_to_console_mutex = printMutex;
 }
 
-void GA_MOP::registerName(std::string optimizerName)
+void FCSOptimizer::registerName(std::string optimizerName)
 {
 	ga_instance_optimizer_name = optimizerName;
 }
 
-void GA_MOP::registerObjective(PID_ControlGoals_sPtr pidGoals, std::string pidName)
+void FCSOptimizer::registerObjective(PID_ControlGoals_sPtr pidGoals, std::string pidName)
 {
 	ga_instance_pid_config_data = pidGoals;
 	ga_instance_pid_name = pidName;
 }
 
-void GA_MOP::registerModel(GAModel_sPtr modelType, SS_NLTIV_ModelBase_sPtr model, std::string name, int processor)
+void FCSOptimizer::registerModel(GAModel_sPtr modelType, SS_NLTIV_ModelBase_sPtr model, std::string name, int processor)
 {
 	modelBase = modelType;
 	ss_user_system_model = model;
@@ -161,7 +161,7 @@ void GA_MOP::registerModel(GAModel_sPtr modelType, SS_NLTIV_ModelBase_sPtr model
 	compute_processor = processor;
 }
 
-void GA_MOP::registerConvergence(GA_ConverganceCriteria_sPtr convLimits, std::string convName)
+void FCSOptimizer::registerConvergence(GA_ConverganceCriteria_sPtr convLimits, std::string convName)
 {
 	ga_instance_convergence_criteria = convLimits;
 	ga_instance_convergence_name = convName;
@@ -170,7 +170,7 @@ void GA_MOP::registerConvergence(GA_ConverganceCriteria_sPtr convLimits, std::st
 /*-----------------------------------------------
 * Private Functions
 *-----------------------------------------------*/
-void GA_MOP::initMemory()
+void FCSOptimizer::initMemory()
 {
 	if (compute_processor == USE_GPU || compute_processor == USE_CPU)
 	{
@@ -196,12 +196,12 @@ void GA_MOP::initMemory()
 		std::cout << "Cannot allocate memory. No valid processor selected." << std::endl;
 }
 
-void GA_MOP::deInitMemory()
+void FCSOptimizer::deInitMemory()
 {
 	
 }
 
-void GA_MOP::initModel()
+void FCSOptimizer::initModel()
 {
 	/* State Space Model */
 	if (ga_instance_model_name == SSModelName)
@@ -230,7 +230,7 @@ void GA_MOP::initModel()
 	}
 }
 
-void GA_MOP::initPopulation()
+void FCSOptimizer::initPopulation()
 {
 	double kpl = ga_instance_pid_config_data->pid_limits.Kp_limits_lower;
 	double kpu = ga_instance_pid_config_data->pid_limits.Kp_limits_upper;
@@ -256,7 +256,7 @@ void GA_MOP::initPopulation()
 	calculateMappingCoefficients(&mapCoefficients_Kd, kdl, kdu);
 }
 
-void GA_MOP::evaluateModel()
+void FCSOptimizer::evaluateModel()
 {
 	#ifdef GA_TRACE_EVALUATE_MODEL
 	auto start = boost::chrono::high_resolution_clock::now();
@@ -346,7 +346,7 @@ void GA_MOP::evaluateModel()
 	#endif
 }
 
-void GA_MOP::evaluateFitness()
+void FCSOptimizer::evaluateFitness()
 {
 	#ifdef GA_TRACE_EVALUATE_FITNESS
 	auto start = boost::chrono::high_resolution_clock::now();
@@ -376,7 +376,7 @@ void GA_MOP::evaluateFitness()
 	#endif
 }
 
-void GA_MOP::filterPopulation()
+void FCSOptimizer::filterPopulation()
 {
 	#ifdef GA_TRACE_FILTER_POPULATION
 	auto start = boost::chrono::high_resolution_clock::now();
@@ -499,7 +499,7 @@ void GA_MOP::filterPopulation()
 	#endif
 }
 
-void GA_MOP::selectParents()
+void FCSOptimizer::selectParents()
 {
 	#ifdef GA_TRACE_SELECT_PARENTS
 	auto start = boost::chrono::high_resolution_clock::now();
@@ -532,7 +532,7 @@ void GA_MOP::selectParents()
 	#endif
 }
 
-void GA_MOP::breedGeneration()
+void FCSOptimizer::breedGeneration()
 {
 	#ifdef GA_TRACE_BREED_GENERATION
 	auto trace_start_time = boost::chrono::high_resolution_clock::now();
@@ -616,7 +616,7 @@ void GA_MOP::breedGeneration()
 	#endif
 }
 
-void GA_MOP::mutateGeneration()
+void FCSOptimizer::mutateGeneration()
 {
 	#ifdef GA_TRACE_MUTATE_GENERATION
 	auto start = boost::chrono::high_resolution_clock::now();
@@ -697,7 +697,7 @@ void GA_MOP::mutateGeneration()
 	#endif
 }
 
-void GA_MOP::checkConvergence()
+void FCSOptimizer::checkConvergence()
 {
 	/*-----------------------------------------------
 	* Save best result from each round
@@ -741,7 +741,7 @@ void GA_MOP::checkConvergence()
 		
 }
 
-void GA_MOP::enforceResolution()
+void FCSOptimizer::enforceResolution()
 {
 	for (int member = 0; member < hData.sim_data.population_size; member++)
 	{
@@ -761,7 +761,7 @@ void GA_MOP::enforceResolution()
 	}
 }
 
-int GA_MOP::reportResults(int trialNum)
+int FCSOptimizer::reportResults(int trialNum)
 {
 	/* Find the highest performer */
 	double highestPerformerVal = 0.0;
@@ -796,7 +796,7 @@ int GA_MOP::reportResults(int trialNum)
 	return highestPerformerIndex;
 }
 
-void GA_MOP::printResultHighlights(double best_fit, int best_fit_idx)
+void FCSOptimizer::printResultHighlights(double best_fit, int best_fit_idx)
 {
 	print_to_console_mutex->lock();
 	/*-----------------------------------------------
