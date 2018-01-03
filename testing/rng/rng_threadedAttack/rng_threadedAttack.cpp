@@ -8,8 +8,8 @@
 using namespace boost::random;
 
 void rng_attack_thread();
-
-RNGManager<mt19937, uniform_real_distribution<>> rng2(uniform_real_distribution<>(0.0, 1000.0));
+uniform_real_distribution<> test(0.0, 1000.0);
+RNGManager<mt19937, uniform_real_distribution<>> rng2(test);
 
 int main(void)
 {
