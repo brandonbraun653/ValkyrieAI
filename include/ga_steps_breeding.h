@@ -25,10 +25,9 @@ class SimpleCrossover
 public:
 	void breed(iVec in_parents, hPID_DataVector* in_pidVals, hPID_Chromosomes* out_breed, mapCoeff_t* in_kp, mapCoeff_t* in_ki, mapCoeff_t* in_kd);
 
-	SimpleCrossover(GA_RunMode execution_type);
+	SimpleCrossover();
 	~SimpleCrossover();
 private:
-	GA_RunMode executionType;
 
 	iVec sc_parents;
 	hPID_DataVector* sc_data;
@@ -57,11 +56,10 @@ class DynamicCrossover
 public:
 	void breed(iVec in_parents, hPID_DataVector* in_pidVals, hPID_Chromosomes* out_breed, mapCoeff_t* in_kp, mapCoeff_t* in_ki, mapCoeff_t* in_kd);
 
-	DynamicCrossover(GA_RunMode execution_type);
+	DynamicCrossover();
 	~DynamicCrossover();
 
 private:
-	GA_RunMode executionType;
 
 	iVec dc_parents;
 	hPID_DataVector* dc_data;
@@ -90,12 +88,10 @@ class FixedRatioCrossover
 public:
 	void breed(iVec in_parents, hPID_DataVector* in_pidVals, hPID_Chromosomes* out_breed, mapCoeff_t* in_kp, mapCoeff_t* in_ki, mapCoeff_t* in_kd);
 
-	FixedRatioCrossover(GA_RunMode execution_type, double ratio);
+	FixedRatioCrossover(double ratio);
 	~FixedRatioCrossover();
 
 private:
-	GA_RunMode executionType;
-
 	double fr_ratio;
 	iVec fr_parents;
 	hPID_DataVector* fr_data;
@@ -122,11 +118,9 @@ class SimulatedBinaryCrossover
 {
 public:
 
-	SimulatedBinaryCrossover(GA_RunMode execution_type);
+	SimulatedBinaryCrossover();
 	~SimulatedBinaryCrossover();
 private:
-	GA_RunMode executionType;
-
 	void calculate_cpu_single_threaded();
 	void calculate_cpu_multi_threaded();
 	void calculate_gpu_single_threaded();

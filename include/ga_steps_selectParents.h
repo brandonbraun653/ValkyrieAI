@@ -23,9 +23,8 @@
 class RankedSelection
 {
 public:
-	GA_RunMode executionType;
 
-	RankedSelection(GA_RunMode execution_type);
+	RankedSelection();
 	~RankedSelection();
 private:
 };
@@ -36,12 +35,11 @@ private:
 class RandomSelection
 {
 public:
-	void selectParents(iVec* out_selections);
+	void selectParents();
 
-	RandomSelection(GA_RunMode execution_type);
+	RandomSelection();
 	~RandomSelection();
 private:
-	GA_RunMode executionType;
 	iVec* rs_selections;
 
 	void calculate_cpu_single_threaded();
@@ -66,11 +64,10 @@ class TournamentSelection
 public:
 	void selectParents(PIDFitness_Vec in_fitnessValues, iVec* out_selections);
 
-	TournamentSelection(GA_RunMode execution_type);
+	TournamentSelection();
 	~TournamentSelection();
 
 private:
-	GA_RunMode executionType;
 	PIDFitness_Vec ts_data;
 	iVec* ts_selections;
 

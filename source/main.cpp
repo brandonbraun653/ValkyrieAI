@@ -1,17 +1,20 @@
 #include <stdlib.h>
 #include <iostream>
-#include "ga_config.h"
-#include "ga_engine.h"
-#include "logger.h"
-#include "model.h"
-#include "data.h"
-#include "user_sim_models.h"
+#include "valkyrie_engine.h"
 
 
 
 int main()
 {
+	ValkyrieEngine DroneTuner;
+
+	FCSOptimizer_Init_t initStruct;
+
+	FCSOptimizer_Handle hRollTuner = DroneTuner.newOptimizer(initStruct);
+
+	DroneTuner.start(hRollTuner);
 
 
+	DroneTuner.waitForCompletion();
 	return 0;
 }

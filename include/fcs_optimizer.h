@@ -18,11 +18,15 @@
 
 /* Local Includes */
 #include "ga_config.h"
-#include "ga_mop_steps.h"
+#include "ga_steps.h"
 #include "model.h"
 #include "logger.h"
 #include "data.h"
-#include "host_memory.h"
+
+/* Forward Declarations */
+class FCSOptimizer;
+typedef boost::shared_ptr<FCSOptimizer> FCSOptimizerClass_sPtr;
+typedef boost::shared_ptr<boost::thread> Thread_sPtr;
 
 /*-----------------------------------------------
 * Genetic Algorithm "Stuff"
@@ -140,8 +144,9 @@ struct FCSOptimizer_Handle_t
 {
 	FCSOptimizer_Init_t Init;		/* Initialization settings for the engine */
 	FCSOptimizer_Output_t Output;	/* Output data metrics for the optimization run */
-	FCSOptimizer_sPtr Engine;		/* Instance of an optimization engine */
-	boost::thread Thread;			/* Reference to the thread running the optimizerEngine */
+	FCSOptimizerClass_sPtr Engine;	/* Instance of an optimization engine */
+	Thread_sPtr Thread;				/* Reference to the thread running the optimizerEngine */
+	GA_Status Status;				/* Current status of the tuner algorithm */
 };
 typedef boost::shared_ptr<FCSOptimizer_Handle_t> FCSOptimizer_Handle;
 
@@ -151,27 +156,29 @@ typedef boost::shared_ptr<FCSOptimizer_Handle_t> FCSOptimizer_Handle;
 /* Helper Functions */
 //////////////////////////////////////////////////////////////////
 extern void calculateMappingCoefficients(mapCoeff_t *mapping, double lower, double upper);
-
+extern double enforceResolution(double in, GA_METHOD_Resolution res);
 //////////////////////////////////////////////////////////////////
 /* CLASS: FCSOptimizer */
 //////////////////////////////////////////////////////////////////
 class FCSOptimizer
 {
 public:
-	void init();
-	void reset();
+// 	void init();
+// 	void reset();
 
-	void run(boost::mutex* resultsMutex, GAEngineStatistics_Vec* resultsStatistics, 
-		GAEngineStatistics_Vec* avgResultsStatistics, int threadIndex, int trialNum);
+// 	void run(boost::mutex* resultsMutex, GAEngineStatistics_Vec* resultsStatistics, 
+// 		GAEngineStatistics_Vec* avgResultsStatistics, int threadIndex, int trialNum);
+
+	void run();
 
 	/* Configuration Functions */
-	void registerOutputMutex(boost::mutex* printMutex);
-	void registerName(std::string optimizerName);
-	void registerObjective(PID_ControlGoals_sPtr pidGoals, std::string pidName);
-	void registerModel(GAModel_sPtr modelType, SS_NLTIV_ModelBase_sPtr model, std::string name, int processor);
-	void registerConvergence(GA_ConverganceCriteria_sPtr convLimits, std::string convName);
+// 	void registerOutputMutex(boost::mutex* printMutex);
+// 	void registerName(std::string optimizerName);
+// 	void registerObjective(PID_ControlGoals_sPtr pidGoals, std::string pidName);
+// 	void registerModel(GAModel_sPtr modelType, SS_NLTIV_ModelBase_sPtr model, std::string name, int processor);
+// 	void registerConvergence(GA_ConverganceCriteria_sPtr convLimits, std::string convName);
 
-	FCSOptimizer(GA_RuntimeConfig alg_methods);
+	FCSOptimizer();
 	~FCSOptimizer();
 
 private:
@@ -262,6 +269,6 @@ private:
 	void printResultHighlights(double best_fit, int best_fit_idx);
 
 };
-typedef std::shared_ptr<FCSOptimizer> FCSOptimizer_sPtr;
+
 
 #endif /* !GA_H_ */

@@ -20,18 +20,4 @@ double uniformRandomNumber(double lower_bound, double upper_bound)
 	return uniform_number(rng);
 }
 
-double enforceResolution(double in, GA_Resolution res)
-{
-	double fracPart = 0.0;
-	double intPart = 0.0;
 
-	/* Decompose the data into integral and fractional parts */
-	fracPart = std::modf(in, &intPart);
-
-	/* Shift up, truncate, shift down */
-	fracPart *= std::pow(10.0, (int)res);
-	fracPart = floor(fracPart);
-	fracPart /= std::pow(10.0, (int)res);
-
-	return (intPart + fracPart);
-}
