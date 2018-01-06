@@ -1,5 +1,7 @@
 #include "fcs_optimizer.h"
 
+using namespace boost::interprocess;
+
 //////////////////////////////////////////////////////////////////
 /* Helper Functions */
 //////////////////////////////////////////////////////////////////
@@ -91,27 +93,74 @@ FCSOptimizer::~FCSOptimizer()
 void FCSOptimizer::run()
 {
 	std::cout << "Hello from thread " << boost::this_thread::get_id() << "!" << std::endl;
+	
+	//Do some initialization here 
+	unsigned int commandPriority;
+	message_queue::size_type received_size;
+	int command;
+	/* Infinitely run until some stop condition is met */
+	for(;;)
+	{
+		//Check for new commands from the main thread every few milliseconds 
+		if (commandQueue->try_receive(&command, sizeof(command), received_size, commandPriority))
+		{
+			std::cout << "I received command: " << command << std::endl;
+
+			if (command == STOP)
+				break;
+		}
+
+		//Proceed another generation forward 
+
+
+		/* Allow other waiting threads to run */
+		boost::this_thread::yield();
+	}
+
+	/* Do some minor post processing here */
+	//What should I do? 
 }
 
-// void FCSOptimizer::init()
-// {
-// 	/* Allocate memory for CPU and GPU operations */
-// 	//initMemory();
-// 
-// 	/* Call the specific model initializer */
-// 	//initModel();
-// 
-// 	std::cout << "Initialized " << ga_instance_model_name << " " << ga_instance_optimizer_name << std::endl;
-// 	optimizer_initialized = true;
-// }
-// 
-// void FCSOptimizer::reset()
-// {
-// 	currentStatus = GA_IDLE;
-// 	currentIteration = 0;
-// 
-// 	//Need to reset the CPU memory to zero...GPU I think can just be freed?
-// }
+void FCSOptimizer::init(FCSOptimizer_Init_t initializationSettings)
+{
+	settings = initializationSettings;
+
+	/* Allocate container sizes before algorithm begins */
+	initMemory();
+
+	/* Call the specific model initializer */
+	initModel();
+
+	/* Create a new message queue for receiving commands from the main thread.
+	This WILL destroy anything the main thread has created, so use this first and then
+	create the main thread's interface after. */
+	try
+	{
+		//Erase the previous message queue if it exists 
+		message_queue::remove(settings.messageQueueName.data());
+
+		//Create a fresh queue
+		commandQueue = new message_queue(
+			create_only,						/* Only create the queue */
+			settings.messageQueueName.data(),	/* Grab the user specified queue name */
+			10,									/* Limit the queue size to 10 */
+			sizeof(int)							/* The queue will hold integers */
+			);
+	}
+	catch (interprocess_exception &ex)
+	{
+		//TODO: Use the console mutex here to make sure the output is readable 
+		std::cout << ex.what() << " in thread " << boost::this_thread::get_id() << std::endl;
+		std::cout << "Unable to properly use the queue. Ignoring all messages from main thread." << std::endl;
+	}
+
+	optimizer_initialized = true;
+}
+
+void FCSOptimizer::requestOutput(FCSOptimizer_Output_t& output)
+{
+
+}
 
 // void FCSOptimizer::run(boost::mutex* resultsMutex, GAEngineStatistics_Vec* resultsStatistics, 
 // 	GAEngineStatistics_Vec* avgResultsStatistics, int threadIndex, int trialNum)
@@ -155,110 +204,48 @@ void FCSOptimizer::run()
 // 
 // 	resultsMutex->unlock();
 // }
-// 
-// void FCSOptimizer::registerOutputMutex(boost::mutex* printMutex)
-// {
-// 	print_to_console_mutex = printMutex;
-// }
-// 
-// void FCSOptimizer::registerName(std::string optimizerName)
-// {
-// 	ga_instance_optimizer_name = optimizerName;
-// }
-// 
-// void FCSOptimizer::registerObjective(PID_ControlGoals_sPtr pidGoals, std::string pidName)
-// {
-// 	ga_instance_pid_config_data = pidGoals;
-// 	ga_instance_pid_name = pidName;
-// }
-// 
-// void FCSOptimizer::registerModel(GAModel_sPtr modelType, SS_NLTIV_ModelBase_sPtr model, std::string name, int processor)
-// {
-// 	modelBase = modelType;
-// 	ss_user_system_model = model;
-// 	ga_instance_model_name = name;
-// 	compute_processor = processor;
-// }
-// 
-// void FCSOptimizer::registerConvergence(GA_ConverganceCriteria_sPtr convLimits, std::string convName)
-// {
-// 	ga_instance_convergence_criteria = convLimits;
-// 	ga_instance_convergence_name = convName;
-// }
-// 
-// /*-----------------------------------------------
-// * Private Functions
-// *-----------------------------------------------*/
-// void FCSOptimizer::initMemory()
-// {
-// 	if (compute_processor == USE_GPU || compute_processor == USE_CPU)
-// 	{
-// 		/* Allocate CPU memory */
-// 		const size_t popSize = ga_instance_convergence_criteria->populationSize;
-// 		hData.sim_data.population_size = popSize;
-// 
-// 		/* Simulation Input Data */
-// 		hData.pid_data.Kp.resize(popSize);
-// 		hData.pid_data.Ki.resize(popSize);
-// 		hData.pid_data.Kd.resize(popSize);
-// 
-// 
-// 		/* Expand the results logging containers */
-// 		SS_StepPerformance.resize(hData.sim_data.population_size);
-// 		SS_FitnessValues.resize(hData.sim_data.population_size);
-// 		parentSelection.resize(hData.sim_data.population_size);
-// 		bredChromosomes.Kp.resize(hData.sim_data.population_size);
-// 		bredChromosomes.Ki.resize(hData.sim_data.population_size);
-// 		bredChromosomes.Kd.resize(hData.sim_data.population_size);
-// 	}
-// 	else
-// 		std::cout << "Cannot allocate memory. No valid processor selected." << std::endl;
-// }
-// 
-// void FCSOptimizer::deInitMemory()
-// {
+
+/*-----------------------------------------------
+* Private Functions
+*-----------------------------------------------*/
+void FCSOptimizer::initMemory()
+{
+// 	const size_t popSize = ga_instance_convergence_criteria->populationSize;
 // 	
-// }
+// 	hData.sim_data.population_size = popSize;
 // 
-// void FCSOptimizer::initModel()
-// {
-// 	/* State Space Model */
-// 	if (ga_instance_model_name == SSModelName)
-// 	{
-// 		/* Down-cast the generic GA_Model base class into the specific model
-// 		type used for executing the algorithm. */
-// 		modelSS = boost::dynamic_pointer_cast<StateSpaceModel>(modelBase);
-// 		modelSS->init();
+// 	/* Simulation Input Data */
+// 	hData.pid_data.Kp.resize(popSize);
+// 	hData.pid_data.Ki.resize(popSize);
+// 	hData.pid_data.Kd.resize(popSize);
 // 
-// 		//TODO: Pass this out to the MAIN func.
-// 		modelSS->assignSimulationTimeConstraints(0.01, 0.0, 1.5);
-// 	}
-// 
-// 	/* Dynamic Model*/
-// 	if (ga_instance_model_name == DYModelName)
-// 	{
-// 		modelDY = std::dynamic_pointer_cast<DynamicModel>(modelBase);
-// 		modelDY->init();
-// 	}
-// 
-// 	/* Live Model */
-// 	if (ga_instance_model_name == LVModelName)
-// 	{
-// 		modelLV = std::dynamic_pointer_cast<LiveModel>(modelBase);
-// 		modelLV->init();
-// 	}
-// }
-// 
+// 	/* Expand the results logging containers */
+// 	SS_StepPerformance.resize(hData.sim_data.population_size);
+// 	SS_FitnessValues.resize(hData.sim_data.population_size);
+// 	parentSelection.resize(hData.sim_data.population_size);
+// 	bredChromosomes.Kp.resize(hData.sim_data.population_size);
+// 	bredChromosomes.Ki.resize(hData.sim_data.population_size);
+// 	bredChromosomes.Kd.resize(hData.sim_data.population_size);
+}
+
+void FCSOptimizer::initModel()
+{
+	/* State Space Model */
+	
+
+	/* Neural Network Model */
+}
+
 // void FCSOptimizer::initPopulation()
 // {
-// 	double kpl = ga_instance_pid_config_data->pid_limits.Kp_limits_lower;
-// 	double kpu = ga_instance_pid_config_data->pid_limits.Kp_limits_upper;
+// 	double kpl = ga_instance_pid_config_data->tuningLimits.Kp_limits_lower;
+// 	double kpu = ga_instance_pid_config_data->tuningLimits.Kp_limits_upper;
 // 
-// 	double kil = ga_instance_pid_config_data->pid_limits.Ki_limits_lower;
-// 	double kiu = ga_instance_pid_config_data->pid_limits.Ki_limits_upper;
+// 	double kil = ga_instance_pid_config_data->tuningLimits.Ki_limits_lower;
+// 	double kiu = ga_instance_pid_config_data->tuningLimits.Ki_limits_upper;
 // 
-// 	double kdl = ga_instance_pid_config_data->pid_limits.Kd_limits_lower;
-// 	double kdu = ga_instance_pid_config_data->pid_limits.Kd_limits_upper;
+// 	double kdl = ga_instance_pid_config_data->tuningLimits.Kd_limits_lower;
+// 	double kdu = ga_instance_pid_config_data->tuningLimits.Kd_limits_upper;
 // 
 // 	for (size_t i = 0; i < hData.sim_data.population_size; i++)
 // 	{
@@ -494,14 +481,14 @@ void FCSOptimizer::run()
 // 		*-----------------------------------*/
 // 		//Random, elite, copy of existing solutions?
 // 
-// 		double kpl = ga_instance_pid_config_data->pid_limits.Kp_limits_lower;
-// 		double kpu = ga_instance_pid_config_data->pid_limits.Kp_limits_upper;
+// 		double kpl = ga_instance_pid_config_data->tuningLimits.Kp_limits_lower;
+// 		double kpu = ga_instance_pid_config_data->tuningLimits.Kp_limits_upper;
 // 
-// 		double kil = ga_instance_pid_config_data->pid_limits.Ki_limits_lower;
-// 		double kiu = ga_instance_pid_config_data->pid_limits.Ki_limits_upper;
+// 		double kil = ga_instance_pid_config_data->tuningLimits.Ki_limits_lower;
+// 		double kiu = ga_instance_pid_config_data->tuningLimits.Ki_limits_upper;
 // 
-// 		double kdl = ga_instance_pid_config_data->pid_limits.Kd_limits_lower;
-// 		double kdu = ga_instance_pid_config_data->pid_limits.Kd_limits_upper;
+// 		double kdl = ga_instance_pid_config_data->tuningLimits.Kd_limits_lower;
+// 		double kdu = ga_instance_pid_config_data->tuningLimits.Kd_limits_upper;
 // 
 // 		/* Pure random generation of replacement members */
 // 		for (int i = 0; i < rejectionIdxs.size(); i++)
@@ -722,7 +709,7 @@ void FCSOptimizer::run()
 // 	* Save best result from each round
 // 	*-----------------------------------------------*/
 // 	double iteration_bestFitGlobal = 0.0;
-// 	PID_Fitness iteration_bestFit;
+// 	PID_FitnessScores iteration_bestFit;
 // 
 // 	for (int member = 0; member < hData.sim_data.population_size; member++)
 // 	{
@@ -851,7 +838,7 @@ void FCSOptimizer::run()
 // 		<< ""
 // 		<< std::endl;
 // 	std::cout << "POS Target:\t\t"
-// 		<< ga_instance_pid_config_data->performance_goals.percentOvershoot_goal*100.0
+// 		<< ga_instance_pid_config_data->performanceGoals.percentOvershoot_goal*100.0
 // 		<< "%"
 // 		<< std::endl;
 // 
@@ -867,7 +854,7 @@ void FCSOptimizer::run()
 // 		<< " sec"
 // 		<< std::endl;
 // 	std::cout << "RiseTime Target:\t"
-// 		<< ga_instance_pid_config_data->performance_goals.riseTime_goal
+// 		<< ga_instance_pid_config_data->performanceGoals.riseTime_goal
 // 		<< " sec"
 // 		<< std::endl;
 // 
@@ -883,7 +870,7 @@ void FCSOptimizer::run()
 // 		<< " sec"
 // 		<< std::endl;
 // 	std::cout << "SettleTime Target:\t"
-// 		<< ga_instance_pid_config_data->performance_goals.settlingTime_goal
+// 		<< ga_instance_pid_config_data->performanceGoals.settlingTime_goal
 // 		<< " sec"
 // 		<< std::endl;
 // 
@@ -900,7 +887,7 @@ void FCSOptimizer::run()
 // 		<< std::endl;
 // 	std::cout << "SSErr Target:\t\t"
 // 		<< "+/- "
-// 		<< ga_instance_pid_config_data->performance_goals.steadyStateError_goal
+// 		<< ga_instance_pid_config_data->performanceGoals.steadyStateError_goal
 // 		<< ""
 // 		<< std::endl;
 // 

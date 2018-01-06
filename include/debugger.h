@@ -17,7 +17,7 @@
 #include <boost/container/vector.hpp>
 
 /* Local Includes (Mainly just so functions can understand types) */
-#include "data.h"
+#include "types.h"
 
 template <typename T>
 void prettyPrint(const Eigen::EigenBase<T> matrix, std::string matrix_name);

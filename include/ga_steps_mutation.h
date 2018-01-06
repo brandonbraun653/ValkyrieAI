@@ -15,7 +15,7 @@
 /* Local Includes */
 #include "ga_config.h"
 #include "ga_helper.h"
-#include "data.h"
+#include "types.h"
 
 ///////////////////////////////////////////////////
 /* CLASS:  MutateProbGenerator */
@@ -38,7 +38,7 @@
 // class BitFlipMutator
 // {
 // public:
-// 	void mutate(hPID_Chromosomes* in_bredChrom, GA_ConverganceCriteria_sPtr in_convgCriteria, PID_ControlGoals_sPtr in_config,
+// 	void mutate(hPID_Chromosomes* in_bredChrom, FCSOptimizer_AdvConstraints_sPtr in_convgCriteria, PID_ControlSettings_sPtr in_config,
 // 		hPID_DataVector* out_pidVals, mapCoeff_t* in_kp, mapCoeff_t* in_ki, mapCoeff_t* in_kd);
 // 
 // 	BitFlipMutator(GA_RunMode execution_type, GA_MutateProbabilityMethod mutationProb_type);
@@ -49,8 +49,8 @@
 // 
 // 	hPID_DataVector* cm_data;
 // 	hPID_Chromosomes* cm_chrom;
-// 	GA_ConverganceCriteria_sPtr cm_convergence;
-// 	PID_ControlGoals_sPtr cm_config;
+// 	FCSOptimizer_AdvConstraints_sPtr cm_convergence;
+// 	PID_ControlSettings_sPtr cm_config;
 // 
 // 	mapCoeff_t* mapCM_Kp;
 // 	mapCoeff_t* mapCM_Ki;
@@ -72,7 +72,7 @@
 // class AddSubMutator
 // {
 // public:
-// 	void mutate(hPID_Chromosomes* in_bredChrom, GA_ConverganceCriteria_sPtr in_convgCriteria, PID_ControlGoals_sPtr in_config,
+// 	void mutate(hPID_Chromosomes* in_bredChrom, FCSOptimizer_AdvConstraints_sPtr in_convgCriteria, PID_ControlSettings_sPtr in_config,
 // 		hPID_DataVector* out_pidVals, mapCoeff_t* in_kp, mapCoeff_t* in_ki, mapCoeff_t* in_kd);
 // 
 // 	AddSubMutator(GA_RunMode execution_type, GA_MutateProbabilityMethod mutationProb_type, GA_Resolution res_type);
@@ -84,8 +84,8 @@
 // 
 // 	hPID_DataVector* as_data;
 // 	hPID_Chromosomes* as_chrom;
-// 	GA_ConverganceCriteria_sPtr as_convergence;
-// 	PID_ControlGoals_sPtr as_config;
+// 	FCSOptimizer_AdvConstraints_sPtr as_convergence;
+// 	PID_ControlSettings_sPtr as_config;
 // 
 // 	mapCoeff_t* mapAS_Kp;
 // 	mapCoeff_t* mapAS_Ki;

@@ -71,7 +71,7 @@
 // /*-----------------------------------------------
 // * Public Functions
 // *-----------------------------------------------*/
-// void BitFlipMutator::mutate(hPID_Chromosomes* in_bredChrom, GA_ConverganceCriteria_sPtr in_convgCriteria, PID_ControlGoals_sPtr in_config,
+// void BitFlipMutator::mutate(hPID_Chromosomes* in_bredChrom, FCSOptimizer_AdvConstraints_sPtr in_convgCriteria, PID_ControlSettings_sPtr in_config,
 // 	hPID_DataVector* out_pidVals, mapCoeff_t* in_kp, mapCoeff_t* in_ki, mapCoeff_t* in_kd)
 // {
 // 	cm_data = out_pidVals;
@@ -153,10 +153,10 @@
 // 		
 // 
 // 		/* Force boundaries */
-// 		if (cm_data->Kp.data()[member] > cm_config->pid_limits.Kp_limits_upper)
-// 			cm_data->Kp.data()[member] = cm_config->pid_limits.Kp_limits_upper;
-// 		if (cm_data->Kp.data()[member] < cm_config->pid_limits.Kp_limits_lower) 
-// 			cm_data->Kp.data()[member] = cm_config->pid_limits.Kp_limits_lower; 
+// 		if (cm_data->Kp.data()[member] > cm_config->tuningLimits.Kp_limits_upper)
+// 			cm_data->Kp.data()[member] = cm_config->tuningLimits.Kp_limits_upper;
+// 		if (cm_data->Kp.data()[member] < cm_config->tuningLimits.Kp_limits_lower) 
+// 			cm_data->Kp.data()[member] = cm_config->tuningLimits.Kp_limits_lower; 
 // 	}
 // }
 // 
@@ -186,10 +186,10 @@
 // 
 // 
 // 		/* Force boundaries */
-// 		if (cm_data->Ki.data()[member] > cm_config->pid_limits.Ki_limits_upper)
-// 			cm_data->Ki.data()[member] = cm_config->pid_limits.Ki_limits_upper;
-// 		if (cm_data->Ki.data()[member] < cm_config->pid_limits.Ki_limits_lower)
-// 			cm_data->Ki.data()[member] = cm_config->pid_limits.Ki_limits_lower;
+// 		if (cm_data->Ki.data()[member] > cm_config->tuningLimits.Ki_limits_upper)
+// 			cm_data->Ki.data()[member] = cm_config->tuningLimits.Ki_limits_upper;
+// 		if (cm_data->Ki.data()[member] < cm_config->tuningLimits.Ki_limits_lower)
+// 			cm_data->Ki.data()[member] = cm_config->tuningLimits.Ki_limits_lower;
 // 	}
 // }
 // 
@@ -219,10 +219,10 @@
 // 
 // 
 // 		/* Force boundaries */
-// 		if (cm_data->Kd.data()[member] > cm_config->pid_limits.Kd_limits_upper)
-// 			cm_data->Kd.data()[member] = cm_config->pid_limits.Kd_limits_upper;
-// 		if (cm_data->Kd.data()[member] < cm_config->pid_limits.Kd_limits_lower)
-// 			cm_data->Kd.data()[member] = cm_config->pid_limits.Kd_limits_lower;
+// 		if (cm_data->Kd.data()[member] > cm_config->tuningLimits.Kd_limits_upper)
+// 			cm_data->Kd.data()[member] = cm_config->tuningLimits.Kd_limits_upper;
+// 		if (cm_data->Kd.data()[member] < cm_config->tuningLimits.Kd_limits_lower)
+// 			cm_data->Kd.data()[member] = cm_config->tuningLimits.Kd_limits_lower;
 // 	}
 // }
 // 
@@ -246,7 +246,7 @@
 // /*-----------------------------------------------
 // * Public Functions
 // *-----------------------------------------------*/
-// void AddSubMutator::mutate(hPID_Chromosomes* in_bredChrom, GA_ConverganceCriteria_sPtr in_convgCriteria, PID_ControlGoals_sPtr in_config,
+// void AddSubMutator::mutate(hPID_Chromosomes* in_bredChrom, FCSOptimizer_AdvConstraints_sPtr in_convgCriteria, PID_ControlSettings_sPtr in_config,
 // 	hPID_DataVector* out_pidVals, mapCoeff_t* in_kp, mapCoeff_t* in_ki, mapCoeff_t* in_kd)
 // {
 // 	as_data = out_pidVals;
@@ -314,8 +314,8 @@
 // 
 // 	/* Configure the range of mutation severity */
 // 	std::uniform_real_distribution<double> kp_Adjustment(
-// 		-maxPct*as_config->pid_limits.Kp_limits_upper,
-// 		maxPct*as_config->pid_limits.Kp_limits_upper);
+// 		-maxPct*as_config->tuningLimits.Kp_limits_upper,
+// 		maxPct*as_config->tuningLimits.Kp_limits_upper);
 // 
 // 
 // 	for (int member = 0; member < as_chrom->Kp.size(); member++)
@@ -328,10 +328,10 @@
 // 			as_data->Kp.data()[member] += kp_Adjustment(rng);
 // 
 // 		/* Force boundaries */
-// 		if (as_data->Kp.data()[member] > as_config->pid_limits.Kp_limits_upper) //Greater than max
-// 			as_data->Kp.data()[member] = as_config->pid_limits.Kp_limits_upper; //	Set as max
-// 		if (as_data->Kp.data()[member] < as_config->pid_limits.Kp_limits_lower) //Less than min
-// 			as_data->Kp.data()[member] = as_config->pid_limits.Kp_limits_lower; //  Set as min
+// 		if (as_data->Kp.data()[member] > as_config->tuningLimits.Kp_limits_upper) //Greater than max
+// 			as_data->Kp.data()[member] = as_config->tuningLimits.Kp_limits_upper; //	Set as max
+// 		if (as_data->Kp.data()[member] < as_config->tuningLimits.Kp_limits_lower) //Less than min
+// 			as_data->Kp.data()[member] = as_config->tuningLimits.Kp_limits_lower; //  Set as min
 // 	}
 // }
 // 
@@ -347,8 +347,8 @@
 // 
 // 	/* Configure the range of mutation severity */
 // 	std::uniform_real_distribution<double> ki_Adjustment(
-// 		-maxPct*as_config->pid_limits.Ki_limits_upper,
-// 		maxPct*as_config->pid_limits.Ki_limits_upper);
+// 		-maxPct*as_config->tuningLimits.Ki_limits_upper,
+// 		maxPct*as_config->tuningLimits.Ki_limits_upper);
 // 
 // 	for (int member = 0; member < as_chrom->Ki.size(); member++)
 // 	{
@@ -360,10 +360,10 @@
 // 			as_data->Ki.data()[member] += ki_Adjustment(rng);
 // 
 // 		/* Force boundaries */
-// 		if (as_data->Ki.data()[member] > as_config->pid_limits.Ki_limits_upper)
-// 			as_data->Ki.data()[member] = as_config->pid_limits.Ki_limits_upper;
-// 		if (as_data->Ki.data()[member] < as_config->pid_limits.Ki_limits_lower)
-// 			as_data->Ki.data()[member] = as_config->pid_limits.Ki_limits_lower;
+// 		if (as_data->Ki.data()[member] > as_config->tuningLimits.Ki_limits_upper)
+// 			as_data->Ki.data()[member] = as_config->tuningLimits.Ki_limits_upper;
+// 		if (as_data->Ki.data()[member] < as_config->tuningLimits.Ki_limits_lower)
+// 			as_data->Ki.data()[member] = as_config->tuningLimits.Ki_limits_lower;
 // 	}
 // }
 // 
@@ -379,8 +379,8 @@
 // 
 // 	/* Configure the range of mutation severity */
 // 	std::uniform_real_distribution<double> kd_Adjustment(
-// 		-maxPct*as_config->pid_limits.Kd_limits_upper,
-// 		maxPct*as_config->pid_limits.Kd_limits_upper);
+// 		-maxPct*as_config->tuningLimits.Kd_limits_upper,
+// 		maxPct*as_config->tuningLimits.Kd_limits_upper);
 // 
 // 
 // 	for (int member = 0; member < as_chrom->Kd.size(); member++)
@@ -393,10 +393,10 @@
 // 			as_data->Kd.data()[member] += kd_Adjustment(rng);
 // 
 // 		/* Force boundaries */
-// 		if (as_data->Kd.data()[member] > as_config->pid_limits.Kd_limits_upper)
-// 			as_data->Kd.data()[member] = as_config->pid_limits.Kd_limits_upper;
-// 		if (as_data->Kd.data()[member] < as_config->pid_limits.Kd_limits_lower)
-// 			as_data->Kd.data()[member] = as_config->pid_limits.Kd_limits_lower;
+// 		if (as_data->Kd.data()[member] > as_config->tuningLimits.Kd_limits_upper)
+// 			as_data->Kd.data()[member] = as_config->tuningLimits.Kd_limits_upper;
+// 		if (as_data->Kd.data()[member] < as_config->tuningLimits.Kd_limits_lower)
+// 			as_data->Kd.data()[member] = as_config->tuningLimits.Kd_limits_lower;
 // 
 // 	}
 // }

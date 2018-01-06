@@ -11,7 +11,7 @@
 
 /* Local Includes */
 #include "ga_config.h"
-#include "data.h"
+#include "types.h"
 
 class StepResponseSimulator
 {

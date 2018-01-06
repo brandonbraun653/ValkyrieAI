@@ -10,7 +10,7 @@
 
 /* Local Includes */
 #include "ga_config.h"
-#include "data.h"
+#include "types.h"
 
 extern uint16_t data2Chromosome(mapCoeff_t *mapping, double data);
 extern double chromosome2Data(mapCoeff_t *mapping, uint16_t chromosome);

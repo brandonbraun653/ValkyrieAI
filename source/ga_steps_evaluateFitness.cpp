@@ -26,7 +26,7 @@
 // /*-----------------------------------------------
 // * Public Functions
 // *-----------------------------------------------*/
-// void WeightedSum::calculateFitness(StepPerformance_Vec input_data, PID_ControlGoals_sPtr input_goals, PIDFitness_Vec* output_fitness)
+// void WeightedSum::calculateFitness(StepPerformance_Vec input_data, PID_ControlSettings_sPtr input_goals, PIDFitness_Vec* output_fitness)
 // {
 // 	ws_data = input_data;			//Explicit copy
 // 	ws_goals = input_goals;			//Explicit copy
@@ -48,15 +48,15 @@
 // /*-----------------------------------------------
 // * Private Functions
 // *-----------------------------------------------*/
-// PID_Fitness WeightedSum::calculateMemberFit(int memberNum, bool dataValid, double POS, double TS, double TR, double SSERR)
+// PID_FitnessScores WeightedSum::calculateMemberFit(int memberNum, bool dataValid, double POS, double TS, double TR, double SSERR)
 // {
-// 	PID_Fitness localFit;
+// 	PID_FitnessScores localFit;
 // 	localFit.fitness_performance = ws_data.data()[memberNum];
 // 	
 // 	if (dataValid)
 // 	{
 // 		/* Make a copy of all the user goals */
-// 		PID_ControlGoals_sPtr lws_goals = std::make_shared<PID_ControlGoals>(*ws_goals);
+// 		PID_ControlSettings_sPtr lws_goals = std::make_shared<PID_ControlSettings>(*ws_goals);
 // 
 // 		/* Create some additional computational variables */
 // 		localFit.global_fitness = 0.0;
@@ -69,7 +69,7 @@
 // 		/*-----------------------------------------------
 // 		* Percent Overshoot
 // 		*-----------------------------------------------*/
-// 		if (POS != -1.0 && lws_goals->performance_goals.percentOvershoot_goal != -1.0)
+// 		if (POS != -1.0 && lws_goals->performanceGoals.percentOvershoot_goal != -1.0)
 // 		{
 // 			if (POS == 0.0)
 // 			{
@@ -86,18 +86,18 @@
 // 				#endif
 // 
 // 				// I guess this can represent percent undershoot as well...
-// 				error = abs(POS) - 100.0*lws_goals->performance_goals.percentOvershoot_goal;
-// 				abs_pct_error = abs(error) - (100.0*lws_goals->performance_goals.percentOvershoot_goal);
+// 				error = abs(POS) - 100.0*lws_goals->performanceGoals.percentOvershoot_goal;
+// 				abs_pct_error = abs(error) - (100.0*lws_goals->performanceGoals.percentOvershoot_goal);
 // 
 // 				/* If we got negative error or are within tolerance, this is good and the solution
 // 				is given a perfect score. If not, figure out how to derate accordingly. */
-// 				if (error <= 0.0 || abs_pct_error < lws_goals->performance_tolerance.percentOvershoot_pcntTol)
+// 				if (error <= 0.0 || abs_pct_error < lws_goals->performanceTolerance.percentOvershoot_pcntTol)
 // 					localFit.percentOvershoot_fitness = perfect_fit_val;
 // 
 // 				/* Derate the solution because it's baaaad. */
 // 				else
 // 				{
-// 					abs_error = abs_pct_error*lws_goals->performance_goals.percentOvershoot_goal;
+// 					abs_error = abs_pct_error*lws_goals->performanceGoals.percentOvershoot_goal;
 // 					localFit.percentOvershoot_fitness = perfect_fit_val*exp(-1.0*abs_error);
 // 				}
 // 			}
@@ -108,7 +108,7 @@
 // 		/*-----------------------------------------------
 // 		* Settling Time
 // 		*-----------------------------------------------*/
-// 		if (TS != -1.0 && lws_goals->performance_goals.settlingTime_goal != -1.0)
+// 		if (TS != -1.0 && lws_goals->performanceGoals.settlingTime_goal != -1.0)
 // 		{
 // 			if (TS == 0.0)
 // 			{
@@ -117,15 +117,15 @@
 // 			}
 // 			else
 // 			{
-// 				error = TS - lws_goals->performance_goals.settlingTime_goal;
-// 				abs_pct_error = abs(error) / lws_goals->performance_goals.settlingTime_goal;
+// 				error = TS - lws_goals->performanceGoals.settlingTime_goal;
+// 				abs_pct_error = abs(error) / lws_goals->performanceGoals.settlingTime_goal;
 // 
-// 				if (error <= 0.0 || abs_pct_error < lws_goals->performance_tolerance.settlingTime_pcntTol)
+// 				if (error <= 0.0 || abs_pct_error < lws_goals->performanceTolerance.settlingTime_pcntTol)
 // 					localFit.settlingTime_fitness = perfect_fit_val;
 // 
 // 				else
 // 				{
-// 					abs_error = abs_pct_error*lws_goals->performance_goals.settlingTime_goal;
+// 					abs_error = abs_pct_error*lws_goals->performanceGoals.settlingTime_goal;
 // 					localFit.settlingTime_fitness = perfect_fit_val*exp(-1.0*abs_error);
 // 				}
 // 			}
@@ -136,17 +136,17 @@
 // 		/*-----------------------------------------------
 // 		* Rise Time
 // 		*-----------------------------------------------*/
-// 		if (TR != -1.0 && lws_goals->performance_goals.riseTime_goal != -1.0)
+// 		if (TR != -1.0 && lws_goals->performanceGoals.riseTime_goal != -1.0)
 // 		{
-// 			error = TR - lws_goals->performance_goals.riseTime_goal;
-// 			abs_pct_error = abs(error) / lws_goals->performance_goals.riseTime_goal;
+// 			error = TR - lws_goals->performanceGoals.riseTime_goal;
+// 			abs_pct_error = abs(error) / lws_goals->performanceGoals.riseTime_goal;
 // 
-// 			if (error <= 0.0 || abs_pct_error < lws_goals->performance_tolerance.riseTime_pcntTol)
+// 			if (error <= 0.0 || abs_pct_error < lws_goals->performanceTolerance.riseTime_pcntTol)
 // 				localFit.riseTime_fitness = perfect_fit_val;
 // 
 // 			else
 // 			{
-// 				abs_error = abs_pct_error*lws_goals->performance_goals.riseTime_goal;
+// 				abs_error = abs_pct_error*lws_goals->performanceGoals.riseTime_goal;
 // 				localFit.riseTime_fitness = perfect_fit_val*exp(-1.0*abs_error);
 // 			}
 // 			localFit.global_fitness += localFit.riseTime_fitness;
@@ -155,17 +155,17 @@
 // 		/*-----------------------------------------------
 // 		* Steady State Error
 // 		*-----------------------------------------------*/
-// 		if (SSERR != -1.0 && lws_goals->performance_goals.steadyStateError_goal != -1.0)
+// 		if (SSERR != -1.0 && lws_goals->performanceGoals.steadyStateError_goal != -1.0)
 // 		{
-// 			error = abs(SSERR) - lws_goals->performance_goals.steadyStateError_goal;
-// 			abs_pct_error = abs(error) / lws_goals->performance_goals.steadyStateError_goal;
+// 			error = abs(SSERR) - lws_goals->performanceGoals.steadyStateError_goal;
+// 			abs_pct_error = abs(error) / lws_goals->performanceGoals.steadyStateError_goal;
 // 
-// 			if (error <= 0.0 || abs_pct_error < lws_goals->performance_tolerance.steadyStateError_pcntTol)
+// 			if (error <= 0.0 || abs_pct_error < lws_goals->performanceTolerance.steadyStateError_pcntTol)
 // 				localFit.steadyStateError_fitness = perfect_fit_val;
 // 
 // 			else
 // 			{
-// 				abs_error = abs_pct_error*lws_goals->performance_goals.steadyStateError_goal;
+// 				abs_error = abs_pct_error*lws_goals->performanceGoals.steadyStateError_goal;
 // 
 // 				/* The value is shifted here to enforce a harsher penalty on a solution that 
 // 				   does not quite hit the steady state error goal & tolerance. It was found 

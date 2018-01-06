@@ -8,10 +8,12 @@
 
 /* Boost Includes */
 #include <boost/thread.hpp>
+#include <boost/bind.hpp>
 #include <boost/container/vector.hpp>
+#include <boost/interprocess/ipc/message_queue.hpp>
 
 /* Local Includes */
-#include "data.h"
+#include "types.h"
 #include "fcs_optimizer.h"
 #include "model.h"
 
@@ -131,8 +133,8 @@ private:
 // public:
 // 	void createOptimizer(std::string optimizer, GA_AlgorithmMethods alg_step_types);
 // 	void attachModel(std::string optimizer, GAModel_sPtr model_type, SS_NLTIV_ModelBase_sPtr model_system, std::string model_name, int processor);
-// 	void attachObjective(std::string optimizer, PID_ControlGoals_sPtr pid_parameters, std::string pid_name);
-// 	void attachConvergence(std::string optimizer, GA_ConverganceCriteria_sPtr convergence_param, std::string convergence_name);
+// 	void attachObjective(std::string optimizer, PID_ControlSettings_sPtr pid_parameters, std::string pid_name);
+// 	void attachConvergence(std::string optimizer, FCSOptimizer_AdvConstraints_sPtr convergence_param, std::string convergence_name);
 // 
 // 	void join(std::string optimizer);
 // 	void joinAll();
@@ -165,9 +167,9 @@ private:
 // 	* Note: shared_ptr chosen to prevent memory leaks
 // 	*----------------------------------------------*/
 // 	std::vector< GAModel_sPtr > model;
-// 	std::vector< PID_ControlGoals_sPtr > pid;
+// 	std::vector< PID_ControlSettings_sPtr > pid;
 // 	std::vector< FCSOptimizerClass_sPtr > ga_optimizer;
-// 	std::vector< GA_ConverganceCriteria_sPtr> ga_convergence;
+// 	std::vector< FCSOptimizer_AdvConstraints_sPtr> ga_convergence;
 // 
 // 	/*----------------------------------------------
 // 	* Containers for various kinds of meta-data. Usually these
@@ -180,8 +182,8 @@ private:
 // 
 // 	void assignOptimizer_name(std::string optimizer, std::string optimizer_name);
 // 	void assignOptimizer_model(std::string optimizer, GAModel_sPtr model, SS_NLTIV_ModelBase_sPtr model_system, int processor);
-// 	void assignOptimizer_objective(std::string optimizer, PID_ControlGoals_sPtr objective);
-// 	void assignOptimizer_convergence(std::string optimizer, GA_ConverganceCriteria_sPtr convergence);
+// 	void assignOptimizer_objective(std::string optimizer, PID_ControlSettings_sPtr objective);
+// 	void assignOptimizer_convergence(std::string optimizer, FCSOptimizer_AdvConstraints_sPtr convergence);
 // };
 
 #endif /* !GA_ENGINE_H_*/

@@ -15,7 +15,7 @@
 /* Local Includes */
 #include "ga_config.h"
 #include "ga_helper.h"
-#include "data.h"
+#include "types.h"
 
 ///////////////////////////////////////////////////
 /* CLASS:  WeightedSum */
@@ -23,18 +23,18 @@
 // class WeightedSum
 // {
 // public:
-// 	void calculateFitness(StepPerformance_Vec input_data, PID_ControlGoals_sPtr input_goals, PIDFitness_Vec* output_fitness);
+// 	void calculateFitness(StepPerformance_Vec input_data, PID_ControlSettings_sPtr input_goals, PIDFitness_Vec* output_fitness);
 // 
 // 	WeightedSum();
 // 	~WeightedSum();
 // private:
 // 
 // 	StepPerformance_Vec ws_data;
-// 	PID_ControlGoals_sPtr ws_goals;
+// 	PID_ControlSettings_sPtr ws_goals;
 // 	PIDFitness_Vec* ws_fitness;
 // 	boost::mutex ws_fitness_mutex;
 // 
-// 	PID_Fitness calculateMemberFit(int memberNum, bool dataValid, double POS, double TS, double TR, double SSERR);
+// 	PID_FitnessScores calculateMemberFit(int memberNum, bool dataValid, double POS, double TS, double TR, double SSERR);
 // 
 // 	void calculate_cpu_single_threaded();
 // 	void calculate_cpu_multi_threaded();

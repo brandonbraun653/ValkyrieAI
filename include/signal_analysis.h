@@ -21,7 +21,7 @@
 
 /* Local Includes */
 #include "ga_config.h"
-#include "data.h"
+#include "types.h"
 #include "debugger.h"
 
 /*-----------------------------------------------

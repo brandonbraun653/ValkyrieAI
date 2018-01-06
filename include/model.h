@@ -24,7 +24,7 @@
 /* Local Includes */
 #include "ga_config.h"
 #include "debugger.h"
-#include "data.h"
+#include "types.h"
 #include "model_simulation.h"
 #include "signal_analysis.h"
 

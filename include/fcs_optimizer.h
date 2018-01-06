@@ -14,14 +14,14 @@
 #include <boost/thread.hpp>
 #include <boost/chrono.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/pointer_cast.hpp>  //TODO: Remove header when finished with removal of old model referencing 
+#include <boost/interprocess/ipc/message_queue.hpp>
 
 /* Local Includes */
 #include "ga_config.h"
 #include "ga_steps.h"
 #include "model.h"
 #include "logger.h"
-#include "data.h"
+#include "types.h"
 
 /* Forward Declarations */
 class FCSOptimizer;
@@ -29,7 +29,7 @@ typedef boost::shared_ptr<FCSOptimizer> FCSOptimizerClass_sPtr;
 typedef boost::shared_ptr<boost::thread> Thread_sPtr;
 
 /*-----------------------------------------------
-* Genetic Algorithm "Stuff"
+* Useful Enumerations 
 *-----------------------------------------------*/
 enum GA_Status
 {
@@ -117,20 +117,36 @@ struct GA_RuntimeConfig
 };
 
 
+enum FCSOptimizer_Commands
+{
+	START,
+	PAUSE,
+	STOP,
+	REPORT_STATUS
+};
+
 /*-----------------------------------------------
 * Input/Output/Referencing Containers 
 *-----------------------------------------------*/
 struct FCSOptimizer_Init_t
 {
-	std::string optimizerName;			/* Use this to give a user friendly unique name to the optimizer */
+	std::string optimizerName;								/* This gives a user friendly name to the optimizer */
 
-	SSModel_sPtr stateSpaceModel;		/* Possible reference to a State Space Model implementation */
-	NNModel_sPtr neuralNetModel;		/* Possible reference to a TensorFlow Neural Network Graph  */
+	std::string resultsPath;								/* Path to directory for results reporting */
 
+	std::string messageQueueName;							/* Name used to create a message queue between the main thread and an optimizer thread */
 
-	//TODO: Either rename or re-categorize how this data is represented 
-	PID_ControlGoals_sPtr pid;
-	GA_ConverganceCriteria_sPtr ga_convergence;
+	SSModel_sPtr stateSpaceModel;							/* Possible reference to a State Space Model implementation. Leave empty if unused. */
+
+	NNModel_sPtr neuralNetModel;							/* Possible reference to a TensorFlow Neural Network Graph. Leave empty if unused.  */
+
+	ControlResponseJargon responseFeel;						/* A non-engineering way of describing how the tuner should optimize */
+
+	PID_ControlSettings pidControlSettings;					/* A full engineering description of desired PID controller performance and limitations */
+
+	FCSOptimizer_BasicConstraints basicConvergenceParam;	/* Simplified global convergence parameters */
+
+	FCSOptimizer_AdvConstraints advConvergenceParam;		/* Convergence parameters that allow tuning how the underlying GA software executes */
 };
 
 struct FCSOptimizer_Output_t
@@ -142,14 +158,19 @@ struct FCSOptimizer_Output_t
 
 struct FCSOptimizer_Handle_t
 {
-	FCSOptimizer_Init_t Init;		/* Initialization settings for the engine */
-	FCSOptimizer_Output_t Output;	/* Output data metrics for the optimization run */
-	FCSOptimizerClass_sPtr Engine;	/* Instance of an optimization engine */
-	Thread_sPtr Thread;				/* Reference to the thread running the optimizerEngine */
-	GA_Status Status;				/* Current status of the tuner algorithm */
+	FCSOptimizer_Init_t Init;								/* Initialization settings for the engine */
+
+	FCSOptimizer_Output_t Output;							/* Output data metrics for the optimization run */
+
+	FCSOptimizerClass_sPtr Engine;							/* Instance of an optimization engine */
+
+	Thread_sPtr Thread;										/* Reference to the thread running the optimizerEngine */
+
+	GA_Status Status;										/* Current status of the tuner algorithm */
+
+	boost::interprocess::message_queue* CommandQueue;		/* Interface to send commands to the optimizer thread */
 };
 typedef boost::shared_ptr<FCSOptimizer_Handle_t> FCSOptimizer_Handle;
-
 
 
 //////////////////////////////////////////////////////////////////
@@ -157,26 +178,30 @@ typedef boost::shared_ptr<FCSOptimizer_Handle_t> FCSOptimizer_Handle;
 //////////////////////////////////////////////////////////////////
 extern void calculateMappingCoefficients(mapCoeff_t *mapping, double lower, double upper);
 extern double enforceResolution(double in, GA_METHOD_Resolution res);
+
+
 //////////////////////////////////////////////////////////////////
 /* CLASS: FCSOptimizer */
 //////////////////////////////////////////////////////////////////
 class FCSOptimizer
 {
 public:
-// 	void init();
-// 	void reset();
+	/** 
+	*	\brief Initialize the optimizer according to input settings 
+	*/
+	void init(FCSOptimizer_Init_t initializationSettings);
 
-// 	void run(boost::mutex* resultsMutex, GAEngineStatistics_Vec* resultsStatistics, 
-// 		GAEngineStatistics_Vec* avgResultsStatistics, int threadIndex, int trialNum);
-
+	/**
+	*	\brief Run the optimizer until a solution is found or convergence criteria are met
+	*/
 	void run();
 
-	/* Configuration Functions */
-// 	void registerOutputMutex(boost::mutex* printMutex);
-// 	void registerName(std::string optimizerName);
-// 	void registerObjective(PID_ControlGoals_sPtr pidGoals, std::string pidName);
-// 	void registerModel(GAModel_sPtr modelType, SS_NLTIV_ModelBase_sPtr model, std::string name, int processor);
-// 	void registerConvergence(GA_ConverganceCriteria_sPtr convLimits, std::string convName);
+	/**
+	*	\brief External request for results
+	* The function is designed with the intent of being called from an instance of the
+	* Valkyrie Engine to report result data back into an optimizer handle
+	*/
+	void requestOutput(FCSOptimizer_Output_t& output);
 
 	FCSOptimizer();
 	~FCSOptimizer();
@@ -186,41 +211,24 @@ private:
 	* User Input Data
 	*----------------------------*/
 	boost::mutex* print_to_console_mutex;
+	boost::interprocess::message_queue* commandQueue;
 
-	int compute_processor;
-	std::string ga_instance_optimizer_name,
-		ga_instance_pid_name,
-		ga_instance_model_name,
-		ga_instance_convergence_name;
 
 	/* Allows the user to specify how the algorithm runs at each step */
 	GA_RuntimeConfig ga_instance_step_methods;
 
-	/* Contains the user's pid goals, constraints, and weightings */
-	PID_ControlGoals_sPtr ga_instance_pid_config_data;
-
-	/* Contains the user's desired convergence criteria */
-	GA_ConverganceCriteria_sPtr ga_instance_convergence_criteria;
+	FCSOptimizer_Init_t settings;
 
 	/*-----------------------------
 	* Runtime Processing Data
 	*----------------------------*/
-	GAMOP_hPID_Data hData;
-
 	/* Step Performance */
-	boost::mutex SS_StepPerformance_mutex;
-	StepPerformance_Vec SS_StepPerformance;
 
 	/* Fitness Values */
-	PIDFitness_Vec SS_FitnessValues;
-	PIDFitness_Vec GA_BestFitnessValues;
-	PIDElitist GA_ElitistSolutions;
 
 	/* Parent Selections */
-	iVec parentSelection;
 
 	/* Bred Chromosomes */
-	hPID_Chromosomes bredChromosomes;
 
 	/*-----------------------------
 	* Runtime Flags
@@ -228,12 +236,6 @@ private:
 	bool optimizer_initialized;
 	int currentIteration;
 	GA_Status currentStatus;
-
-
-	SSModel_sPtr modelSS;
-
-
-	SS_NLTIV_ModelBase_sPtr ss_user_system_model;
 
 	/*-----------------------------
 	* Constants for Mapping Conversions
@@ -248,7 +250,6 @@ private:
 	void initMemory();
 	void initModel();
 	void initPopulation();
-	void deInitMemory();
 
 	/*-----------------------------
 	* Primary Algorithm Functions
@@ -267,7 +268,6 @@ private:
 	void enforceResolution();
 	int reportResults(int trialNum);
 	void printResultHighlights(double best_fit, int best_fit_idx);
-
 };
 
 
