@@ -119,15 +119,18 @@ enum GA_METHOD_Resolution
 	GA_RESOLUTION_10DP
 };
 
-struct GA_RuntimeConfig
+struct FCSOptimizer_RuntimeConfig
 {
-	GA_METHOD_Breed					breedType;
-	GA_METHOD_PopulationFilter		filterType;
-	GA_METHOD_ParentSelection		selectType;
-	GA_METHOD_MutateProbability		mutateProbabilityType;
-	GA_METHOD_MutateType			mutateType;
-	GA_METHOD_FitnessEvaluation		fitnessType;
-	GA_METHOD_Resolution			resolutionType;
+	GA_METHOD_Breed					breedType;					/* Breed/Mate step operation */
+	GA_METHOD_PopulationFilter		filterType;					/* Population Filtering step operation */
+	GA_METHOD_ParentSelection		selectType;					/* Parent Selection step operation */
+	GA_METHOD_MutateProbability		mutateProbabilityType;		/* Mutation step operation */
+	GA_METHOD_MutateType			mutateType;					/* Mutation step operation */
+	GA_METHOD_FitnessEvaluation		fitnessType;				/* Fitness Evaluation step operation */
+	GA_METHOD_Resolution			resolutionType;				/* Sets mathematical resolution for all chromosomes */
+
+	GA_RNG_Engine					rngEngine;					/* Random Number Generator Engine type */
+	GA_RNG_Distribution				rngDistribution;			/* Random Number Generator Distribution type */
 };
 
 
@@ -150,17 +153,23 @@ struct FCSOptimizer_Init_t
 
 	std::string messageQueueName;							/* Name used to create a message queue between the main thread and an optimizer thread */
 
+
 	SSModel_sPtr stateSpaceModel;							/* Possible reference to a State Space Model implementation. Leave empty if unused. */
 
 	NNModel_sPtr neuralNetModel;							/* Possible reference to a TensorFlow Neural Network Graph. Leave empty if unused.  */
 
+
 	ControlResponseJargon responseFeel;						/* A non-engineering way of describing how the tuner should optimize */
 
+
 	PID_ControlSettings pidControlSettings;					/* A full engineering description of desired PID controller performance and limitations */
+
 
 	FCSOptimizer_BasicConstraints basicConvergenceParam;	/* Simplified global convergence parameters */
 
 	FCSOptimizer_AdvConstraints advConvergenceParam;		/* Convergence parameters that allow tuning how the underlying Genetic Algorithm software executes */
+
+	FCSOptimizer_RuntimeConfig solverParam;					/* Configures how the optimizer internals operate at each step */
 };
 
 struct FCSOptimizer_Output_t

@@ -15,6 +15,8 @@ int main()
 	initStruct.optimizerName = "ROLL";
 	initStruct.messageQueueName = "rollCMD";
 	
+	initStruct.solverParam.rngEngine = GA_MERSENNE_TWISTER;
+	initStruct.solverParam.rngDistribution = GA_DISTRIBUTION_UNIFORM_REAL;
 
 	FCSOptimizer_Handle hRollTuner = DroneTuner.newOptimizer(initStruct);
 
