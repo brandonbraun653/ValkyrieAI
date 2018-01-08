@@ -39,7 +39,7 @@
 // {
 // public:
 // 	void mutate(hPID_Chromosomes* in_bredChrom, FCSOptimizer_AdvConstraints_sPtr in_convgCriteria, PID_ControlSettings_sPtr in_config,
-// 		hPID_DataVector* out_pidVals, mapCoeff_t* in_kp, mapCoeff_t* in_ki, mapCoeff_t* in_kd);
+// 		hPID_DataVector* out_pidVals, FCSOptimizer_MappingCoeff* in_kp, FCSOptimizer_MappingCoeff* in_ki, FCSOptimizer_MappingCoeff* in_kd);
 // 
 // 	BitFlipMutator(GA_RunMode execution_type, GA_MutateProbabilityMethod mutationProb_type);
 // 	~BitFlipMutator();
@@ -52,9 +52,9 @@
 // 	FCSOptimizer_AdvConstraints_sPtr cm_convergence;
 // 	PID_ControlSettings_sPtr cm_config;
 // 
-// 	mapCoeff_t* mapCM_Kp;
-// 	mapCoeff_t* mapCM_Ki;
-// 	mapCoeff_t* mapCM_Kd;
+// 	FCSOptimizer_MappingCoeff* mapCM_Kp;
+// 	FCSOptimizer_MappingCoeff* mapCM_Ki;
+// 	FCSOptimizer_MappingCoeff* mapCM_Kd;
 // 
 // 	void calculate_cpu_single_threaded();
 // 	void calculate_cpu_multi_threaded();
@@ -73,7 +73,7 @@
 // {
 // public:
 // 	void mutate(hPID_Chromosomes* in_bredChrom, FCSOptimizer_AdvConstraints_sPtr in_convgCriteria, PID_ControlSettings_sPtr in_config,
-// 		hPID_DataVector* out_pidVals, mapCoeff_t* in_kp, mapCoeff_t* in_ki, mapCoeff_t* in_kd);
+// 		hPID_DataVector* out_pidVals, FCSOptimizer_MappingCoeff* in_kp, FCSOptimizer_MappingCoeff* in_ki, FCSOptimizer_MappingCoeff* in_kd);
 // 
 // 	AddSubMutator(GA_RunMode execution_type, GA_MutateProbabilityMethod mutationProb_type, GA_Resolution res_type);
 // 	~AddSubMutator();
@@ -87,9 +87,9 @@
 // 	FCSOptimizer_AdvConstraints_sPtr as_convergence;
 // 	PID_ControlSettings_sPtr as_config;
 // 
-// 	mapCoeff_t* mapAS_Kp;
-// 	mapCoeff_t* mapAS_Ki;
-// 	mapCoeff_t* mapAS_Kd;
+// 	FCSOptimizer_MappingCoeff* mapAS_Kp;
+// 	FCSOptimizer_MappingCoeff* mapAS_Ki;
+// 	FCSOptimizer_MappingCoeff* mapAS_Kd;
 // 
 // 	void calculate_cpu_single_threaded();
 // 	void calculate_cpu_multi_threaded();

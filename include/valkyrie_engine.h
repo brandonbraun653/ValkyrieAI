@@ -8,7 +8,10 @@
 
 /* Boost Includes */
 #include <boost/thread.hpp>
+#include <boost/thread/mutex.hpp>
 #include <boost/bind.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/interprocess/ipc/message_queue.hpp>
 
@@ -124,6 +127,12 @@ public:
 
 private:
 	boost::container::vector<FCSOptimizer_Handle> optimizerInstances;
+
+	/*-----------------------------
+	* Resource Protection 
+	*----------------------------*/
+
+	boost::shared_ptr<boost::mutex> ostream_mtx_sPtr;	/* Print to console "cout" mutex */
 
 };
 

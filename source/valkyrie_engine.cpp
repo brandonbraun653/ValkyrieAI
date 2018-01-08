@@ -1,13 +1,14 @@
 #include "valkyrie_engine.h"
 
 using namespace boost::interprocess;
-int command;
 
 /*-----------------------------------------------
 * Constructor/Destructor
 *-----------------------------------------------*/
 ValkyrieEngine::ValkyrieEngine()
 {
+	ostream_mtx_sPtr = boost::make_shared<boost::mutex>();
+
 }
 
 ValkyrieEngine::~ValkyrieEngine()
@@ -36,7 +37,7 @@ void ValkyrieEngine::initialize(const FCSOptimizer_Handle& optimizer)
 	optimizer->Engine->init(optimizer->Init);
 
 	
-	/* The Engine's command queue will have been initialized now, so init
+	/* The Engine's command queue will have been initialized now, so setup
 	the interface queue for the main thread. */
 	try
 	{
@@ -64,19 +65,19 @@ void ValkyrieEngine::initialize(const FCSOptimizer_Handle& optimizer)
 
 void ValkyrieEngine::start(const FCSOptimizer_Handle& optimizer)
 {
-	command = START;
+	int command = START;
 	optimizer->CommandQueue->try_send(&command, sizeof(command), 0);
 }
 
 void ValkyrieEngine::pause(const FCSOptimizer_Handle& optimizer)
 {
-	//TODO: Call the pause function when eventually defined in the FCSOptimizer
-	//Probably this would be a flag of some sorts.
+	int command = PAUSE;
+	optimizer->CommandQueue->try_send(&command, sizeof(command), 0);
 }
 
 void ValkyrieEngine::stop(const FCSOptimizer_Handle& optimizer)
 {
-	command = STOP;
+	int command = STOP;
 	optimizer->CommandQueue->try_send(&command, sizeof(command), 0);
 }
 

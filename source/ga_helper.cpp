@@ -1,11 +1,11 @@
 #include "ga_helper.h"
 
-uint16_t data2Chromosome(mapCoeff_t *mapping, double data)
+uint16_t data2Chromosome(FCSOptimizer_MappingCoeff *mapping, double data)
 {
 	return (uint16_t)(trunc(mapping->x_sF*(data - mapping->x_lo) + mapping->x_offset));
 }
 
-double chromosome2Data(mapCoeff_t *mapping, uint16_t chromosome)
+double chromosome2Data(FCSOptimizer_MappingCoeff *mapping, uint16_t chromosome)
 {
 	return (mapping->x_sR*(((float)chromosome) - mapping->x_offset) + mapping->x_lo);
 }

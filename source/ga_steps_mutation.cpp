@@ -72,7 +72,7 @@
 // * Public Functions
 // *-----------------------------------------------*/
 // void BitFlipMutator::mutate(hPID_Chromosomes* in_bredChrom, FCSOptimizer_AdvConstraints_sPtr in_convgCriteria, PID_ControlSettings_sPtr in_config,
-// 	hPID_DataVector* out_pidVals, mapCoeff_t* in_kp, mapCoeff_t* in_ki, mapCoeff_t* in_kd)
+// 	hPID_DataVector* out_pidVals, FCSOptimizer_MappingCoeff* in_kp, FCSOptimizer_MappingCoeff* in_ki, FCSOptimizer_MappingCoeff* in_kd)
 // {
 // 	cm_data = out_pidVals;
 // 	cm_chrom = in_bredChrom;
@@ -247,7 +247,7 @@
 // * Public Functions
 // *-----------------------------------------------*/
 // void AddSubMutator::mutate(hPID_Chromosomes* in_bredChrom, FCSOptimizer_AdvConstraints_sPtr in_convgCriteria, PID_ControlSettings_sPtr in_config,
-// 	hPID_DataVector* out_pidVals, mapCoeff_t* in_kp, mapCoeff_t* in_ki, mapCoeff_t* in_kd)
+// 	hPID_DataVector* out_pidVals, FCSOptimizer_MappingCoeff* in_kp, FCSOptimizer_MappingCoeff* in_ki, FCSOptimizer_MappingCoeff* in_kd)
 // {
 // 	as_data = out_pidVals;
 // 	as_chrom = in_bredChrom;

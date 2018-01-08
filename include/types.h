@@ -5,10 +5,8 @@
 /* C/C++ Includes */
 #include <stdlib.h>
 #include <stdint.h>
-//#include <memory>
 
 /* Boost Includes */
-//#include <boost/chrono.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/container/vector.hpp>
 
@@ -39,6 +37,11 @@ enum ControlResponseJargon
 	SHARP,
 	DIALED_IN
 };
+
+
+/*-----------------------------------------------
+* PID Data Types
+*-----------------------------------------------*/
 
 /** 
 * \brief Engineering perspective of tuner goals for a SISO system
@@ -79,7 +82,7 @@ struct PID_PerformanceWeights
 /** 
 * \brief Holds a single set of Kp, Ki, Kd values 
 */
-struct PID_Value
+struct PID_Values
 {
 	double Kp = 0.0;
 	double Ki = 0.0;
@@ -111,8 +114,33 @@ struct PID_ControlSettings
 	PID_PerformanceTolerance	performanceTolerance;
 	PID_PerformanceWeights		performanceWeights;
 	PID_TuningLimits			tuningLimits;
-	PID_Value					tuningInitialValues;
+	PID_Values					tuningInitialValues;
 };
+
+
+/*-----------------------------------------------
+* Genetic Algorithm Data Types 
+*-----------------------------------------------*/
+
+/**
+* \brief Chromosome representation for a set of PID values
+*
+* A highly generic way of representing PID data so that many 
+* different approaches can be used for manipulation
+*/
+template<typename ChromType>
+struct GA_PIDChromosome
+{
+	ChromType Kp;
+	ChromType Ki;
+	ChromType Kd;
+};
+
+
+
+/*-----------------------------------------------
+* FCSOptimizer Data Types
+*-----------------------------------------------*/
 
 /**
 * \brief Specifies basic solver convergence constraints
@@ -155,12 +183,28 @@ struct FCSOptimizer_AdvConstraints
 };
 
 /**
+* \brief Descriptive information about a population member
+*/
+struct FCSOptimizer_PopulationMember
+{
+	GA_PIDChromosome<double> realPID;			/* Real valued representation of PID tuning parameters */
+
+	GA_PIDChromosome<uint16_t> mappedPID;		/* Mapped representation (double -> uint16_t) of realPID over the min/max
+												range specified in the PID_ControlSettings.tuningLimits struct */
+
+	double fitnessScore;						/* A generic score that is independent of fitness metrics. More specific
+												performance indices will need to be stored elsewhere */
+	
+	int age;									/* Records how many iterations the particular instance has been alive */
+};
+
+/**
 * \brief Conversion constants between uint16_t and double
 * Holds pre-calculated constants used to map doubles into uint16_t
 * types and back. This is useful for when chromosomes are represented
 * as some form of bits instead of real numbers
 */
-struct mapCoeff_t
+struct FCSOptimizer_MappingCoeff
 {
 	double bytes_precision;
 	double x_offset;
@@ -172,7 +216,11 @@ struct mapCoeff_t
 	double x_sR;
 };
 
-/* Non-Linear Time Invariant State Space Model:*/
+
+/*-----------------------------------------------
+* Model Data Types
+*-----------------------------------------------*/
+
 class SS_NLTIV_Dynamics
 {
 public:

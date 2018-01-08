@@ -5,7 +5,7 @@ using namespace boost::interprocess;
 //////////////////////////////////////////////////////////////////
 /* Helper Functions */
 //////////////////////////////////////////////////////////////////
-void calculateMappingCoefficients(mapCoeff_t *mapping, double lower, double upper)
+void calculateMappingCoefficients(FCSOptimizer_MappingCoeff *mapping, double lower, double upper)
 {
 	/* Currently hard coded precision, but I may want to template this and the output types later */
 	mapping->bytes_precision = 2.0;
@@ -78,7 +78,6 @@ void writeCSV_StepData(StepPerformance data, std::string filename)
 *-----------------------------------------------*/
 FCSOptimizer::FCSOptimizer()
 {
-	optimizer_initialized = false;
 	currentStatus = GA_IDLE;
 	currentIteration = 0;
 }
@@ -97,20 +96,75 @@ void FCSOptimizer::run()
 	//Do some initialization here 
 	unsigned int commandPriority;
 	message_queue::size_type received_size;
-	int command;
-	/* Infinitely run until some stop condition is met */
+	int externCmd;
+
+
 	for(;;)
 	{
-		//Check for new commands from the main thread every few milliseconds 
-		if (commandQueue->try_receive(&command, sizeof(command), received_size, commandPriority))
+		/*-------------------------------------
+		* Check for new commands from the main thread 
+		*-------------------------------------*/
+		if (commandQueue->try_receive(&externCmd, sizeof(externCmd), received_size, commandPriority))
 		{
-			std::cout << "I received command: " << command << std::endl;
+			std::cout << "I received command: " << externCmd << std::endl;
 
-			if (command == STOP)
+			/* Only set a flag here so that the error/message handing section below can take care of 
+			commands from this block as well as commands issued by the core algorithm. */
+			switch (externCmd)
+			{
+			case START:
+				currentStatus = GA_OK;
 				break;
+
+			case PAUSE:
+				currentStatus = GA_PAUSED;
+				break;
+
+			case STOP:
+				currentStatus = GA_HALT;
+				break;
+
+			case REPORT_STATUS:
+				//TODO: Enable passing back data to the main thread here
+				//Or maybe do it in the error handling section??? doesn't quite fit either place...
+				break;
+			}
 		}
 
-		//Proceed another generation forward 
+		
+		/*-------------------------------------
+		* Propagate forward 1 generation
+		*-------------------------------------*/
+		if (currentStatus == GA_OK)
+		{
+			evaluateModel();		/* With the current population members, run a test scenario on the chosen model and record output data */
+
+			evaluateFitness();		/* Use recorded performance data from last step to gauge how well it meets user goals */
+
+			checkConvergence();		/* Given the new fitness scores, see if we have a "winner" that met user goals sufficiently */
+
+			filterPopulation();		/* Apply random "filtering" to the population to simulate things like death/disaster/disease etc. */
+
+			selectParents();		/* Of the current population, select those who will mate */
+
+			breedGeneration();		/* Use the selected mating pairs from the last step to create new offspring */
+		}
+
+
+		/*-------------------------------------
+		* Handle errors or external commands
+		*-------------------------------------*/
+		else
+		{
+			if (currentStatus == GA_HALT)
+			{
+				//Do any logging that might report why a halt was called. 
+				break;
+			}
+
+
+
+		}
 
 
 		/* Allow other waiting threads to run */
@@ -119,17 +173,21 @@ void FCSOptimizer::run()
 
 	/* Do some minor post processing here */
 	//What should I do? 
+	std::cout << "Exiting spawned thread" << std::endl;
 }
 
 void FCSOptimizer::init(FCSOptimizer_Init_t initializationSettings)
 {
 	settings = initializationSettings;
 
-	/* Allocate container sizes before algorithm begins */
-	initMemory();
+	/*-----------------------------
+	* Order specific initialization sequence 
+	*----------------------------*/
+	initMemory();			/* Allocate container sizes before algorithm begins */
+	initRNG();				/* Make sure the RNG is setup and well warmed up before use */
+	initModel();			/* Call the specific model initializer */
+	initPopulation();		/* Set up the initial population */
 
-	/* Call the specific model initializer */
-	initModel();
 
 	/* Create a new message queue for receiving commands from the main thread.
 	This WILL destroy anything the main thread has created, so use this first and then
@@ -154,12 +212,15 @@ void FCSOptimizer::init(FCSOptimizer_Init_t initializationSettings)
 		std::cout << "Unable to properly use the queue. Ignoring all messages from main thread." << std::endl;
 	}
 
-	optimizer_initialized = true;
+	/* After this function exits, the Genetic Algorithm should be ready to go */
+	currentStatus = GA_OK;
 }
 
 void FCSOptimizer::requestOutput(FCSOptimizer_Output_t& output)
 {
-
+	//Might want to deprecate this? Not sure. Might just set the flag
+	//here rather than checking for it in the main loop. Log the reference
+	//to the output container so we can write to it later. 
 }
 
 // void FCSOptimizer::run(boost::mutex* resultsMutex, GAEngineStatistics_Vec* resultsStatistics, 
@@ -208,6 +269,7 @@ void FCSOptimizer::requestOutput(FCSOptimizer_Output_t& output)
 /*-----------------------------------------------
 * Private Functions
 *-----------------------------------------------*/
+
 void FCSOptimizer::initMemory()
 {
 // 	const size_t popSize = ga_instance_convergence_criteria->populationSize;
@@ -228,6 +290,16 @@ void FCSOptimizer::initMemory()
 // 	bredChromosomes.Kd.resize(hData.sim_data.population_size);
 }
 
+void FCSOptimizer::initRNG()
+{
+	//create a new rng with a user specified range...what defines the range again???
+	//might be best to create multiple generators for each kp ki kd?? then maybe another
+	//for other stuff?...this is getting kinda confusing.
+
+
+
+}
+
 void FCSOptimizer::initModel()
 {
 	/* State Space Model */
@@ -236,8 +308,8 @@ void FCSOptimizer::initModel()
 	/* Neural Network Model */
 }
 
-// void FCSOptimizer::initPopulation()
-// {
+void FCSOptimizer::initPopulation()
+{
 // 	double kpl = ga_instance_pid_config_data->tuningLimits.Kp_limits_lower;
 // 	double kpu = ga_instance_pid_config_data->tuningLimits.Kp_limits_upper;
 // 
@@ -260,8 +332,47 @@ void FCSOptimizer::initModel()
 // 	calculateMappingCoefficients(&mapCoefficients_Kp, kpl, kpu);
 // 	calculateMappingCoefficients(&mapCoefficients_Ki, kil, kiu);
 // 	calculateMappingCoefficients(&mapCoefficients_Kd, kdl, kdu);
-// }
-// 
+
+	
+}
+
+
+void FCSOptimizer::checkConvergence()
+{
+	std::cout << "I checked for convergence!" << std::endl;
+}
+
+void FCSOptimizer::evaluateModel()
+{
+	std::cout << "I evaluated a model!" << std::endl;
+}
+
+void FCSOptimizer::evaluateFitness()
+{
+	std::cout << "I evaluated fitness!" << std::endl;
+}
+
+void FCSOptimizer::filterPopulation()
+{
+	std::cout << "I killed off some people!" << std::endl;
+}
+
+void FCSOptimizer::selectParents()
+{
+	std::cout << "I selected some mates!" << std::endl;
+}
+
+void FCSOptimizer::breedGeneration()
+{
+	std::cout << "I mated!" << std::endl;
+}
+
+void FCSOptimizer::mutateGeneration()
+{
+	std::cout << "I mutated!" << std::endl;
+}
+
+
 // void FCSOptimizer::evaluateModel()
 // {
 // 	#ifdef GA_TRACE_EVALUATE_MODEL

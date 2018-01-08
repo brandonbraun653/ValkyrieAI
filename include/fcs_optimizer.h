@@ -11,14 +11,17 @@
 #include "math.h"
 
 /* Boost Includes */
+#include <boost/any.hpp>
 #include <boost/thread.hpp>
 #include <boost/chrono.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/interprocess/ipc/message_queue.hpp>
 
 /* Local Includes */
 #include "ga_config.h"
 #include "ga_steps.h"
+#include "rng.hpp"
 #include "model.h"
 #include "logger.h"
 #include "types.h"
@@ -43,6 +46,17 @@ enum GA_Status
 	GA_INPROGRESS,
 	GA_COMPLETE,
 	GA_ERROR
+};
+
+enum GA_RNG_Engine
+{
+	GA_MERSENNE_TWISTER
+};
+
+enum GA_RNG_Distribution
+{
+	GA_DISTRIBUTION_UNIFORM_REAL,
+	GA_DISTRIBUTION_UNIFORM_INT
 };
 
 enum GA_METHOD_Breed
@@ -146,7 +160,7 @@ struct FCSOptimizer_Init_t
 
 	FCSOptimizer_BasicConstraints basicConvergenceParam;	/* Simplified global convergence parameters */
 
-	FCSOptimizer_AdvConstraints advConvergenceParam;		/* Convergence parameters that allow tuning how the underlying GA software executes */
+	FCSOptimizer_AdvConstraints advConvergenceParam;		/* Convergence parameters that allow tuning how the underlying Genetic Algorithm software executes */
 };
 
 struct FCSOptimizer_Output_t
@@ -176,7 +190,7 @@ typedef boost::shared_ptr<FCSOptimizer_Handle_t> FCSOptimizer_Handle;
 //////////////////////////////////////////////////////////////////
 /* Helper Functions */
 //////////////////////////////////////////////////////////////////
-extern void calculateMappingCoefficients(mapCoeff_t *mapping, double lower, double upper);
+extern void calculateMappingCoefficients(FCSOptimizer_MappingCoeff *mapping, double lower, double upper);
 extern double enforceResolution(double in, GA_METHOD_Resolution res);
 
 
@@ -208,14 +222,21 @@ public:
 
 private:
 	/*-----------------------------
-	* User Input Data
+	* Runtime Flags
+	*----------------------------*/
+	int currentIteration;
+	GA_Status currentStatus;
+
+	/*-----------------------------
+	* Threading Related Variables
 	*----------------------------*/
 	boost::mutex* print_to_console_mutex;
 	boost::interprocess::message_queue* commandQueue;
 
-
-	/* Allows the user to specify how the algorithm runs at each step */
-	GA_RuntimeConfig ga_instance_step_methods;
+	/*-----------------------------
+	* Shared Objects 
+	*----------------------------*/
+	RNGManager_sPtr rngEngine;		/* Base class for all RNG instances */
 
 	FCSOptimizer_Init_t settings;
 
@@ -230,38 +251,34 @@ private:
 
 	/* Bred Chromosomes */
 
-	/*-----------------------------
-	* Runtime Flags
-	*----------------------------*/
-	bool optimizer_initialized;
-	int currentIteration;
-	GA_Status currentStatus;
+	
 
 	/*-----------------------------
 	* Constants for Mapping Conversions
 	*-----------------------------*/
-	mapCoeff_t mapCoefficients_Kp;
-	mapCoeff_t mapCoefficients_Ki;
-	mapCoeff_t mapCoefficients_Kd;
+	FCSOptimizer_MappingCoeff mapCoefficients_Kp;
+	FCSOptimizer_MappingCoeff mapCoefficients_Ki;
+	FCSOptimizer_MappingCoeff mapCoefficients_Kd;
 
 	/*-----------------------------
 	* Setup Functions
 	*----------------------------*/
 	void initMemory();
+	void initRNG();
 	void initModel();
 	void initPopulation();
 
 	/*-----------------------------
 	* Primary Algorithm Functions
 	*----------------------------*/
+	void checkConvergence();
 	void evaluateModel();
 	void evaluateFitness();
 	void filterPopulation();
 	void selectParents();
 	void breedGeneration();
 	void mutateGeneration();
-	void checkConvergence();
-
+	
 	/*-----------------------------
 	* Useful Helper Functions
 	*----------------------------*/

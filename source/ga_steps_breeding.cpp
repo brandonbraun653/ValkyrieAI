@@ -17,7 +17,7 @@
 // /*-----------------------------------------------
 // * Public Functions
 // *-----------------------------------------------*/
-// void SimpleCrossover::breed(iVec in_parents, hPID_DataVector* in_pidVals, hPID_Chromosomes* out_breed, mapCoeff_t* in_kp, mapCoeff_t* in_ki, mapCoeff_t* in_kd)
+// void SimpleCrossover::breed(iVec in_parents, hPID_DataVector* in_pidVals, hPID_Chromosomes* out_breed, FCSOptimizer_MappingCoeff* in_kp, FCSOptimizer_MappingCoeff* in_ki, FCSOptimizer_MappingCoeff* in_kd)
 // {
 // 	sc_parents = in_parents;
 // 	sc_data = in_pidVals;
@@ -162,7 +162,7 @@
 // /*-----------------------------------------------
 // * Public Functions
 // *-----------------------------------------------*/
-// void DynamicCrossover::breed(iVec in_parents, hPID_DataVector* in_pidVals, hPID_Chromosomes* out_breed, mapCoeff_t* in_kp, mapCoeff_t* in_ki, mapCoeff_t* in_kd)
+// void DynamicCrossover::breed(iVec in_parents, hPID_DataVector* in_pidVals, hPID_Chromosomes* out_breed, FCSOptimizer_MappingCoeff* in_kp, FCSOptimizer_MappingCoeff* in_ki, FCSOptimizer_MappingCoeff* in_kd)
 // {
 // 	dc_parents = in_parents;
 // 	dc_data = in_pidVals;
@@ -342,7 +342,7 @@
 // /*-----------------------------------------------
 // * Public Functions
 // *-----------------------------------------------*/
-// void FixedRatioCrossover::breed(iVec in_parents, hPID_DataVector* in_pidVals, hPID_Chromosomes* out_breed, mapCoeff_t* in_kp, mapCoeff_t* in_ki, mapCoeff_t* in_kd)
+// void FixedRatioCrossover::breed(iVec in_parents, hPID_DataVector* in_pidVals, hPID_Chromosomes* out_breed, FCSOptimizer_MappingCoeff* in_kp, FCSOptimizer_MappingCoeff* in_ki, FCSOptimizer_MappingCoeff* in_kd)
 // {
 // 	fr_parents = in_parents;
 // 	fr_data = in_pidVals;

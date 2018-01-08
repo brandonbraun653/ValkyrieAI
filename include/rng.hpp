@@ -8,29 +8,50 @@
 /* Boost Includes */
 #include <boost/thread/mutex.hpp>
 #include <boost/random.hpp>
+#include <boost/shared_ptr.hpp>
 
-template<typename Engine, typename Distribution>
 class RNGManager
 {
 public:
-	template<typename Scalar>
-	Scalar get()
+	virtual int getInt() = 0;
+	virtual double getDouble() = 0;
+
+	virtual bool acquireEngine() = 0;
+	virtual void releaseEngine() = 0;
+
+	
+private:
+	virtual void warmup() = 0;
+};
+typedef boost::shared_ptr<RNGManager> RNGManager_sPtr;
+
+
+template<typename Engine, typename Distribution>
+class RNGInstance : RNGManager
+{
+public:
+	double getInt() override
 	{
-		return (isLocked) ? ((Scalar)dist(eng)) : (Scalar)0;
+		return (isLocked) ? ((int)dist(eng)) : (int)0;
 	}
 
-	bool acquireEngine()
+	double getDouble() override
+	{
+		return (isLocked) ? ((double)dist(eng)) : (double)0;
+	}
+
+	bool acquireEngine() override
 	{
 		return (isLocked = rng_mutex.try_lock());
 	}
 	
-	void releaseEngine()
+	void releaseEngine() override
 	{
 		rng_mutex.unlock();
 		isLocked = false;
 	}
 
-	RNGManager(Distribution& distribution)
+	RNGInstance(Distribution& distribution)
 	{
 		dist = distribution;
 		isLocked = false;
@@ -41,8 +62,6 @@ public:
 
 		/* Warm up the engine a bit */
 		warmup();
-
-		
 	};
 	
 private:
@@ -51,7 +70,7 @@ private:
 	Engine eng;
 	Distribution dist;
 
-	void warmup()
+	void warmup() override
 	{
 		for (int i = 0; i < 100; i++)
 			dist(eng);

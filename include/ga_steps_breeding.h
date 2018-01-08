@@ -23,7 +23,7 @@
 // class SimpleCrossover
 // {
 // public:
-// 	void breed(iVec in_parents, hPID_DataVector* in_pidVals, hPID_Chromosomes* out_breed, mapCoeff_t* in_kp, mapCoeff_t* in_ki, mapCoeff_t* in_kd);
+// 	void breed(iVec in_parents, hPID_DataVector* in_pidVals, hPID_Chromosomes* out_breed, FCSOptimizer_MappingCoeff* in_kp, FCSOptimizer_MappingCoeff* in_ki, FCSOptimizer_MappingCoeff* in_kd);
 // 
 // 	SimpleCrossover();
 // 	~SimpleCrossover();
@@ -33,9 +33,9 @@
 // 	hPID_DataVector* sc_data;
 // 	hPID_Chromosomes* sc_chrom;
 // 
-// 	mapCoeff_t* mapCF_Kp;
-// 	mapCoeff_t* mapCF_Ki;
-// 	mapCoeff_t* mapCF_Kd;
+// 	FCSOptimizer_MappingCoeff* mapCF_Kp;
+// 	FCSOptimizer_MappingCoeff* mapCF_Ki;
+// 	FCSOptimizer_MappingCoeff* mapCF_Kd;
 // 
 // 	void calculate_cpu_single_threaded();
 // 	void calculate_cpu_multi_threaded();
@@ -54,7 +54,7 @@
 // class DynamicCrossover
 // {
 // public:
-// 	void breed(iVec in_parents, hPID_DataVector* in_pidVals, hPID_Chromosomes* out_breed, mapCoeff_t* in_kp, mapCoeff_t* in_ki, mapCoeff_t* in_kd);
+// 	void breed(iVec in_parents, hPID_DataVector* in_pidVals, hPID_Chromosomes* out_breed, FCSOptimizer_MappingCoeff* in_kp, FCSOptimizer_MappingCoeff* in_ki, FCSOptimizer_MappingCoeff* in_kd);
 // 
 // 	DynamicCrossover();
 // 	~DynamicCrossover();
@@ -65,9 +65,9 @@
 // 	hPID_DataVector* dc_data;
 // 	hPID_Chromosomes* dc_chrom;
 // 
-// 	mapCoeff_t* mapCF_Kp;
-// 	mapCoeff_t* mapCF_Ki;
-// 	mapCoeff_t* mapCF_Kd;
+// 	FCSOptimizer_MappingCoeff* mapCF_Kp;
+// 	FCSOptimizer_MappingCoeff* mapCF_Ki;
+// 	FCSOptimizer_MappingCoeff* mapCF_Kd;
 // 
 // 	void calculate_cpu_single_threaded();
 // 	void calculate_cpu_multi_threaded();
@@ -86,7 +86,7 @@
 // class FixedRatioCrossover
 // {
 // public:
-// 	void breed(iVec in_parents, hPID_DataVector* in_pidVals, hPID_Chromosomes* out_breed, mapCoeff_t* in_kp, mapCoeff_t* in_ki, mapCoeff_t* in_kd);
+// 	void breed(iVec in_parents, hPID_DataVector* in_pidVals, hPID_Chromosomes* out_breed, FCSOptimizer_MappingCoeff* in_kp, FCSOptimizer_MappingCoeff* in_ki, FCSOptimizer_MappingCoeff* in_kd);
 // 
 // 	FixedRatioCrossover(double ratio);
 // 	~FixedRatioCrossover();
@@ -97,9 +97,9 @@
 // 	hPID_DataVector* fr_data;
 // 	hPID_Chromosomes* fr_chrom;
 // 
-// 	mapCoeff_t* mapCF_Kp;
-// 	mapCoeff_t* mapCF_Ki;
-// 	mapCoeff_t* mapCF_Kd;
+// 	FCSOptimizer_MappingCoeff* mapCF_Kp;
+// 	FCSOptimizer_MappingCoeff* mapCF_Ki;
+// 	FCSOptimizer_MappingCoeff* mapCF_Kd;
 // 
 // 	void calculate_cpu_single_threaded();
 // 	void calculate_cpu_multi_threaded();
