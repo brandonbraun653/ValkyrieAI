@@ -9,6 +9,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/random.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/chrono.hpp>
 
 class RNGManager
 {
@@ -27,10 +28,10 @@ typedef boost::shared_ptr<RNGManager> RNGManager_sPtr;
 
 
 template<typename Engine, typename Distribution>
-class RNGInstance : RNGManager
+class RNGInstance : public RNGManager
 {
 public:
-	double getInt() override
+	int getInt() override
 	{
 		return (isLocked) ? ((int)dist(eng)) : (int)0;
 	}
@@ -56,8 +57,17 @@ public:
 		dist = distribution;
 		isLocked = false;
 
+		/* Create a "random" time delay based on timing imperfections in the OS thread scheduling algorithm */
+		auto start = boost::chrono::high_resolution_clock::now();
+		boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+		auto end = boost::chrono::high_resolution_clock::now();
+
+		auto totalTime = boost::chrono::duration_cast<boost::chrono::nanoseconds>(end - start);
+		//std::cout << castTime.count() << " nS" << std::endl;
+		//std::cout << static_cast<uint64_t>(castTime.count()) << std::endl;
+
 		/* Reseed and reset so the new object is unique */
-		eng.seed(static_cast<std::uint32_t>(std::time(0)));
+		eng.seed(static_cast<uint64_t>(totalTime.count()));
 		dist.reset();
 
 		/* Warm up the engine a bit */

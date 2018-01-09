@@ -96,8 +96,8 @@ struct PID_TuningLimits
 {
 	struct PID_Limits
 	{
-		double upper;
 		double lower;
+		double upper;
 	};
 
 	PID_Limits Kp, Ki, Kd;

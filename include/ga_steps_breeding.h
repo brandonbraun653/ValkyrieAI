@@ -1,22 +1,47 @@
-// #pragma once
-// #ifndef BREEDING_H_
-// #define BREEDING_H_
-// 
-// /* C/C++ Includes */
-// #include <stdlib.h>
-// #include <stdint.h>
-// #include <iostream>
-// #include <random>
-// #include <math.h>
-// 
-// /* Boost Includes */
-// #include <boost/thread.hpp>
-// 
-// /* Local Includes */
-// #include "ga_config.h"
-// #include "ga_helper.h"
-// #include "types.h"
-// 
+#pragma once
+#ifndef BREEDING_H_
+#define BREEDING_H_
+
+/* C/C++ Includes */
+#include <stdlib.h>
+#include <stdint.h>
+#include <iostream>
+#include <random>
+#include <math.h>
+
+/* Boost Includes */
+#include <boost/thread.hpp>
+#include <boost/shared_ptr.hpp>
+
+/* Local Includes */
+#include "ga_config.h"
+#include "ga_helper.h"
+#include "types.h"
+ 
+struct GA_BreedingDataInput
+{
+	//Add whatever the heck is needed here
+};
+
+struct GA_BreedingDataOutput
+{
+	//Add whatever the heck is needed here
+};
+
+class GA_BreedBase
+{
+public:
+	virtual void breed(GA_BreedingDataInput, GA_BreedingDataOutput&) = 0;
+
+private:
+	virtual void breedKp() = 0;
+	virtual void breedKi() = 0;
+	virtual void breedKd() = 0;
+};
+typedef boost::shared_ptr<GA_BreedBase> GA_BreedBase_sPtr;
+
+
+#endif /* BREEDING_H_ */
 // ///////////////////////////////////////////////////
 // /* CLASS:  SimpleCrossover */
 // ///////////////////////////////////////////////////

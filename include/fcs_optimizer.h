@@ -12,6 +12,7 @@
 
 /* Boost Includes */
 #include <boost/any.hpp>
+#include <boost/function.hpp>
 #include <boost/thread.hpp>
 #include <boost/chrono.hpp>
 #include <boost/shared_ptr.hpp>
@@ -64,7 +65,13 @@ enum GA_METHOD_Breed
 	GA_BREED_SIMPLE_CROSSOVER,
 	GA_BREED_DYNAMIC_CROSSOVER,
 	GA_BREED_FIXED_RATIO_CROSSOVER,
-	GA_BREED_SIMULATED_BINARY_CROSSOVER
+	GA_BREED_SIMULATED_BINARY_CROSSOVER,
+	GA_BREED_TOTAL_OPTIONS,
+
+	GA_BREED_SIMPLE_CROSSOVER_MSK = (1u << GA_BREED_SIMPLE_CROSSOVER),
+	GA_BREED_DYNAMIC_CROSSOVER_MSK = (1u << GA_BREED_DYNAMIC_CROSSOVER),
+	GA_BREED_FIXED_RATIO_CROSSOVER_MSK = (1u << GA_BREED_FIXED_RATIO_CROSSOVER),
+	GA_BREED_SIMULATED_BINARY_CROSSOVER_MSK = (1u << GA_BREED_SIMULATED_BINARY_CROSSOVER)
 };
 
 enum GA_METHOD_PopulationFilter
@@ -134,6 +141,15 @@ struct FCSOptimizer_RuntimeConfig
 };
 
 
+/**
+* \brief Constrains the choices for the real time reconfiguration
+* //TODO: Add a better description once this idea is fully fleshed out 
+*/
+struct FCSOptimizer_AllowedRuntimeConfig
+{
+	uint32_t allowedBreedTypes;
+};
+
 enum FCSOptimizer_Commands
 {
 	START,
@@ -169,7 +185,10 @@ struct FCSOptimizer_Init_t
 
 	FCSOptimizer_AdvConstraints advConvergenceParam;		/* Convergence parameters that allow tuning how the underlying Genetic Algorithm software executes */
 
-	FCSOptimizer_RuntimeConfig solverParam;					/* Configures how the optimizer internals operate at each step */
+	FCSOptimizer_RuntimeConfig solverParam;					/* Configures how the optimizer internals operate at each step, to be updated dynamically by
+															the internal reconfiguration engine */
+
+	FCSOptimizer_AllowedRuntimeConfig solverParamOptions;	/* Possible options to select from for each step of the algorithm */
 };
 
 struct FCSOptimizer_Output_t
@@ -245,8 +264,21 @@ private:
 	/*-----------------------------
 	* Shared Objects 
 	*----------------------------*/
-	RNGManager_sPtr rngEngine;		/* Base class for all RNG instances */
 
+	/**
+	* Custom random number generators for PID values that generate values 
+	* within the upper/lower bounds of user specified pidControlSettings.tuningLimits
+	*/
+	struct RNGEngines
+	{
+		RNGManager_sPtr Kp;
+		RNGManager_sPtr Ki;
+		RNGManager_sPtr Kd;
+	} PID_RNG;
+	
+
+
+	boost::container::vector<FCSOptimizer_PopulationMember> population;
 	FCSOptimizer_Init_t settings;
 
 	/*-----------------------------
@@ -260,7 +292,9 @@ private:
 
 	/* Bred Chromosomes */
 
-	
+	boost::container::vector<GA_BreedBase_sPtr> breedInstances;								/* Implementations of unique breeding approaches */
+	boost::function<void(GA_BreedingDataInput, GA_BreedingDataOutput&)> breedFunction;		/* Reference to the current breed function (fast access)*/
+
 
 	/*-----------------------------
 	* Constants for Mapping Conversions
