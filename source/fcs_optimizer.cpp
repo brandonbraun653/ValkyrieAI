@@ -2,6 +2,9 @@
 
 using namespace boost::interprocess;
 
+typedef boost::random::uniform_real_distribution<> urd_t;
+typedef boost::random::uniform_int_distribution<> uid_t;
+
 //////////////////////////////////////////////////////////////////
 /* Helper Functions */
 //////////////////////////////////////////////////////////////////
@@ -272,32 +275,83 @@ void FCSOptimizer::requestOutput(FCSOptimizer_Output_t& output)
 
 void FCSOptimizer::initMemory()
 {
-// 	const size_t popSize = ga_instance_convergence_criteria->populationSize;
-// 	
-// 	hData.sim_data.population_size = popSize;
-// 
-// 	/* Simulation Input Data */
-// 	hData.pid_data.Kp.resize(popSize);
-// 	hData.pid_data.Ki.resize(popSize);
-// 	hData.pid_data.Kd.resize(popSize);
-// 
 // 	/* Expand the results logging containers */
 // 	SS_StepPerformance.resize(hData.sim_data.population_size);
 // 	SS_FitnessValues.resize(hData.sim_data.population_size);
 // 	parentSelection.resize(hData.sim_data.population_size);
-// 	bredChromosomes.Kp.resize(hData.sim_data.population_size);
-// 	bredChromosomes.Ki.resize(hData.sim_data.population_size);
-// 	bredChromosomes.Kd.resize(hData.sim_data.population_size);
+
+	population.resize(settings.advConvergenceParam.populationSize);
+
+	/* Allocate the memory needed to hold all the operation functions */
+	breedInstances.resize(GA_BREED_TOTAL_OPTIONS);
+
 }
 
 void FCSOptimizer::initRNG()
 {
-	//create a new rng with a user specified range...what defines the range again???
-	//might be best to create multiple generators for each kp ki kd?? then maybe another
-	//for other stuff?...this is getting kinda confusing.
+	/* Unfortunately, this is the best way I currently know how to get a single RNG interface
+	to be used with many different kinds of possible engines and distributions. I tried templating
+	the whole thing, but it ended up being far more trouble than it was worth. This is the solution
+	found in the available time frame.
+	*/
 
+	std::cout << "Initializing the RNG Engines with time based seed..." << std::endl;
 
+	if (settings.solverParam.rngDistribution == GA_DISTRIBUTION_UNIFORM_REAL)
+	{
+		auto Kp_distribution = urd_t(
+			settings.pidControlSettings.tuningLimits.Kp.lower,
+			settings.pidControlSettings.tuningLimits.Kp.upper);
 
+		auto Ki_distribution = urd_t(
+			settings.pidControlSettings.tuningLimits.Ki.lower,
+			settings.pidControlSettings.tuningLimits.Ki.upper);
+
+		auto Kd_distribution = urd_t(
+			settings.pidControlSettings.tuningLimits.Kd.lower,
+			settings.pidControlSettings.tuningLimits.Kd.upper);
+
+		switch (settings.solverParam.rngEngine)
+		{
+		case GA_MERSENNE_TWISTER:
+			PID_RNG.Kp = boost::make_shared<RNGInstance<boost::mt19937, urd_t>>(Kp_distribution);
+			PID_RNG.Ki = boost::make_shared<RNGInstance<boost::mt19937, urd_t>>(Ki_distribution);
+			PID_RNG.Kd = boost::make_shared<RNGInstance<boost::mt19937, urd_t>>(Kd_distribution);
+			break;
+
+		/*Add support for more as needed*/
+		default: break;
+		}
+	}
+
+	if (settings.solverParam.rngDistribution == GA_DISTRIBUTION_UNIFORM_INT)
+	{
+		auto Kp_distribution = uid_t(
+			(int)settings.pidControlSettings.tuningLimits.Kp.lower,
+			(int)settings.pidControlSettings.tuningLimits.Kp.upper);
+
+		auto Ki_distribution = uid_t(
+			(int)settings.pidControlSettings.tuningLimits.Ki.lower,
+			(int)settings.pidControlSettings.tuningLimits.Ki.upper);
+
+		auto Kd_distribution = uid_t(
+			(int)settings.pidControlSettings.tuningLimits.Kd.lower,
+			(int)settings.pidControlSettings.tuningLimits.Kd.upper);
+
+		switch (settings.solverParam.rngEngine)
+		{
+		case GA_MERSENNE_TWISTER:
+			PID_RNG.Kp = boost::make_shared<RNGInstance<boost::mt19937, uid_t>>(Kp_distribution);
+			PID_RNG.Ki = boost::make_shared<RNGInstance<boost::mt19937, uid_t>>(Ki_distribution);
+			PID_RNG.Kd = boost::make_shared<RNGInstance<boost::mt19937, uid_t>>(Kd_distribution);
+			break;
+
+			/*Add support for more as needed*/
+		default: break;
+		}
+	}
+
+	std::cout << "Done!" << std::endl;
 }
 
 void FCSOptimizer::initModel()
@@ -310,66 +364,118 @@ void FCSOptimizer::initModel()
 
 void FCSOptimizer::initPopulation()
 {
-// 	double kpl = ga_instance_pid_config_data->tuningLimits.Kp_limits_lower;
-// 	double kpu = ga_instance_pid_config_data->tuningLimits.Kp_limits_upper;
-// 
-// 	double kil = ga_instance_pid_config_data->tuningLimits.Ki_limits_lower;
-// 	double kiu = ga_instance_pid_config_data->tuningLimits.Ki_limits_upper;
-// 
-// 	double kdl = ga_instance_pid_config_data->tuningLimits.Kd_limits_lower;
-// 	double kdu = ga_instance_pid_config_data->tuningLimits.Kd_limits_upper;
-// 
-// 	for (size_t i = 0; i < hData.sim_data.population_size; i++)
-// 	{
-// 		/* Get some random PID values to start off with */
-// 		hData.pid_data.Kp[i] = uniformRandomNumber(kpl, kpu);
-// 		hData.pid_data.Ki[i] = uniformRandomNumber(kil, kiu);
-// 		hData.pid_data.Kd[i] = uniformRandomNumber(kdl, kdu);
-// 	}
-// 
-// 	/* Initialize the mapping constants to convert from raw data to
-// 	something the GA can manipulate in the crossover and mutation stage */
-// 	calculateMappingCoefficients(&mapCoefficients_Kp, kpl, kpu);
-// 	calculateMappingCoefficients(&mapCoefficients_Ki, kil, kiu);
-// 	calculateMappingCoefficients(&mapCoefficients_Kd, kdl, kdu);
+	/* Initialize the mapping constants to enable conversions between real
+	valued data and unsigned integers (bit manipulation) */
+	calculateMappingCoefficients(
+		&mapCoefficients_Kp, 
+		settings.pidControlSettings.tuningLimits.Kp.lower, 
+		settings.pidControlSettings.tuningLimits.Kp.upper);
 
-	
+	calculateMappingCoefficients(
+		&mapCoefficients_Ki, 
+		settings.pidControlSettings.tuningLimits.Ki.lower,
+		settings.pidControlSettings.tuningLimits.Ki.upper);
+
+	calculateMappingCoefficients(
+		&mapCoefficients_Kd,
+		settings.pidControlSettings.tuningLimits.Kd.lower,
+		settings.pidControlSettings.tuningLimits.Kd.upper);
+
+	/* Initialize the PID values for every population member */
+	PID_RNG.Kp->acquireEngine();
+	PID_RNG.Ki->acquireEngine();
+	PID_RNG.Kd->acquireEngine();
+
+	for (size_t i = 0; i < settings.advConvergenceParam.populationSize; i++)
+	{
+		/* Get some random PID values to start off with */
+		population[i].realPID.Kp = PID_RNG.Kp->getDouble();
+		population[i].realPID.Ki = PID_RNG.Ki->getDouble();
+		population[i].realPID.Kd = PID_RNG.Kd->getDouble();
+	}
+
+	PID_RNG.Kp->releaseEngine();
+	PID_RNG.Ki->releaseEngine();
+	PID_RNG.Kd->releaseEngine();
 }
 
 
 void FCSOptimizer::checkConvergence()
 {
-	std::cout << "I checked for convergence!" << std::endl;
+	
 }
 
 void FCSOptimizer::evaluateModel()
 {
-	std::cout << "I evaluated a model!" << std::endl;
+	
+
 }
 
 void FCSOptimizer::evaluateFitness()
 {
-	std::cout << "I evaluated fitness!" << std::endl;
+	/* Switch how the fitness is evaluated based on current settings */
+	if (settings.solverParam.fitnessType == GA_FITNESS_WEIGHTED_SUM)
+	{
+
+	}
+
+	else if (settings.solverParam.fitnessType == GA_FITNESS_NON_DOMINATED_SORT)
+	{
+
+	}
+	else
+	{
+		std::cout << "No valid solverParam for FitnessType!!" << std::endl;
+	}
 }
 
 void FCSOptimizer::filterPopulation()
 {
-	std::cout << "I killed off some people!" << std::endl;
+	if (settings.solverParam.filterType == GA_POPULATION_STATIC_FILTER)
+	{
+
+	}
+	else if (settings.solverParam.filterType == GA_POPULATION_DYNAMIC_FILTER)
+	{
+
+	}
+	else
+	{
+		std::cout << "No valid solverParam for FilterType!!" << std::endl;
+	}
 }
 
 void FCSOptimizer::selectParents()
 {
-	std::cout << "I selected some mates!" << std::endl;
+
 }
 
 void FCSOptimizer::breedGeneration()
 {
-	std::cout << "I mated!" << std::endl;
+	//TODO: FUTURE WORK BELOW
+	/* What if you logged a base class instance instead of filtering through all this
+	junk? This works ok for smaller stuff, but as the number of methods grow, it would be
+	extremely useful to have a common interface for everything. You could handle different
+	kinds of settings by passing in a common struct that contains every field needed...each
+	specific sub class could then use only the fields it really needs. That sounds like a pretty
+	good idea. */
+
+	GA_BreedingDataInput input;
+	GA_BreedingDataOutput output;
+
+	/* Execute the proper function, assuming it has already been bound properly */
+	
+	breedFunction(input, output);
+
+	/* If not, bind the correct implementation function and then execute it */
+// 	else
+// 	{
+// 
+// 	}
 }
 
 void FCSOptimizer::mutateGeneration()
 {
-	std::cout << "I mutated!" << std::endl;
 }
 
 
