@@ -1,5 +1,59 @@
-// #include "ga_evaluateFitness.h"
-// 
+#include "ga_steps_evaluateFitness.h"
+
+//////////////////////////////////////////////////////////////////
+/* CLASS:  WeightedSum */
+//////////////////////////////////////////////////////////////////
+/*-----------------------------------------------
+* Constructors/Destructor
+*-----------------------------------------------*/
+WeightedSum::WeightedSum()
+{
+}
+
+WeightedSum::~WeightedSum()
+{
+}
+
+/*-----------------------------------------------
+* Public Functions
+*-----------------------------------------------*/
+void WeightedSum::evaluateFitness(const GA_EvaluateFitnessDataInput input, GA_EvaluateFitnessDataOutput& output)
+{
+
+}
+
+/*-----------------------------------------------
+* Private Functions
+*-----------------------------------------------*/
+
+
+//////////////////////////////////////////////////////////////////
+/* CLASS:  NonDominatedSort */
+//////////////////////////////////////////////////////////////////
+/*-----------------------------------------------
+* Constructors/Destructor
+*-----------------------------------------------*/
+NonDominatedSort::NonDominatedSort()
+{
+}
+
+NonDominatedSort::~NonDominatedSort()
+{
+}
+
+/*-----------------------------------------------
+* Public Functions
+*-----------------------------------------------*/
+void NonDominatedSort::evaluateFitness(const GA_EvaluateFitnessDataInput input, GA_EvaluateFitnessDataOutput& output)
+{
+
+}
+
+/*-----------------------------------------------
+* Private Functions
+*-----------------------------------------------*/
+
+
 // bool filterData(double input, double abs_threshold)
 // {
 // 	if ((abs(input) < abs_threshold) && (input != -1.0))

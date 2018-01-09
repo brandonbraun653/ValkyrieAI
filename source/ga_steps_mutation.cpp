@@ -1,5 +1,88 @@
-// #include "ga_steps_mutation.h"
-// 
+#include "ga_steps_mutation.h"
+
+
+
+///////////////////////////////////////////////////
+/* CLASS:  BitFlipMutator */
+///////////////////////////////////////////////////
+/*-----------------------------------------------
+* Constructors/Destructor
+*-----------------------------------------------*/
+BitFlipMutator::BitFlipMutator()
+{
+}
+
+BitFlipMutator::~BitFlipMutator()
+{
+}
+
+/*-----------------------------------------------
+* Public Functions
+*-----------------------------------------------*/
+void BitFlipMutator::mutate(const GA_MutateDataInput input, GA_MutateDataOutput& output)
+{
+
+}
+
+/*-----------------------------------------------
+* Private Functions
+*-----------------------------------------------*/
+void BitFlipMutator::mutateKp()
+{
+
+}
+
+void BitFlipMutator::mutateKi()
+{
+	
+}
+
+void BitFlipMutator::mutateKd()
+{
+
+}
+
+
+///////////////////////////////////////////////////
+/* CLASS:  AddSubMutator */
+///////////////////////////////////////////////////
+/*-----------------------------------------------
+* Constructors/Destructor
+*-----------------------------------------------*/
+AddSubMutator::AddSubMutator()
+{
+}
+
+AddSubMutator::~AddSubMutator()
+{
+}
+
+/*-----------------------------------------------
+* Public Functions
+*-----------------------------------------------*/
+void AddSubMutator::mutate(const GA_MutateDataInput input, GA_MutateDataOutput& output)
+{
+
+}
+
+/*-----------------------------------------------
+* Private Functions
+*-----------------------------------------------*/
+void AddSubMutator::mutateKp()
+{
+
+}
+
+void AddSubMutator::mutateKi()
+{
+
+}
+
+void AddSubMutator::mutateKd()
+{
+
+}
+
 // ///////////////////////////////////////////////////
 // /* CLASS:  MutateProbGenerator */
 // ///////////////////////////////////////////////////

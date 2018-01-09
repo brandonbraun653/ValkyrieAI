@@ -31,7 +31,7 @@ struct GA_BreedingDataOutput
 class GA_BreedBase
 {
 public:
-	virtual void breed(GA_BreedingDataInput, GA_BreedingDataOutput&) = 0;
+	virtual void breed(const GA_BreedingDataInput, GA_BreedingDataOutput&) = 0;
 
 private:
 	virtual void breedKp() = 0;
@@ -41,115 +41,80 @@ private:
 typedef boost::shared_ptr<GA_BreedBase> GA_BreedBase_sPtr;
 
 
+///////////////////////////////////////////////////
+/* CLASS:  SimpleCrossover */
+///////////////////////////////////////////////////
+class SimpleCrossover : public GA_BreedBase
+{
+public:
+
+	void breed(const GA_BreedingDataInput input, GA_BreedingDataOutput& output) override;
+
+	SimpleCrossover();
+	~SimpleCrossover();
+
+private:
+	void breedKp() override;
+	void breedKi() override;
+	void breedKd() override;
+
+};
+
+///////////////////////////////////////////////////
+/* CLASS:  DynamicCrossover */
+///////////////////////////////////////////////////
+class DynamicCrossover : public GA_BreedBase
+{
+public:
+
+	void breed(const GA_BreedingDataInput input, GA_BreedingDataOutput& output) override;
+
+	DynamicCrossover();
+	~DynamicCrossover();
+
+private:
+	void breedKp() override;
+	void breedKi() override;
+	void breedKd() override;
+
+};
+
+///////////////////////////////////////////////////
+/* CLASS:  FixedRatioCrossover */
+///////////////////////////////////////////////////
+class FixedRatioCrossover : public GA_BreedBase
+{
+public:
+
+	void breed(const GA_BreedingDataInput input, GA_BreedingDataOutput& output) override;
+
+	FixedRatioCrossover();
+	~FixedRatioCrossover();
+
+private:
+	void breedKp() override;
+	void breedKi() override;
+	void breedKd() override;
+
+};
+
+///////////////////////////////////////////////////
+/* CLASS:  SimulatedBinaryCrossover */
+///////////////////////////////////////////////////
+class SimulatedBinaryCrossover : public GA_BreedBase
+{
+public:
+
+	void breed(const GA_BreedingDataInput input, GA_BreedingDataOutput& output) override;
+
+	SimulatedBinaryCrossover();
+	~SimulatedBinaryCrossover();
+
+private:
+	void breedKp() override;
+	void breedKi() override;
+	void breedKd() override;
+
+};
+
 #endif /* BREEDING_H_ */
-// ///////////////////////////////////////////////////
-// /* CLASS:  SimpleCrossover */
-// ///////////////////////////////////////////////////
-// class SimpleCrossover
-// {
-// public:
-// 	void breed(iVec in_parents, hPID_DataVector* in_pidVals, hPID_Chromosomes* out_breed, FCSOptimizer_MappingCoeff* in_kp, FCSOptimizer_MappingCoeff* in_ki, FCSOptimizer_MappingCoeff* in_kd);
-// 
-// 	SimpleCrossover();
-// 	~SimpleCrossover();
-// private:
-// 
-// 	iVec sc_parents;
-// 	hPID_DataVector* sc_data;
-// 	hPID_Chromosomes* sc_chrom;
-// 
-// 	FCSOptimizer_MappingCoeff* mapCF_Kp;
-// 	FCSOptimizer_MappingCoeff* mapCF_Ki;
-// 	FCSOptimizer_MappingCoeff* mapCF_Kd;
-// 
-// 	void calculate_cpu_single_threaded();
-// 	void calculate_cpu_multi_threaded();
-// 	void calculate_gpu_single_threaded();
-// 	void calculate_gpu_multi_threaded();
-// 
-// 	void breedKp();
-// 	void breedKi();
-// 	void breedKd();
-// };
-// 
-// 
-// ///////////////////////////////////////////////////
-// /* CLASS:  DynamicCrossover */
-// ///////////////////////////////////////////////////
-// class DynamicCrossover
-// {
-// public:
-// 	void breed(iVec in_parents, hPID_DataVector* in_pidVals, hPID_Chromosomes* out_breed, FCSOptimizer_MappingCoeff* in_kp, FCSOptimizer_MappingCoeff* in_ki, FCSOptimizer_MappingCoeff* in_kd);
-// 
-// 	DynamicCrossover();
-// 	~DynamicCrossover();
-// 
-// private:
-// 
-// 	iVec dc_parents;
-// 	hPID_DataVector* dc_data;
-// 	hPID_Chromosomes* dc_chrom;
-// 
-// 	FCSOptimizer_MappingCoeff* mapCF_Kp;
-// 	FCSOptimizer_MappingCoeff* mapCF_Ki;
-// 	FCSOptimizer_MappingCoeff* mapCF_Kd;
-// 
-// 	void calculate_cpu_single_threaded();
-// 	void calculate_cpu_multi_threaded();
-// 	void calculate_gpu_single_threaded();
-// 	void calculate_gpu_multi_threaded();
-// 
-// 	void breedKp();
-// 	void breedKi();
-// 	void breedKd();
-// 
-// };
-// 
-// ///////////////////////////////////////////////////
-// /* CLASS:  FixedRatioCrossover */
-// ///////////////////////////////////////////////////
-// class FixedRatioCrossover
-// {
-// public:
-// 	void breed(iVec in_parents, hPID_DataVector* in_pidVals, hPID_Chromosomes* out_breed, FCSOptimizer_MappingCoeff* in_kp, FCSOptimizer_MappingCoeff* in_ki, FCSOptimizer_MappingCoeff* in_kd);
-// 
-// 	FixedRatioCrossover(double ratio);
-// 	~FixedRatioCrossover();
-// 
-// private:
-// 	double fr_ratio;
-// 	iVec fr_parents;
-// 	hPID_DataVector* fr_data;
-// 	hPID_Chromosomes* fr_chrom;
-// 
-// 	FCSOptimizer_MappingCoeff* mapCF_Kp;
-// 	FCSOptimizer_MappingCoeff* mapCF_Ki;
-// 	FCSOptimizer_MappingCoeff* mapCF_Kd;
-// 
-// 	void calculate_cpu_single_threaded();
-// 	void calculate_cpu_multi_threaded();
-// 	void calculate_gpu_single_threaded();
-// 	void calculate_gpu_multi_threaded();
-// 
-// 	void breedKp();
-// 	void breedKi();
-// 	void breedKd();
-// };
-// 
-// ///////////////////////////////////////////////////
-// /* CLASS:  SimulatedBinaryCrossover */
-// ///////////////////////////////////////////////////
-// class SimulatedBinaryCrossover
-// {
-// public:
-// 
-// 	SimulatedBinaryCrossover();
-// 	~SimulatedBinaryCrossover();
-// private:
-// 	void calculate_cpu_single_threaded();
-// 	void calculate_cpu_multi_threaded();
-// 	void calculate_gpu_single_threaded();
-// 	void calculate_gpu_multi_threaded();
-// };
-// 
-// #endif

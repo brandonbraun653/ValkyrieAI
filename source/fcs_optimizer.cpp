@@ -275,15 +275,15 @@ void FCSOptimizer::requestOutput(FCSOptimizer_Output_t& output)
 
 void FCSOptimizer::initMemory()
 {
-// 	/* Expand the results logging containers */
-// 	SS_StepPerformance.resize(hData.sim_data.population_size);
-// 	SS_FitnessValues.resize(hData.sim_data.population_size);
-// 	parentSelection.resize(hData.sim_data.population_size);
-
 	population.resize(settings.advConvergenceParam.populationSize);
 
 	/* Allocate the memory needed to hold all the operation functions */
-	breedInstances.resize(GA_BREED_TOTAL_OPTIONS);
+	runtimeStep.populationFilterInstances.resize(GA_POPULATION_TOTAL_OPTIONS);
+	runtimeStep.evaluateModelInstances.resize(GA_MODEL_TOTAL_OPTIONS);
+	runtimeStep.evaluateFitnessInstances.resize(GA_FITNESS_TOTAL_OPTIONS);
+	runtimeStep.selectParentInstances.resize(GA_SELECT_TOTAL_OPTIONS);
+	runtimeStep.breedInstances.resize(GA_BREED_TOTAL_OPTIONS);
+	runtimeStep.mutateInstances.resize(GA_MUTATE_TOTAL_OPTIONS);
 
 }
 
@@ -402,80 +402,218 @@ void FCSOptimizer::initPopulation()
 
 void FCSOptimizer::checkConvergence()
 {
-	
+	//Update the possible selection types here
 }
 
 void FCSOptimizer::evaluateModel()
 {
-	
+	const GA_METHOD_ModelEvaluation modelType = currentSolverParam.modelType;
 
+	GA_EvaluateModelDataInput input;
+	GA_EvaluateModelDataOutput output;
+
+	/* Ensure an instance of the mutation type exists before calling the mutate function */
+	if (!runtimeStep.evaluateModelInstances[modelType])
+	{
+		switch (modelType)
+		{
+		case GA_MODEL_STATE_SPACE:
+			runtimeStep.evaluateModelInstances[modelType] = boost::make_shared<StateSpaceModel>();
+			break;
+
+		case GA_MODEL_NEURAL_NETWORK:
+			runtimeStep.evaluateModelInstances[modelType] = boost::make_shared<NeuralNetworkModel>();
+			break;
+
+		//Add more as needed here
+		default:
+			std::cout << "Evaluation model not configured or is unknown. You are about to crash." << std::endl;
+			break;
+		}
+	}
+
+	runtimeStep.evaluateModelInstances[modelType]->evaluate(input, output);
+	//Do any post processing here 
 }
 
 void FCSOptimizer::evaluateFitness()
 {
-	/* Switch how the fitness is evaluated based on current settings */
-	if (settings.solverParam.fitnessType == GA_FITNESS_WEIGHTED_SUM)
-	{
+	const GA_METHOD_FitnessEvaluation fitnessType = currentSolverParam.fitnessType;
 
+	GA_EvaluateFitnessDataInput input;
+	GA_EvaluateFitnessDataOutput output;
+
+	/* Ensure an instance of the mutation type exists before calling the mutate function */
+	if (!runtimeStep.evaluateFitnessInstances[fitnessType])
+	{
+		switch (fitnessType)
+		{
+		case GA_FITNESS_WEIGHTED_SUM:
+			runtimeStep.evaluateFitnessInstances[fitnessType] = boost::make_shared<WeightedSum>();
+			break;
+
+		case GA_FITNESS_NON_DOMINATED_SORT:
+			runtimeStep.evaluateFitnessInstances[fitnessType] = boost::make_shared<NonDominatedSort>();
+			break;
+
+		//Add more as needed here
+		default:
+			std::cout << "Fitness method not configured or is unknown. You are about to crash." << std::endl;
+			break;
+		}
 	}
 
-	else if (settings.solverParam.fitnessType == GA_FITNESS_NON_DOMINATED_SORT)
-	{
-
-	}
-	else
-	{
-		std::cout << "No valid solverParam for FitnessType!!" << std::endl;
-	}
+	runtimeStep.evaluateFitnessInstances[fitnessType]->evaluateFitness(input, output);
+	//Do any post processing here 
 }
 
 void FCSOptimizer::filterPopulation()
 {
-	if (settings.solverParam.filterType == GA_POPULATION_STATIC_FILTER)
-	{
+	const GA_METHOD_PopulationFilter filterType = currentSolverParam.filterType;
 
-	}
-	else if (settings.solverParam.filterType == GA_POPULATION_DYNAMIC_FILTER)
-	{
+	GA_PopulationFilterDataInput input;
+	GA_PopulationFilterDataOutput output;
 
-	}
-	else
+	/* Ensure an instance of the mutation type exists before calling the mutate function */
+	if (!runtimeStep.mutateInstances[filterType])
 	{
-		std::cout << "No valid solverParam for FilterType!!" << std::endl;
+		switch (filterType)
+		{
+		case GA_POPULATION_STATIC_FILTER:
+			runtimeStep.populationFilterInstances[filterType] = boost::make_shared<StaticFilter>();
+			break;
+
+		case GA_POPULATION_DYNAMIC_FILTER:
+			runtimeStep.populationFilterInstances[filterType] = boost::make_shared<DynamicFilter>();
+			break;
+
+			//Add more as needed here
+		default:
+			std::cout << "Filtering method not configured or is unknown. You are about to crash." << std::endl;
+			break;
+		}
 	}
+
+	runtimeStep.populationFilterInstances[filterType]->filter(input, output);
+	//Do any post processing here 
 }
 
 void FCSOptimizer::selectParents()
 {
+	const GA_METHOD_ParentSelection selectType = currentSolverParam.selectType;
 
+	GA_SelectParentDataInput input;
+	GA_SelectParentDataOutput output;
+
+	/* Ensure an instance of the selection type exists before calling the selection function */
+	if (!runtimeStep.selectParentInstances[selectType])
+	{
+		switch (selectType)
+		{
+		case GA_SELECT_RANDOM:
+			runtimeStep.selectParentInstances[selectType] = boost::make_shared<RandomSelection>();
+			break;
+
+		case GA_SELECT_RANKED:
+			runtimeStep.selectParentInstances[selectType] = boost::make_shared<RankedSelection>();
+			break;
+
+		case GA_SELECT_ROULETTE:
+			runtimeStep.selectParentInstances[selectType] = boost::make_shared<RouletteSelection>();
+			break;
+
+		case GA_SELECT_STOCHASTIC_SAMPLING:
+			runtimeStep.selectParentInstances[selectType] = boost::make_shared<StochasticSelection>();
+			break;
+
+		case GA_SELECT_TOURNAMENT:
+			runtimeStep.selectParentInstances[selectType] = boost::make_shared<TournamentSelection>();
+			break;
+
+		case GA_SELECT_ELITIST:
+			runtimeStep.selectParentInstances[selectType] = boost::make_shared<ElitistSelection>();
+			break;
+
+		//Add more as needed here
+		default:
+			std::cout << "Parent selection method not configured or is unknown. You are about to crash." << std::endl;
+			break;
+		}
+	}
+
+	runtimeStep.selectParentInstances[selectType]->selectParent(input, output);
+	//Do any post processing here 
 }
 
 void FCSOptimizer::breedGeneration()
 {
-	//TODO: FUTURE WORK BELOW
-	/* What if you logged a base class instance instead of filtering through all this
-	junk? This works ok for smaller stuff, but as the number of methods grow, it would be
-	extremely useful to have a common interface for everything. You could handle different
-	kinds of settings by passing in a common struct that contains every field needed...each
-	specific sub class could then use only the fields it really needs. That sounds like a pretty
-	good idea. */
+	const GA_METHOD_Breed breedType = currentSolverParam.breedType;
 
 	GA_BreedingDataInput input;
 	GA_BreedingDataOutput output;
 
-	/* Execute the proper function, assuming it has already been bound properly */
-	
-	breedFunction(input, output);
+	/* Ensure an instance of the breeding type exists before calling the breed function */
+	if (!runtimeStep.breedInstances[breedType])
+	{
+		switch (breedType)
+		{
+		case GA_BREED_SIMPLE_CROSSOVER:
+			runtimeStep.breedInstances[breedType] = boost::make_shared<SimpleCrossover>();
+			break;
 
-	/* If not, bind the correct implementation function and then execute it */
-// 	else
-// 	{
-// 
-// 	}
+		case GA_BREED_DYNAMIC_CROSSOVER:
+			runtimeStep.breedInstances[breedType] = boost::make_shared<DynamicCrossover>();
+			break;
+
+		case GA_BREED_FIXED_RATIO_CROSSOVER:
+			runtimeStep.breedInstances[breedType] = boost::make_shared<FixedRatioCrossover>();
+			break;
+
+		case GA_BREED_SIMULATED_BINARY_CROSSOVER:
+			runtimeStep.breedInstances[breedType] = boost::make_shared<SimulatedBinaryCrossover>();
+			break;
+
+		//Add more as needed here
+		default: 
+			std::cout << "Breeding method not configured or is unknown. You are about to crash." << std::endl;
+			break;
+		}
+	}
+
+	runtimeStep.breedInstances[breedType]->breed(input, output);
+
+	//Do any post processing here 
 }
 
 void FCSOptimizer::mutateGeneration()
 {
+	const GA_METHOD_MutateType mutateType = currentSolverParam.mutateType;
+
+	GA_MutateDataInput input;
+	GA_MutateDataOutput output;
+
+	/* Ensure an instance of the mutation type exists before calling the mutate function */
+	if (!runtimeStep.mutateInstances[mutateType])
+	{
+		switch (mutateType)
+		{
+		case GA_MUTATE_BIT_FLIP:
+			runtimeStep.mutateInstances[mutateType] = boost::make_shared<BitFlipMutator>();
+			break;
+
+		case GA_MUTATE_ADD_SUB:
+			runtimeStep.mutateInstances[mutateType] = boost::make_shared<AddSubMutator>();
+			break;
+
+		//Add more as needed here
+		default:
+			std::cout << "Mutate method not configured or is unknown. You are about to crash." << std::endl;
+			break;
+		}
+	}
+
+	runtimeStep.mutateInstances[mutateType]->mutate(input, output);
+	//Do any post processing here 
 }
 
 

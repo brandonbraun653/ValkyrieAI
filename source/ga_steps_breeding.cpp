@@ -1,48 +1,169 @@
-// #include "ga_steps_breeding.h"
-// 
-// ///////////////////////////////////////////////////
-// /* CLASS:  SimpleCrossover */
-// ///////////////////////////////////////////////////
-// /*-----------------------------------------------
-// * Constructors/Destructor
-// *-----------------------------------------------*/
-// SimpleCrossover::SimpleCrossover()
-// {
-// }
-// 
-// SimpleCrossover::~SimpleCrossover()
-// {
-// }
-// 
-// /*-----------------------------------------------
-// * Public Functions
-// *-----------------------------------------------*/
-// void SimpleCrossover::breed(iVec in_parents, hPID_DataVector* in_pidVals, hPID_Chromosomes* out_breed, FCSOptimizer_MappingCoeff* in_kp, FCSOptimizer_MappingCoeff* in_ki, FCSOptimizer_MappingCoeff* in_kd)
-// {
-// 	sc_parents = in_parents;
-// 	sc_data = in_pidVals;
-// 	sc_chrom = out_breed;
-// 
-// 	mapCF_Kp = in_kp;
-// 	mapCF_Ki = in_ki;
-// 	mapCF_Kd = in_kd;
-// 
-// // 	if (executionType == SINGLE_THREADED)
-// // 		calculate_cpu_single_threaded();
-// // 
-// // 	if (executionType == MULTI_THREADED)
-// // 		calculate_cpu_multi_threaded();
-// // 
-// // 	if (executionType == SINGLE_THREADED_WITH_CUDA)
-// // 		calculate_gpu_single_threaded();
-// // 
-// // 	if (executionType == MULTI_THREADED_WITH_CUDA)
-// // 		calculate_gpu_multi_threaded();
-// }
-// 
-// /*-----------------------------------------------
-// * Private Functions
-// *-----------------------------------------------*/
+#include "ga_steps_breeding.h"
+
+///////////////////////////////////////////////////
+/* CLASS:  SimpleCrossover */
+///////////////////////////////////////////////////
+/*-----------------------------------------------
+* Constructors/Destructor
+*-----------------------------------------------*/
+SimpleCrossover::SimpleCrossover()
+{
+}
+
+SimpleCrossover::~SimpleCrossover()
+{
+}
+
+/*-----------------------------------------------
+* Public Functions
+*-----------------------------------------------*/
+void SimpleCrossover::breed(GA_BreedingDataInput input, GA_BreedingDataOutput& output)
+{
+	std::cout << "Hello from the simple crossover breeding function!" << std::endl;
+}
+
+/*-----------------------------------------------
+* Private Functions
+*-----------------------------------------------*/
+void SimpleCrossover::breedKp()
+{
+
+}
+
+void SimpleCrossover::breedKi()
+{
+
+}
+
+void SimpleCrossover::breedKd()
+{
+
+}
+
+
+///////////////////////////////////////////////////
+/* CLASS:  DynamicCrossover */
+///////////////////////////////////////////////////
+/*-----------------------------------------------
+* Constructors/Destructor
+*-----------------------------------------------*/
+DynamicCrossover::DynamicCrossover()
+{
+}
+
+DynamicCrossover::~DynamicCrossover()
+{
+}
+
+/*-----------------------------------------------
+* Public Functions
+*-----------------------------------------------*/
+void DynamicCrossover::breed(GA_BreedingDataInput input, GA_BreedingDataOutput& output)
+{
+	std::cout << "Hello from the dynamic crossover breeding function!" << std::endl;
+}
+
+/*-----------------------------------------------
+* Private Functions
+*-----------------------------------------------*/
+void DynamicCrossover::breedKp()
+{
+
+}
+
+void DynamicCrossover::breedKi()
+{
+
+}
+
+void DynamicCrossover::breedKd()
+{
+
+}
+
+
+///////////////////////////////////////////////////
+/* CLASS:  FixedRatioCrossover */
+///////////////////////////////////////////////////
+/*-----------------------------------------------
+* Constructors/Destructor
+*-----------------------------------------------*/
+FixedRatioCrossover::FixedRatioCrossover()
+{
+}
+
+FixedRatioCrossover::~FixedRatioCrossover()
+{
+}
+
+/*-----------------------------------------------
+* Public Functions
+*-----------------------------------------------*/
+void FixedRatioCrossover::breed(GA_BreedingDataInput input, GA_BreedingDataOutput& output)
+{
+	std::cout << "Hello from the fixed ratio crossover breeding function!" << std::endl;
+}
+
+/*-----------------------------------------------
+* Private Functions
+*-----------------------------------------------*/
+void FixedRatioCrossover::breedKp()
+{
+
+}
+
+void FixedRatioCrossover::breedKi()
+{
+
+}
+
+void FixedRatioCrossover::breedKd()
+{
+
+}
+
+
+///////////////////////////////////////////////////
+/* CLASS:  SimulatedBinaryCrossover */
+///////////////////////////////////////////////////
+/*-----------------------------------------------
+* Constructors/Destructor
+*-----------------------------------------------*/
+SimulatedBinaryCrossover::SimulatedBinaryCrossover()
+{
+}
+
+SimulatedBinaryCrossover::~SimulatedBinaryCrossover()
+{
+}
+
+/*-----------------------------------------------
+* Public Functions
+*-----------------------------------------------*/
+void SimulatedBinaryCrossover::breed(GA_BreedingDataInput input, GA_BreedingDataOutput& output)
+{
+	std::cout << "Hello from the simulated binary crossover breeding function!" << std::endl;
+}
+
+/*-----------------------------------------------
+* Private Functions
+*-----------------------------------------------*/
+void SimulatedBinaryCrossover::breedKp()
+{
+
+}
+
+void SimulatedBinaryCrossover::breedKi()
+{
+
+}
+
+void SimulatedBinaryCrossover::breedKd()
+{
+
+}
+
+
 // void SimpleCrossover::calculate_cpu_single_threaded()
 // {
 // 	breedKp();

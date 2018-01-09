@@ -77,7 +77,11 @@ enum GA_METHOD_Breed
 enum GA_METHOD_PopulationFilter
 {
 	GA_POPULATION_STATIC_FILTER,
-	GA_POPULATION_DYNAMIC_FILTER
+	GA_POPULATION_DYNAMIC_FILTER,
+	GA_POPULATION_TOTAL_OPTIONS,
+
+	GA_POPULATION_STATIC_FILTER_MSK = (1u << GA_POPULATION_STATIC_FILTER),
+	GA_POPULATION_DYNAMIC_FILTER_MSK = (1u << GA_POPULATION_DYNAMIC_FILTER)
 };
 
 enum GA_METHOD_ParentSelection
@@ -87,7 +91,15 @@ enum GA_METHOD_ParentSelection
 	GA_SELECT_ROULETTE,
 	GA_SELECT_STOCHASTIC_SAMPLING,
 	GA_SELECT_TOURNAMENT,
-	GA_SELECT_ELITIST
+	GA_SELECT_ELITIST,
+	GA_SELECT_TOTAL_OPTIONS,
+
+	GA_SELECT_RANDOM_MSK = (1u << GA_SELECT_RANDOM),
+	GA_SELECT_RANKED_MSK = (1u << GA_SELECT_RANKED),
+	GA_SELECT_ROULETTE_MSK = (1u << GA_SELECT_ROULETTE),
+	GA_SELECT_STOCHASTIC_SAMPLING_MSK = (1u << GA_SELECT_STOCHASTIC_SAMPLING),
+	GA_SELECT_TOURNAMENT_MSK = (1u << GA_SELECT_TOURNAMENT),
+	GA_SELECT_ELITIST_MSK = (1u << GA_SELECT_ELITIST)
 };
 
 enum GA_METHOD_MutateProbability
@@ -96,19 +108,44 @@ enum GA_METHOD_MutateProbability
 	GA_MUTATE_PROBABILITY_EXPONENTIAL,
 	GA_MUTATE_PROBABILITY_GAMMA,
 	GA_MUTATE_PROBABILITY_WEIBULL,
-	GA_MUTATE_PROBABILITY_CHI_SQUARED
+	GA_MUTATE_PROBABILITY_CHI_SQUARED,
+	GA_MUTATE_PROBABILITY_TOTAL_OPTIONS,
+
+	GA_MUTATE_PROBABILITY_POISSON_MSK = (1u << GA_MUTATE_PROBABILITY_POISSON),
+	GA_MUTATE_PROBABILITY_EXPONENTIAL_MSK = (1u << GA_MUTATE_PROBABILITY_EXPONENTIAL),
+	GA_MUTATE_PROBABILITY_GAMMA_MSK = (1u << GA_MUTATE_PROBABILITY_GAMMA),
+	GA_MUTATE_PROBABILITY_WEIBULL_MSK = (1u << GA_MUTATE_PROBABILITY_WEIBULL),
+	GA_MUTATE_PROBABILITY_CHI_SQUARED_MSK = (1u << GA_MUTATE_PROBABILITY_CHI_SQUARED)
 };
 
 enum GA_METHOD_MutateType
 {
 	GA_MUTATE_BIT_FLIP,
-	GA_MUTATE_ADD_SUB
+	GA_MUTATE_ADD_SUB,
+	GA_MUTATE_TOTAL_OPTIONS,
+
+	GA_MUTATE_BIT_FLIP_MSK = (1u << GA_MUTATE_BIT_FLIP),
+	GA_MUTATE_ADD_SUB_MSK = (1u << GA_MUTATE_ADD_SUB)
 };
 
 enum GA_METHOD_FitnessEvaluation
 {
 	GA_FITNESS_WEIGHTED_SUM,
-	GA_FITNESS_NON_DOMINATED_SORT
+	GA_FITNESS_NON_DOMINATED_SORT,
+	GA_FITNESS_TOTAL_OPTIONS,
+
+	GA_FITNESS_WEIGHTED_SUM_MSK = (1u << GA_FITNESS_WEIGHTED_SUM),
+	GA_FITNESS_NON_DOMINATED_SORT_MSK = (1u << GA_FITNESS_NON_DOMINATED_SORT)
+};
+
+enum GA_METHOD_ModelEvaluation
+{
+	GA_MODEL_STATE_SPACE,
+	GA_MODEL_NEURAL_NETWORK,
+	GA_MODEL_TOTAL_OPTIONS,
+
+	GA_MODEL_STATE_SPACE_MSK = (1u << GA_MODEL_STATE_SPACE),
+	GA_MODEL_NEURAL_NETWORK_MSK = (1u << GA_MODEL_NEURAL_NETWORK)
 };
 
 enum GA_METHOD_Resolution
@@ -133,6 +170,7 @@ struct FCSOptimizer_RuntimeConfig
 	GA_METHOD_ParentSelection		selectType;					/* Parent Selection step operation */
 	GA_METHOD_MutateProbability		mutateProbabilityType;		/* Mutation step operation */
 	GA_METHOD_MutateType			mutateType;					/* Mutation step operation */
+	GA_METHOD_ModelEvaluation		modelType;					/* Model Evaluation step operation */
 	GA_METHOD_FitnessEvaluation		fitnessType;				/* Fitness Evaluation step operation */
 	GA_METHOD_Resolution			resolutionType;				/* Sets mathematical resolution for all chromosomes */
 
@@ -275,8 +313,19 @@ private:
 		RNGManager_sPtr Ki;
 		RNGManager_sPtr Kd;
 	} PID_RNG;
-	
 
+
+	struct RuntimeApproaches
+	{
+		boost::container::vector<GA_PopulationFilterBase_sPtr> populationFilterInstances;	/* Implementations of unique population filtering approaches */
+		boost::container::vector<GA_EvaluateModelBase_sPtr> evaluateModelInstances;			/* Implementations of unique model evaluation approaches */
+		boost::container::vector<GA_EvaluateFitnessBase_sPtr> evaluateFitnessInstances;		/* Implementations of unique fitness evaluation approaches */
+		boost::container::vector<GA_SelectParentBase_sPtr> selectParentInstances;			/* Implementations of unique parent selection approaches */
+		boost::container::vector<GA_BreedBase_sPtr> breedInstances;							/* Implementations of unique breeding approaches */
+		boost::container::vector<GA_MutateBase_sPtr> mutateInstances;						/* Implementations of unique mutation approaches */
+	} runtimeStep;
+	
+	FCSOptimizer_RuntimeConfig currentSolverParam;	/* Keeps track of the current execution style implemented */
 
 	boost::container::vector<FCSOptimizer_PopulationMember> population;
 	FCSOptimizer_Init_t settings;
@@ -292,8 +341,8 @@ private:
 
 	/* Bred Chromosomes */
 
-	boost::container::vector<GA_BreedBase_sPtr> breedInstances;								/* Implementations of unique breeding approaches */
-	boost::function<void(GA_BreedingDataInput, GA_BreedingDataOutput&)> breedFunction;		/* Reference to the current breed function (fast access)*/
+	
+	//boost::function<void GA_BreedBase& (GA_BreedingDataInput, GA_BreedingDataOutput&)> breedFunction;		/* Reference to the current breed function (fast access) */
 
 
 	/*-----------------------------

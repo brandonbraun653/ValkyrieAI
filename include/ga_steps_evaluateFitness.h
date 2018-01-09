@@ -11,44 +11,57 @@
 
 /* Boost Includes */
 #include <boost/thread.hpp>
+#include <boost/shared_ptr.hpp>
 
 /* Local Includes */
 #include "ga_config.h"
 #include "ga_helper.h"
 #include "types.h"
 
+struct GA_EvaluateFitnessDataInput
+{
+	//Add whatever the heck is needed here
+};
+
+struct GA_EvaluateFitnessDataOutput
+{
+	//Add whatever the heck is needed here
+};
+
+class GA_EvaluateFitnessBase
+{
+public:
+	virtual void evaluateFitness(const GA_EvaluateFitnessDataInput, GA_EvaluateFitnessDataOutput&) = 0;
+
+private:
+	//?
+};
+typedef boost::shared_ptr<GA_EvaluateFitnessBase> GA_EvaluateFitnessBase_sPtr;
+
+
 ///////////////////////////////////////////////////
 /* CLASS:  WeightedSum */
 ///////////////////////////////////////////////////
-// class WeightedSum
-// {
-// public:
-// 	void calculateFitness(StepPerformance_Vec input_data, PID_ControlSettings_sPtr input_goals, PIDFitness_Vec* output_fitness);
-// 
-// 	WeightedSum();
-// 	~WeightedSum();
-// private:
-// 
-// 	StepPerformance_Vec ws_data;
-// 	PID_ControlSettings_sPtr ws_goals;
-// 	PIDFitness_Vec* ws_fitness;
-// 	boost::mutex ws_fitness_mutex;
-// 
-// 	PID_FitnessScores calculateMemberFit(int memberNum, bool dataValid, double POS, double TS, double TR, double SSERR);
-// 
-// 	void calculate_cpu_single_threaded();
-// 	void calculate_cpu_multi_threaded();
-// 	void calculate_gpu_single_threaded();
-// 	void calculate_gpu_multi_threaded();
-// };
+class WeightedSum : public GA_EvaluateFitnessBase
+{
+public:
+	void evaluateFitness(const GA_EvaluateFitnessDataInput input, GA_EvaluateFitnessDataOutput& output) override;
+
+	WeightedSum();
+	~WeightedSum();
+private:
+};
 
 ///////////////////////////////////////////////////
 /* CLASS:  NonDominatedSort */
 ///////////////////////////////////////////////////
-class NonDominatedSort
+class NonDominatedSort : public GA_EvaluateFitnessBase
 {
 public:
+	void evaluateFitness(const GA_EvaluateFitnessDataInput input, GA_EvaluateFitnessDataOutput& output) override;
 
+	NonDominatedSort();
+	~NonDominatedSort();
 private:
 };
 

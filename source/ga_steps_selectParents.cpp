@@ -1,44 +1,246 @@
-// #include "ga_mop_steps_selectParents.h"
-// 
-// ///////////////////////////////////////////////////
-// /* CLASS:  RankedSelection */
-// ///////////////////////////////////////////////////
-// /*-----------------------------------------------
-// * Constructors/Destructor
-// *-----------------------------------------------*/
-// RankedSelection::RankedSelection()
-// {
-// }
-// 
-// RankedSelection::~RankedSelection()
-// {
-// }
-// /*-----------------------------------------------
-// * Public Functions
-// *-----------------------------------------------*/
-// 
-// /*-----------------------------------------------
-// * Private Functions
-// *-----------------------------------------------*/
-// 
-// ///////////////////////////////////////////////////
-// /* CLASS:  RandomSelection */
-// ///////////////////////////////////////////////////
-// /*-----------------------------------------------
-// * Constructors/Destructor
-// *-----------------------------------------------*/
-// RandomSelection::RandomSelection()
-// {
-// 	
-// }
-// 
-// RandomSelection::~RandomSelection()
-// {
-// }
-// 
-// /*-----------------------------------------------
-// * Public Functions
-// *-----------------------------------------------*/
+#include "ga_steps_selectParents.h"
+
+///////////////////////////////////////////////////
+/* CLASS:  RankedSelection */
+///////////////////////////////////////////////////
+/*-----------------------------------------------
+* Constructors/Destructor
+*-----------------------------------------------*/
+RankedSelection::RankedSelection()
+{
+}
+
+RankedSelection::~RankedSelection()
+{
+}
+/*-----------------------------------------------
+* Public Functions
+*-----------------------------------------------*/
+void RankedSelection::selectParent(const GA_SelectParentDataInput input, GA_SelectParentDataOutput& output)
+{
+
+}
+
+/*-----------------------------------------------
+* Private Functions
+*-----------------------------------------------*/
+void RankedSelection::selectParentKp()
+{
+	
+}
+
+void RankedSelection::selectParentKi()
+{
+	
+}
+
+void RankedSelection::selectParentKd()
+{
+	
+}
+
+
+///////////////////////////////////////////////////
+/* CLASS:  RandomSelection */
+///////////////////////////////////////////////////
+/*-----------------------------------------------
+* Constructors/Destructor
+*-----------------------------------------------*/
+RandomSelection::RandomSelection()
+{
+}
+
+RandomSelection::~RandomSelection()
+{
+}
+/*-----------------------------------------------
+* Public Functions
+*-----------------------------------------------*/
+void RandomSelection::selectParent(const GA_SelectParentDataInput input, GA_SelectParentDataOutput& output)
+{
+
+}
+
+/*-----------------------------------------------
+* Private Functions
+*-----------------------------------------------*/
+void RandomSelection::selectParentKp()
+{
+
+}
+
+void RandomSelection::selectParentKi()
+{
+
+}
+
+void RandomSelection::selectParentKd()
+{
+
+}
+
+
+///////////////////////////////////////////////////
+/* CLASS:  RouletteSelection */
+///////////////////////////////////////////////////
+/*-----------------------------------------------
+* Constructors/Destructor
+*-----------------------------------------------*/
+RouletteSelection::RouletteSelection()
+{
+}
+
+RouletteSelection::~RouletteSelection()
+{
+}
+/*-----------------------------------------------
+* Public Functions
+*-----------------------------------------------*/
+void RouletteSelection::selectParent(const GA_SelectParentDataInput input, GA_SelectParentDataOutput& output)
+{
+
+}
+
+/*-----------------------------------------------
+* Private Functions
+*-----------------------------------------------*/
+void RouletteSelection::selectParentKp()
+{
+
+}
+
+void RouletteSelection::selectParentKi()
+{
+
+}
+
+void RouletteSelection::selectParentKd()
+{
+
+}
+
+
+///////////////////////////////////////////////////
+/* CLASS:  StochasticSelection */
+///////////////////////////////////////////////////
+/*-----------------------------------------------
+* Constructors/Destructor
+*-----------------------------------------------*/
+StochasticSelection::StochasticSelection()
+{
+}
+
+StochasticSelection::~StochasticSelection()
+{
+}
+/*-----------------------------------------------
+* Public Functions
+*-----------------------------------------------*/
+void StochasticSelection::selectParent(const GA_SelectParentDataInput input, GA_SelectParentDataOutput& output)
+{
+
+}
+
+/*-----------------------------------------------
+* Private Functions
+*-----------------------------------------------*/
+void StochasticSelection::selectParentKp()
+{
+
+}
+
+void StochasticSelection::selectParentKi()
+{
+
+}
+
+void StochasticSelection::selectParentKd()
+{
+
+}
+
+
+///////////////////////////////////////////////////
+/* CLASS:  TournamentSelection */
+///////////////////////////////////////////////////
+/*-----------------------------------------------
+* Constructors/Destructor
+*-----------------------------------------------*/
+TournamentSelection::TournamentSelection()
+{
+}
+
+TournamentSelection::~TournamentSelection()
+{
+}
+/*-----------------------------------------------
+* Public Functions
+*-----------------------------------------------*/
+void TournamentSelection::selectParent(const GA_SelectParentDataInput input, GA_SelectParentDataOutput& output)
+{
+
+}
+
+/*-----------------------------------------------
+* Private Functions
+*-----------------------------------------------*/
+void TournamentSelection::selectParentKp()
+{
+
+}
+
+void TournamentSelection::selectParentKi()
+{
+
+}
+
+void TournamentSelection::selectParentKd()
+{
+
+}
+
+
+///////////////////////////////////////////////////
+/* CLASS:  ElitistSelection */
+///////////////////////////////////////////////////
+/*-----------------------------------------------
+* Constructors/Destructor
+*-----------------------------------------------*/
+ElitistSelection::ElitistSelection()
+{
+}
+
+ElitistSelection::~ElitistSelection()
+{
+}
+/*-----------------------------------------------
+* Public Functions
+*-----------------------------------------------*/
+void ElitistSelection::selectParent(const GA_SelectParentDataInput input, GA_SelectParentDataOutput& output)
+{
+
+}
+
+/*-----------------------------------------------
+* Private Functions
+*-----------------------------------------------*/
+void ElitistSelection::selectParentKp()
+{
+
+}
+
+void ElitistSelection::selectParentKi()
+{
+
+}
+
+void ElitistSelection::selectParentKd()
+{
+
+}
+
+
+
 // void RandomSelection::selectParents()
 // {
 // // 	rs_selections = out_selections;
@@ -70,22 +272,7 @@
 // {
 // 	std::cout << "GPU Single/Multi Threaded Mode Currently Not Supported." << std::endl;
 // }
-// 
-// ///////////////////////////////////////////////////
-// /* CLASS:  TournamentSelection */
-// ///////////////////////////////////////////////////
-// /*-----------------------------------------------
-// * Constructors/Destructor
-// *-----------------------------------------------*/
-// TournamentSelection::TournamentSelection()
-// {
-// 	
-// }
-// 
-// TournamentSelection::~TournamentSelection()
-// {
-// }
-// 
+
 // /*-----------------------------------------------
 // * Public Functions
 // *-----------------------------------------------*/
@@ -165,19 +352,4 @@
 // 			//TODO: Select based on the best fitness in each sub category
 // 		}
 // 	}
-// }
-// 
-// void TournamentSelection::calculate_cpu_multi_threaded()
-// {
-// 	std::cout << "CPU Multi Threaded Mode Currently Not Supported." << std::endl;
-// }
-// 
-// void TournamentSelection::calculate_gpu_single_threaded()
-// {
-// 	std::cout << "GPU Single Threaded Mode Currently Not Supported." << std::endl;
-// }
-// 
-// void TournamentSelection::calculate_gpu_multi_threaded()
-// {
-// 	std::cout << "GPU Multi Threaded Mode Currently Not Supported." << std::endl;
 // }
