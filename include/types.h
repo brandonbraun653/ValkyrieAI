@@ -221,69 +221,18 @@ struct FCSOptimizer_MappingCoeff
 * Model Data Types
 *-----------------------------------------------*/
 
-class SS_NLTIV_Dynamics
+enum StateSpaceSimulation
 {
-public:
-	double integrator_dt, integrator_time_start, integrator_time_end;
-	Eigen::MatrixXd A, B, C, D, U, X0;
-	int inputs, outputs, states;
-
-	SS_NLTIV_Dynamics(const int Inputs, const int Outputs, const int States)
-	{
-		A.resize(States, States); A.setZero(States, States);
-		B.resize(States, Inputs); B.setZero(States, Inputs);
-		C.resize(Outputs, States); C.setZero(Outputs, States);
-		D.resize(Outputs, Inputs); D.setZero(Outputs, Inputs);
-		X0.resize(States, 1); X0.setZero(States, 1);
-		U.resize(Inputs, 1); U.setZero(Inputs, 1);
-		integrator_dt = 0.0;
-		integrator_time_start = 0.0;
-		integrator_time_end = 0.0;
-
-		inputs = Inputs;
-		outputs = Outputs;
-		states = States;
-	}
-
-	/* System Function */
-	void operator()(const Eigen::MatrixXd x, Eigen::MatrixXd &dxdt, double t)
-	{
-		dxdt = A*x + B*U;
-	}
-
-private:
+	IMPULSE,
+	STEP,
+	RAMP,
+	QUADRATIC,
+	CUSTOM,
 };
 
-class SS_NLTIV_Observer
+class SS_ModelBase
 {
 public:
-	uint32_t currentStep;
-	Eigen::MatrixXd C, D, U, &Y;
-
-	/* Constructor */
-	SS_NLTIV_Observer(Eigen::MatrixXd ssC, Eigen::MatrixXd ssD, Eigen::MatrixXd ssU, Eigen::MatrixXd& ssY)
-		: C(ssC), D(ssD), U(ssU), Y(ssY)
-	{
-		currentStep = 0;
-		Y.resizeLike(U);
-		Y.setZero(U.rows(), U.cols());
-	}
-
-	/* Observer Function */
-	void operator()(const Eigen::MatrixXd &x, double t)
-	{
-		Y.col(currentStep) = C*x + D*U.col(currentStep);
-		currentStep += 1;
-	}
-
-private:
-};
-
-class SS_NLTIV_ModelBase
-{
-public:
-	virtual void assignData(int argc, double* argv) = 0;
-
 	virtual Eigen::MatrixXd getA() = 0;
 	virtual Eigen::MatrixXd getB() = 0;
 	virtual Eigen::MatrixXd getC() = 0;
@@ -296,7 +245,50 @@ public:
 
 private:
 };
-typedef std::shared_ptr<SS_NLTIV_ModelBase> SS_NLTIV_ModelBase_sPtr;
+typedef std::shared_ptr<SS_ModelBase> SS_ModelBase_sPtr;
+
+
+class SS_NLTIVModel : public SS_ModelBase
+{
+public:
+	Eigen::MatrixXd A, B, C, D, U, X0;
+	int inputs, outputs, states;
+
+	SS_NLTIVModel() = default;
+
+	SS_NLTIVModel(const int Inputs, const int Outputs, const int States) : \
+		inputs(Inputs), outputs(Outputs), states(States)
+	{
+		A.resize(States, States); A.setZero(States, States);
+		B.resize(States, Inputs); B.setZero(States, Inputs);
+		C.resize(Outputs, States); C.setZero(Outputs, States);
+		D.resize(Outputs, Inputs); D.setZero(Outputs, Inputs);
+		X0.resize(States, 1); X0.setZero(States, 1);
+		U.resize(Inputs, 1); U.setZero(Inputs, 1);
+	}
+
+	/* System Function: compatible with Odeint solvers */
+	void operator()(const Eigen::MatrixXd x, Eigen::MatrixXd &dxdt, double t)
+	{
+		dxdt = A*x + B*U;
+	}
+
+
+	Eigen::MatrixXd getA() override { return A; };
+	Eigen::MatrixXd getB() override { return B; };
+	Eigen::MatrixXd getC() override { return C; };
+	Eigen::MatrixXd getD() override { return D; };
+	Eigen::MatrixXd getX0() override { return X0; };
+	
+	int getNumInputs() override { return inputs; };
+	int getNumOutputs() override { return outputs; };
+	int getNumStates() override { return states; };
+
+private:
+};
+typedef boost::shared_ptr<SS_NLTIVModel> SS_NLTIVModel_sPtr;
+
+
 
 /*-----------------------------------------------
 * OUTPUT DATA
@@ -307,9 +299,7 @@ typedef std::shared_ptr<SS_NLTIV_ModelBase> SS_NLTIV_ModelBase_sPtr;
 */
 struct StepPerformance
 {
-	double Kp = -1.0;
-	double Ki = -1.0;
-	double Kd = -1.0;
+	PID_Values pidValues = { -1.0, -1.0, -1.0 };
 
 	double percentOvershoot_performance = -1.0;	/* Units: none, percentage */
 	double steadyStateError_performance = -1.0;	/* Units: none, absolute */

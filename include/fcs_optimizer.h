@@ -208,9 +208,9 @@ struct FCSOptimizer_Init_t
 	std::string messageQueueName;							/* Name used to create a message queue between the main thread and an optimizer thread */
 
 
-	SSModel_sPtr stateSpaceModel;							/* Possible reference to a State Space Model implementation. Leave empty if unused. */
+	SS_NLTIVModel stateSpaceModel;							/* Possible reference to a State Space Model implementation. Leave empty if unused. */
 
-	NNModel_sPtr neuralNetModel;							/* Possible reference to a TensorFlow Neural Network Graph. Leave empty if unused.  */
+	//NNModel_sPtr neuralNetModel;							/* Possible reference to a TensorFlow Neural Network Graph. Leave empty if unused.  */
 
 
 	ControlResponseJargon responseFeel;						/* A non-engineering way of describing how the tuner should optimize */

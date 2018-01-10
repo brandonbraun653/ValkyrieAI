@@ -146,7 +146,7 @@ void FCSOptimizer::run()
 
 			checkConvergence();		/* Given the new fitness scores, see if we have a "winner" that met user goals sufficiently */
 
-			filterPopulation();		/* Apply random "filtering" to the population to simulate things like death/disaster/disease etc. */
+			filterPopulation();		/* Apply random "filtering" to the population to stepResponse things like death/disaster/disease etc. */
 
 			selectParents();		/* Of the current population, select those who will mate */
 
@@ -409,8 +409,6 @@ void FCSOptimizer::evaluateModel()
 {
 	const GA_METHOD_ModelEvaluation modelType = currentSolverParam.modelType;
 
-	GA_EvaluateModelDataInput input;
-	GA_EvaluateModelDataOutput output;
 
 	/* Ensure an instance of the mutation type exists before calling the mutate function */
 	if (!runtimeStep.evaluateModelInstances[modelType])
@@ -418,11 +416,11 @@ void FCSOptimizer::evaluateModel()
 		switch (modelType)
 		{
 		case GA_MODEL_STATE_SPACE:
-			runtimeStep.evaluateModelInstances[modelType] = boost::make_shared<StateSpaceModel>();
+			runtimeStep.evaluateModelInstances[modelType] = boost::make_shared<StateSpaceEvaluator>();
 			break;
 
 		case GA_MODEL_NEURAL_NETWORK:
-			runtimeStep.evaluateModelInstances[modelType] = boost::make_shared<NeuralNetworkModel>();
+			runtimeStep.evaluateModelInstances[modelType] = boost::make_shared<NeuralNetworkEvaluator>();
 			break;
 
 		//Add more as needed here
@@ -432,7 +430,37 @@ void FCSOptimizer::evaluateModel()
 		}
 	}
 
-	runtimeStep.evaluateModelInstances[modelType]->evaluate(input, output);
+	if (modelType == GA_MODEL_STATE_SPACE)
+	{
+		StateSpaceModelInput input;
+		StateSpaceModelOutput output;
+
+		/* Simulation time constraints */
+		input.dt = 0.1;
+		input.startTime = 0.0;
+		input.endTime = 10.0;
+
+		/* Simulation PID values */
+		input.pid.Kp = population[0].realPID.Kp;
+		input.pid.Ki = population[0].realPID.Ki;
+		input.pid.Kd = population[0].realPID.Kd;
+
+		/* Simulation Model */
+		input.simulationType = STEP;
+		input.model = settings.stateSpaceModel;
+
+
+		/* This function can be threaded, so ensure it has everything it needs in the input output stuff*/
+		runtimeStep.evaluateModelInstances[modelType]->evaluate(input, output);
+	}
+	
+	else if (modelType == GA_MODEL_NEURAL_NETWORK)
+	{
+		NeuralNetworkModelInput input;
+		NeuralNetworkModelOutput output;
+
+		runtimeStep.evaluateModelInstances[modelType]->evaluate(input, output);
+	}
 	//Do any post processing here 
 }
 
@@ -628,7 +656,7 @@ void FCSOptimizer::mutateGeneration()
 // 	{
 // 		double new_pid_vals[3] = { 0.0, 0.0, 0.0 };
 // 
-// 		SS_NLTIV_Dynamics ss_system_dynamics(
+// 		SS_NLTIVModel ss_system_dynamics(
 // 			ss_user_system_model->getNumInputs(),
 // 			ss_user_system_model->getNumOutputs(),
 // 			ss_user_system_model->getNumStates());
@@ -794,7 +822,7 @@ void FCSOptimizer::mutateGeneration()
 // 		*-----------------------------------*/
 // 		boost::container::vector<int> rejectionIdxs;
 // 
-// 		/* Create a random number generator that is used to simulate how 
+// 		/* Create a random number generator that is used to stepResponse how 
 // 		   many population members are killed off at each generation. */
 // 		int maxReplacements = (int)floor(hData.sim_data.population_size*0.4);
 // 		std::random_device rd1;

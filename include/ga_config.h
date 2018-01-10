@@ -39,7 +39,8 @@
 
 
 /* Debugging Statements */
-#define SS_TRACE							0
+#define SS_TRACE_ENABLE						1
+#define SS_TRACE_EXECUTION_TIME				1
 #define SS_TRACE_LOG_COUT					0
 #define SS_TRACE_LOG_CSV					0
 #define SS_THREAD_TRACE_LOG_COUT			0

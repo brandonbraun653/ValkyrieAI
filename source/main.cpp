@@ -36,6 +36,18 @@ int main()
 		GA_BREED_DYNAMIC_CROSSOVER_MSK |
 		GA_BREED_FIXED_RATIO_CROSSOVER_MSK );
 
+
+	/* Create the State Space Model */
+	SS_NLTIVModel model(1, 1, 2);
+	model.A << -8.202, -2.029, -0.149, -3.25;
+	model.B << 1.14, -1.23;
+	model.C << 1.0, 0.0;
+	model.D << 0.0;
+	model.X0 << 0.0, 0.0;
+
+	//Need to figure out how to cast the child class back to the parent
+	initStruct.stateSpaceModel = model;
+
 	FCSOptimizer_Handle hRollTuner = DroneTuner.newOptimizer(initStruct);
 
 	DroneTuner.initialize(hRollTuner);

@@ -7,20 +7,57 @@
 /*-----------------------------------------------
 * Constructors/Destructor
 *-----------------------------------------------*/
-StateSpaceModel::StateSpaceModel()
+StateSpaceEvaluator::StateSpaceEvaluator()
 {
+	simulator = boost::make_shared<StateSpaceSimulator>();
 }
 
-StateSpaceModel::~StateSpaceModel()
+StateSpaceEvaluator::~StateSpaceEvaluator()
 {
 }
 
 /*-----------------------------------------------
 * Public Functions
 *-----------------------------------------------*/
-void StateSpaceModel::evaluate(const GA_EvaluateModelDataInput input, GA_EvaluateModelDataOutput& output)
+void StateSpaceEvaluator::evaluate(const StateSpaceModelInput input, StateSpaceModelOutput& output)
 {
+	#if (SS_TRACE_ENABLE == 1)
+		#if (SS_TRACE_EXECUTION_TIME == 1)
+		auto start = boost::chrono::high_resolution_clock::now();
+		#endif
+	#endif
 
+		output.errorCode = 0; //currently just default to zero
+
+		switch (input.simulationType)
+		{
+		case STEP:
+			output.data = simulator->stepResponse(input.startTime, input.endTime, input.dt, input.model, input.pid);
+			break;
+
+		case RAMP:
+
+			break;
+
+		case QUADRATIC:
+
+			break;
+
+		case CUSTOM:
+
+			break;
+
+		default: 
+			output.errorCode = -1;
+			break;
+		};
+	
+	
+	#if (SS_TRACE_ENABLE == 1)
+		#if (SS_TRACE_EXECUTION_TIME == 1)
+		auto stop = boost::chrono::high_resolution_clock::now();
+		#endif
+	#endif
 }
 
 /*-----------------------------------------------
@@ -36,18 +73,18 @@ void StateSpaceModel::evaluate(const GA_EvaluateModelDataInput input, GA_Evaluat
 /*-----------------------------------------------
 * Constructors/Destructor
 *-----------------------------------------------*/
-NeuralNetworkModel::NeuralNetworkModel()
+NeuralNetworkEvaluator::NeuralNetworkEvaluator()
 {
 }
 
-NeuralNetworkModel::~NeuralNetworkModel()
+NeuralNetworkEvaluator::~NeuralNetworkEvaluator()
 {
 }
 
 /*-----------------------------------------------
 * Public Functions
 *-----------------------------------------------*/
-void NeuralNetworkModel::evaluate(const GA_EvaluateModelDataInput input, GA_EvaluateModelDataOutput& output)
+void NeuralNetworkEvaluator::evaluate(const NeuralNetworkModelInput input, NeuralNetworkModelOutput& output)
 {
 
 }
