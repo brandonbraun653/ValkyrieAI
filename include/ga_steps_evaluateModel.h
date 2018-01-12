@@ -33,7 +33,8 @@ struct StateSpaceModelInput
 	
 	PID_Values pid;
 
-	SS_NLTIVModel model;		
+	SS_ModelBase_sPtr model;
+	//SS_NLTIVModel model;		
 	StateSpaceSimulation simulationType;
 };
 

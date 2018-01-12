@@ -245,7 +245,7 @@ public:
 
 private:
 };
-typedef std::shared_ptr<SS_ModelBase> SS_ModelBase_sPtr;
+typedef boost::shared_ptr<SS_ModelBase> SS_ModelBase_sPtr;
 
 
 class SS_NLTIVModel : public SS_ModelBase
@@ -256,15 +256,38 @@ public:
 
 	SS_NLTIVModel() = default;
 
+	/* Copy constructor */
+	SS_NLTIVModel(const SS_ModelBase_sPtr& base)
+	{
+		//Note: Am I assuming too much by taking directly from the base class?
+		inputs = base->getNumInputs();
+		outputs = base->getNumOutputs();
+		states = base->getNumStates();
+
+		A.resize(states, states); A.setZero(states, states);
+		B.resize(states, inputs); B.setZero(states, inputs);
+		C.resize(outputs, states); C.setZero(outputs, states);
+		D.resize(outputs, inputs); D.setZero(outputs, inputs);
+		X0.resize(states, 1); X0.setZero(states, 1);
+		U.resize(inputs, 1); U.setZero(inputs, 1);
+
+
+		A << base->getA();
+		B << base->getB();
+		C << base->getC();
+		D << base->getD();
+		X0 << base->getX0();
+	}
+
 	SS_NLTIVModel(const int Inputs, const int Outputs, const int States) : \
 		inputs(Inputs), outputs(Outputs), states(States)
 	{
-		A.resize(States, States); A.setZero(States, States);
-		B.resize(States, Inputs); B.setZero(States, Inputs);
-		C.resize(Outputs, States); C.setZero(Outputs, States);
-		D.resize(Outputs, Inputs); D.setZero(Outputs, Inputs);
-		X0.resize(States, 1); X0.setZero(States, 1);
-		U.resize(Inputs, 1); U.setZero(Inputs, 1);
+		A.resize(states, states); A.setZero(states, states);
+		B.resize(states, inputs); B.setZero(states, inputs);
+		C.resize(outputs, states); C.setZero(outputs, states);
+		D.resize(outputs, inputs); D.setZero(outputs, inputs);
+		X0.resize(states, 1); X0.setZero(states, 1);
+		U.resize(inputs, 1); U.setZero(inputs, 1);
 	}
 
 	/* System Function: compatible with Odeint solvers */

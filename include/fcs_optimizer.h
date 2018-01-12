@@ -208,8 +208,9 @@ struct FCSOptimizer_Init_t
 	std::string messageQueueName;							/* Name used to create a message queue between the main thread and an optimizer thread */
 
 
-	SS_NLTIVModel stateSpaceModel;							/* Possible reference to a State Space Model implementation. Leave empty if unused. */
+	//SS_NLTIVModel stateSpaceModel;							/* Possible reference to a State Space Model implementation. Leave empty if unused. */
 
+	SS_ModelBase_sPtr stateSpaceModel;
 	//NNModel_sPtr neuralNetModel;							/* Possible reference to a TensorFlow Neural Network Graph. Leave empty if unused.  */
 
 
