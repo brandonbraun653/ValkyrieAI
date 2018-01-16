@@ -20,7 +20,7 @@
 #include <boost/numeric/odeint/external/eigen/eigen.hpp>
 
 /* Local Includes */
-#include "ga_config.h"
+#include "config.h"
 #include "types.h"
 #include "debugger.h"
 

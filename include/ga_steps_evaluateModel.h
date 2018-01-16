@@ -20,7 +20,7 @@
 
 
 /* ValkyrieAI Includes */
-#include "ga_config.h"
+#include "config.h"
 #include "types.h"
 #include "model_simulation.h"
 
@@ -33,16 +33,19 @@ struct StateSpaceModelInput
 	
 	PID_Values pid;
 
-	SS_ModelBase_sPtr model;
-	//SS_NLTIVModel model;		
+	SS_ModelBase_sPtr model;	
 	StateSpaceSimulation simulationType;
+
+	
 };
 
 struct StateSpaceModelOutput
 {
-	Eigen::MatrixXd data;	/* Raw simulation data */
+	StateSpaceSimulation simulationType;		/* Kind of simulation that was run */
+	Eigen::MatrixXd data;						/* Raw simulation data */
 
-	int errorCode;			/* Any possible error codes from the simulation */
+	int errorCode;								/* Any possible error codes from the simulation */
+	boost::chrono::microseconds executionTime;	/* Physical time spent solving for results */
 };
 
 struct NeuralNetworkModelInput

@@ -14,7 +14,7 @@
 #include <boost/shared_ptr.hpp>
 
 /* Local Includes */
-#include "ga_config.h"
+#include "config.h"
 #include "ga_helper.h"
 #include "types.h"
 

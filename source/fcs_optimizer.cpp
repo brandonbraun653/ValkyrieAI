@@ -94,6 +94,10 @@ FCSOptimizer::~FCSOptimizer()
 *-----------------------------------------------*/
 void FCSOptimizer::run()
 {
+	#if (FCS_TRACE_EXECUTION_TIME == 1)
+	auto start = boost::chrono::high_resolution_clock::now();
+	#endif
+
 	std::cout << "Hello from thread " << boost::this_thread::get_id() << "!" << std::endl;
 	
 	//Do some initialization here 
@@ -140,6 +144,8 @@ void FCSOptimizer::run()
 		*-------------------------------------*/
 		if (currentStatus == GA_OK)
 		{
+			//Current Module: Evaluate Fitness
+
 			evaluateModel();		/* With the current population members, run a test scenario on the chosen model and record output data */
 
 			evaluateFitness();		/* Use recorded performance data from last step to gauge how well it meets user goals */
@@ -153,7 +159,6 @@ void FCSOptimizer::run()
 			breedGeneration();		/* Use the selected mating pairs from the last step to create new offspring */
 		}
 
-
 		/*-------------------------------------
 		* Handle errors or external commands
 		*-------------------------------------*/
@@ -165,10 +170,17 @@ void FCSOptimizer::run()
 				break;
 			}
 
-
-
+			if (currentStatus == GA_COMPLETE)
+			{
+				//Do other things? 
+				break;
+			}
 		}
 
+		#ifdef _DEBUG
+		//We only want to run one time through just to make sure stuff executes ok. To be removed later.
+		currentStatus = GA_COMPLETE;
+		#endif
 
 		/* Allow other waiting threads to run */
 		boost::this_thread::yield();
@@ -177,6 +189,13 @@ void FCSOptimizer::run()
 	/* Do some minor post processing here */
 	//What should I do? 
 	std::cout << "Exiting spawned thread" << std::endl;
+
+	#if (FCS_TRACE_EXECUTION_TIME == 1)
+	auto stop = boost::chrono::high_resolution_clock::now();
+	auto totalTime = boost::chrono::duration_cast<boost::chrono::milliseconds>(stop - start);
+
+	std::cout << "Total Execution Time: " << totalTime << std::endl;
+	#endif
 }
 
 void FCSOptimizer::init(FCSOptimizer_Init_t initializationSettings)
@@ -275,7 +294,12 @@ void FCSOptimizer::requestOutput(FCSOptimizer_Output_t& output)
 
 void FCSOptimizer::initMemory()
 {
-	population.resize(settings.advConvergenceParam.populationSize);
+	const size_t popSize = settings.advConvergenceParam.populationSize;
+	population.resize(popSize);
+
+	/* Glue memory between the GA functions */
+	fcs_modelEvalutationData.resize(popSize);
+	fcs_fitnessData.resize(popSize);
 
 	/* Allocate the memory needed to hold all the operation functions */
 	runtimeStep.populationFilterInstances.resize(GA_POPULATION_TOTAL_OPTIONS);
@@ -284,7 +308,6 @@ void FCSOptimizer::initMemory()
 	runtimeStep.selectParentInstances.resize(GA_SELECT_TOTAL_OPTIONS);
 	runtimeStep.breedInstances.resize(GA_BREED_TOTAL_OPTIONS);
 	runtimeStep.mutateInstances.resize(GA_MUTATE_TOTAL_OPTIONS);
-
 }
 
 void FCSOptimizer::initRNG()
@@ -409,13 +432,14 @@ void FCSOptimizer::evaluateModel()
 {
 	const GA_METHOD_ModelEvaluation modelType = currentSolverParam.modelType;
 
-
-	/* Ensure an instance of the mutation type exists before calling the mutate function */
+	/* Ensure an instance of the mutation type exists before evaluation */
 	if (!runtimeStep.evaluateModelInstances[modelType])
 	{
 		switch (modelType)
 		{
 		case GA_MODEL_STATE_SPACE:
+			//TODO: refactor this ridiculous "runtimeStep"...I forgot what it meant and
+			// didn't understand at a glance
 			runtimeStep.evaluateModelInstances[modelType] = boost::make_shared<StateSpaceEvaluator>();
 			break;
 
@@ -438,20 +462,34 @@ void FCSOptimizer::evaluateModel()
 		/* Simulation time constraints */
 		input.dt = 0.1;
 		input.startTime = 0.0;
-		input.endTime = 10.0;
-
-		/* Simulation PID values */
-		input.pid.Kp = population[0].realPID.Kp;
-		input.pid.Ki = population[0].realPID.Ki;
-		input.pid.Kd = population[0].realPID.Kd;
+		input.endTime = 3.0;
 
 		/* Simulation Model */
 		input.simulationType = STEP;
 		input.model = settings.stateSpaceModel;
 
+		/* This is incredibly slow (~6mS, eT3.0, dT0.1) per member...ridiculous. More than likely
+		this is due to being single threaded and not taking up enough logical cores. */
+		//TODO: Enforce machine specific multi threading based on number of logical cores 
+		for (int member = 0; member < settings.advConvergenceParam.populationSize; member++)
+		{
+			/* FUTURE NOTE:
+			When doing the multi threaded version, it probably would be extremely helpful to build 
+			up all the data needed to run the simulation and pass it into a thread that is waiting 
+			to consume some data and spit out results before sleeping again.
+			
+			Create these threads during initialization so that thread allocation and destruction does
+			not consume any runtime resources. There will be as many threads as the number of logical 
+			processor cores. */
 
-		/* This function can be threaded, so ensure it has everything it needs in the input output stuff*/
-		runtimeStep.evaluateModelInstances[modelType]->evaluate(input, output);
+			/* Swap out the PID values and simulate */
+			input.pid = population[member].realPID;
+			runtimeStep.evaluateModelInstances[modelType]->evaluate(input, output);
+
+			/* Pass on the resulting data to the optimizer's record of everything */
+			fcs_modelEvalutationData[member].simModelType = STATE_SPACE_MODEL;
+			fcs_modelEvalutationData[member].ss_output = output;
+		}
 	}
 	
 	else if (modelType == GA_MODEL_NEURAL_NETWORK)
@@ -460,8 +498,7 @@ void FCSOptimizer::evaluateModel()
 		NeuralNetworkModelOutput output;
 
 		runtimeStep.evaluateModelInstances[modelType]->evaluate(input, output);
-	}
-	//Do any post processing here 
+	} 
 }
 
 void FCSOptimizer::evaluateFitness()
@@ -471,7 +508,10 @@ void FCSOptimizer::evaluateFitness()
 	GA_EvaluateFitnessDataInput input;
 	GA_EvaluateFitnessDataOutput output;
 
-	/* Ensure an instance of the mutation type exists before calling the mutate function */
+	
+	/*-----------------------------
+	* Ensure a fitness evaluation instance exists 
+	*----------------------------*/
 	if (!runtimeStep.evaluateFitnessInstances[fitnessType])
 	{
 		switch (fitnessType)
@@ -489,6 +529,25 @@ void FCSOptimizer::evaluateFitness()
 			std::cout << "Fitness method not configured or is unknown. You are about to crash." << std::endl;
 			break;
 		}
+	}
+
+	/*-----------------------------
+	* Calculate the fitness 
+	*----------------------------*/
+	if (fitnessType == GA_FITNESS_WEIGHTED_SUM)
+	{
+		
+		for (int member = 0; member < settings.advConvergenceParam.populationSize; member++)
+		{
+			//do some stuff
+
+			runtimeStep.evaluateFitnessInstances[fitnessType]->evaluateFitness(input, output);
+		}
+	}
+
+	else if (fitnessType == GA_FITNESS_NON_DOMINATED_SORT)
+	{
+
 	}
 
 	runtimeStep.evaluateFitnessInstances[fitnessType]->evaluateFitness(input, output);

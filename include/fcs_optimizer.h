@@ -20,7 +20,7 @@
 #include <boost/interprocess/ipc/message_queue.hpp>
 
 /* Local Includes */
-#include "ga_config.h"
+#include "config.h"
 #include "ga_steps.h"
 #include "rng.hpp"
 #include "model.h"
@@ -186,6 +186,7 @@ struct FCSOptimizer_RuntimeConfig
 struct FCSOptimizer_AllowedRuntimeConfig
 {
 	uint32_t allowedBreedTypes;
+	uint32_t allowedFitnessTypes;
 };
 
 enum FCSOptimizer_Commands
@@ -254,6 +255,8 @@ struct FCSOptimizer_Handle_t
 typedef boost::shared_ptr<FCSOptimizer_Handle_t> FCSOptimizer_Handle;
 
 
+
+
 //////////////////////////////////////////////////////////////////
 /* Helper Functions */
 //////////////////////////////////////////////////////////////////
@@ -288,6 +291,33 @@ public:
 	~FCSOptimizer();
 
 private:
+	/*-----------------------------
+	* Custom structures for passing information around to internal functions. These
+	* essentially work as glue and help keep the actual algorithm as abstract as possible.
+	* Each structure corresponds to the output data for each step and should only reference
+	* a single population member. See "Runtime Processing Data" section below for actual 
+	* implementation of this concept. 
+	*----------------------------*/
+
+	struct FCSOptimzer_SimulationData
+	{
+		/* Generic information about the results of the simulation step. Not all of 
+		 * these fields will be used depending on the type of simulation that has been
+		 * performed by the user.
+		 */
+		SimulationModelType simModelType;
+
+		StateSpaceModelOutput ss_output;
+		NeuralNetworkModelOutput nn_output;
+
+		/* Add more support here as necessary */
+	};
+
+	struct FCSOptimizer_FitnessData
+	{
+
+	};
+
 	/*-----------------------------
 	* Runtime Flags
 	*----------------------------*/
@@ -328,15 +358,20 @@ private:
 	
 	FCSOptimizer_RuntimeConfig currentSolverParam;	/* Keeps track of the current execution style implemented */
 
+	/* A highly generic description of the population members */
 	boost::container::vector<FCSOptimizer_PopulationMember> population;
+
+
 	FCSOptimizer_Init_t settings;
 
 	/*-----------------------------
 	* Runtime Processing Data
 	*----------------------------*/
-	/* Step Performance */
+	/* Model Evaluation Data */
+	boost::container::vector<FCSOptimzer_SimulationData> fcs_modelEvalutationData;
 
-	/* Fitness Values */
+	/* Fitness Data */
+	boost::container::vector<FCSOptimizer_FitnessData> fcs_fitnessData;
 
 	/* Parent Selections */
 

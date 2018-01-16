@@ -1,6 +1,6 @@
 #pragma once
-#ifndef GA_CONFIG_H_
-#define GA_CONFIG_H_
+#ifndef CONFIG_H_
+#define CONFIG_H_
 
 /*-----------------------------------------------
 * Global Genetic Algorithm "Stuff"
@@ -9,7 +9,12 @@
 #define MAX_THREADS_ALLOWED_PER_OPTIMIZER	16
 
 /*-----------------------------------------------
-* Runtime Options
+* FCS Optimizer Options
+*-----------------------------------------------*/
+#define FCS_TRACE_EXECUTION_TIME			1
+
+/*-----------------------------------------------
+* Genetic Algorithm Options
 *-----------------------------------------------*/
 /* Initialize Population Function */
 #define GA_TRACE_INITIALIZE_POPULATION		0
@@ -47,4 +52,4 @@
 #define SS_THREAD_TRACE_LOG_CSV				0
 
 
-#endif
+#endif /* CONFIG_H_ */

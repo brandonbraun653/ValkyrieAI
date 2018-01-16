@@ -28,6 +28,7 @@ int main()
 
 	/* Setup the starting operation parameters */
 	initStruct.solverParam.breedType = GA_BREED_SIMPLE_CROSSOVER;
+	initStruct.solverParam.fitnessType = GA_FITNESS_WEIGHTED_SUM;
 
 	/* Choose which parameters the reconfiguration engine is allowed to use */
 	initStruct.solverParamOptions.allowedBreedTypes = (
@@ -36,6 +37,9 @@ int main()
 		GA_BREED_DYNAMIC_CROSSOVER_MSK |
 		GA_BREED_FIXED_RATIO_CROSSOVER_MSK );
 
+	initStruct.solverParamOptions.allowedFitnessTypes = (
+		GA_FITNESS_WEIGHTED_SUM_MSK | 
+		GA_FITNESS_NON_DOMINATED_SORT_MSK );
 
 	/* Create the State Space Model */
 	SS_NLTIVModel_sPtr model = boost::make_shared<SS_NLTIVModel>(1, 1, 2);
@@ -45,7 +49,7 @@ int main()
 	model->D << 0.0;
 	model->X0 << 0.0, 0.0;
 
-	//Testing: Purposefully cast back to the base class for the abstraction into the model simulation method
+	//Testing: Purposefully cast back to the base class for abstraction into the model simulation method
 	initStruct.stateSpaceModel = boost::dynamic_pointer_cast<SS_ModelBase, SS_NLTIVModel>(model);
 
 
@@ -54,9 +58,8 @@ int main()
 	DroneTuner.initialize(hRollTuner);
 	DroneTuner.start(hRollTuner);
 
-	std::this_thread::sleep_for(std::chrono::seconds(2));
-
-	DroneTuner.stop(hRollTuner);
+	//std::this_thread::sleep_for(std::chrono::seconds(2));
+	//DroneTuner.stop(hRollTuner);
 
 	DroneTuner.waitForCompletion();
 	return 0;

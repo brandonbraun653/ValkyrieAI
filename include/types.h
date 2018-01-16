@@ -187,7 +187,7 @@ struct FCSOptimizer_AdvConstraints
 */
 struct FCSOptimizer_PopulationMember
 {
-	GA_PIDChromosome<double> realPID;			/* Real valued representation of PID tuning parameters */
+	PID_Values realPID;							/* Real valued representation of PID tuning parameters */
 
 	GA_PIDChromosome<uint16_t> mappedPID;		/* Mapped representation (double -> uint16_t) of realPID over the min/max
 												range specified in the PID_ControlSettings.tuningLimits struct */
@@ -220,6 +220,11 @@ struct FCSOptimizer_MappingCoeff
 /*-----------------------------------------------
 * Model Data Types
 *-----------------------------------------------*/
+enum SimulationModelType
+{
+	STATE_SPACE_MODEL,
+	NEURAL_NETWORK_MODEL
+};
 
 enum StateSpaceSimulation
 {
@@ -335,7 +340,8 @@ struct StepPerformance
 	int settlingTime_Idx = 0;			/* Index in given data series */
 	int riseTime_Idx[2] = { 0, 0 };		/* Start/Stop index in given data series */
 
-										/* Stores the data that resulted in performance criteria above */
+
+	/* Stores the data that resulted in performance criteria above */
 	bool performance_simulation_data_is_valid = false;
 	Eigen::MatrixXd performance_simulation_data;
 };

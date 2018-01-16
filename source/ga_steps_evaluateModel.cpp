@@ -56,6 +56,8 @@ void StateSpaceEvaluator::evaluate(const StateSpaceModelInput input, StateSpaceM
 	#if (SS_TRACE_ENABLE == 1)
 		#if (SS_TRACE_EXECUTION_TIME == 1)
 		auto stop = boost::chrono::high_resolution_clock::now();
+		output.executionTime = boost::chrono::duration_cast<boost::chrono::microseconds>(stop - start);
+
 		#endif
 	#endif
 }

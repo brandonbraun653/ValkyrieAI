@@ -9,7 +9,7 @@
 #include <random>
 
 /* Local Includes */
-#include "ga_config.h"
+#include "config.h"
 #include "types.h"
 
 extern uint16_t data2Chromosome(FCSOptimizer_MappingCoeff *mapping, double data);
