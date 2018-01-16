@@ -43,8 +43,8 @@ StepPerformance StepResponseAnalyzer::analyze(Eigen::MatrixXd data)
 	/*-----------------------------------------------
 	* Initialization steps
 	*-----------------------------------------------*/
-	sim_data = data;
-	performance.performance_simulation_data = data; //Probably should merge this
+	sim_data = data;				/* Local copy of simulation data for below functions */
+	performance.data = sim_data;	/* Log of simulation data for FCS Optimizer */
 
 	/*-----------------------------------------------
 	* Run through each step successively

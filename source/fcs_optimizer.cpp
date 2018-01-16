@@ -47,17 +47,17 @@ void writeCSV_StepData(StepPerformance data, std::string filename)
 {
 	std::ofstream csvFile;
 	csvFile.open(filename);
-	size_t num_rows = data.performance_simulation_data.rows();
-	size_t num_cols = data.performance_simulation_data.cols();
+	size_t num_rows = data.data.rows();
+	size_t num_cols = data.data.cols();
 
 	//Write each full row
 	for (int row = 0; row < num_rows; row++)
 	{
 		for (int col = 0; col < num_cols; col++)
 			if (col == num_cols - 1)
-				csvFile << std::to_string(data.performance_simulation_data(row, col)*1.0);
+				csvFile << std::to_string(data.data(row, col)*1.0);
 			else
-				csvFile << std::to_string(data.performance_simulation_data(row, col)*1.0) << ",";
+				csvFile << std::to_string(data.data(row, col)*1.0) << ",";
 
 		csvFile << "\n";
 	}
@@ -74,7 +74,7 @@ void writeCSV_StepData(StepPerformance data, std::string filename)
 }
 
 //////////////////////////////////////////////////////////////////
-/* CLASS: GACLASS_MOP */
+/* CLASS: FCSOptimizer */
 //////////////////////////////////////////////////////////////////
 /*-----------------------------------------------
 * Constructors/Destructor
@@ -483,11 +483,14 @@ void FCSOptimizer::evaluateModel()
 			processor cores. */
 
 			/* Swap out the PID values and simulate */
-			input.pid = population[member].realPID;
+			//input.pid = population[member].realPID;
+			input.pid.Kp = 12.05;
+			input.pid.Ki = 68.38;
+			input.pid.Kd = 0.0;
 			runtimeStep.evaluateModelInstances[modelType]->evaluate(input, output);
 
 			/* Pass on the resulting data to the optimizer's record of everything */
-			fcs_modelEvalutationData[member].simModelType = STATE_SPACE_MODEL;
+			fcs_modelEvalutationData[member].modelType = GA_MODEL_STATE_SPACE;
 			fcs_modelEvalutationData[member].ss_output = output;
 		}
 	}
@@ -503,10 +506,15 @@ void FCSOptimizer::evaluateModel()
 
 void FCSOptimizer::evaluateFitness()
 {
+	const GA_METHOD_ModelEvaluation modelType = currentSolverParam.modelType;
 	const GA_METHOD_FitnessEvaluation fitnessType = currentSolverParam.fitnessType;
 
 	GA_EvaluateFitnessDataInput input;
 	GA_EvaluateFitnessDataOutput output;
+
+	/* Assign the static fitness evaluation parameters */
+	input.goals = settings.pidControlSettings.performanceGoals;
+	input.tolerance = settings.pidControlSettings.performanceTolerance;
 
 	
 	/*-----------------------------
@@ -531,17 +539,50 @@ void FCSOptimizer::evaluateFitness()
 		}
 	}
 
+	//TESTING ONLY:
+	writeCSV_StepData(fcs_modelEvalutationData[0].ss_output.stepPerformance, "testOut.csv");
+
 	/*-----------------------------
 	* Calculate the fitness 
 	*----------------------------*/
 	if (fitnessType == GA_FITNESS_WEIGHTED_SUM)
 	{
 		
-		for (int member = 0; member < settings.advConvergenceParam.populationSize; member++)
+		if (modelType == GA_MODEL_STATE_SPACE)
 		{
-			//do some stuff
+			for (int member = 0; member < settings.advConvergenceParam.populationSize; member++)
+			{
+				/* Update the simulation results to be passed in */
+				input.POS = fcs_modelEvalutationData[member].ss_output.stepPerformance.percentOvershoot_performance;
+				input.SSER = fcs_modelEvalutationData[member].ss_output.stepPerformance.steadyStateError_performance;
+				input.TR = fcs_modelEvalutationData[member].ss_output.stepPerformance.percentOvershoot_performance;
+				input.TS = fcs_modelEvalutationData[member].ss_output.stepPerformance.settlingTime_performance;
+				input.FV = fcs_modelEvalutationData[member].ss_output.stepPerformance.finalValue_performance;
 
-			runtimeStep.evaluateFitnessInstances[fitnessType]->evaluateFitness(input, output);
+				input.simulationData = fcs_modelEvalutationData[member].ss_output.stepPerformance.data;
+				//NOTE: Eventually I am going to need to specify what kind of simulation was performed...
+
+
+				/* Evaluate fitness */
+				runtimeStep.evaluateFitnessInstances[fitnessType]->evaluateFitness(input, output);
+
+				
+				/* Copy the results of the step performance analyzer into the output struct */
+				output.fit.stepPerformanceData = fcs_modelEvalutationData[member].ss_output.stepPerformance;
+
+				/* Pass on the resulting data to the optimizer's record of everything */
+				fcs_fitnessData[member].modelType = modelType;
+				fcs_fitnessData[member].fit = output.fit;
+
+				#if (DEBUGGING_ENABLED == 1)
+				double memberFit = 0.0;
+				memberFit = output.fit.global_fitness;
+				#endif
+			}
+		}
+		else if (modelType == GA_MODEL_NEURAL_NETWORK)
+		{
+
 		}
 	}
 
@@ -549,9 +590,6 @@ void FCSOptimizer::evaluateFitness()
 	{
 
 	}
-
-	runtimeStep.evaluateFitnessInstances[fitnessType]->evaluateFitness(input, output);
-	//Do any post processing here 
 }
 
 void FCSOptimizer::filterPopulation()

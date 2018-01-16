@@ -305,7 +305,7 @@ private:
 		 * these fields will be used depending on the type of simulation that has been
 		 * performed by the user.
 		 */
-		SimulationModelType simModelType;
+		GA_METHOD_ModelEvaluation modelType;
 
 		StateSpaceModelOutput ss_output;
 		NeuralNetworkModelOutput nn_output;
@@ -315,7 +315,9 @@ private:
 
 	struct FCSOptimizer_FitnessData
 	{
+		GA_METHOD_ModelEvaluation modelType;
 
+		PID_FitnessScores fit;
 	};
 
 	/*-----------------------------

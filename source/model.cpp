@@ -51,8 +51,8 @@ void writeCSV_StepPerfData(StepPerformance data, std::string filename)
 {
 	std::ofstream csvFile;
 	csvFile.open(filename);
-	size_t num_rows = data.performance_simulation_data.rows();
-	size_t num_cols = data.performance_simulation_data.cols();
+	size_t num_rows = data.data.rows();
+	size_t num_cols = data.data.cols();
 
 	//Write each full row
 	for (int row = 0; row < num_rows; row++)
@@ -60,9 +60,9 @@ void writeCSV_StepPerfData(StepPerformance data, std::string filename)
 		for (int col = 0; col < num_cols; col++)
 
 			if (col == num_cols - 1)
-				csvFile << std::to_string(data.performance_simulation_data(row, col)*1.0);
+				csvFile << std::to_string(data.data(row, col)*1.0);
 			else
-				csvFile << std::to_string(data.performance_simulation_data(row, col)*1.0) << ",";
+				csvFile << std::to_string(data.data(row, col)*1.0) << ",";
 
 		csvFile << "\n";
 	}

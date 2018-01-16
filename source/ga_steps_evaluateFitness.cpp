@@ -19,8 +19,156 @@ WeightedSum::~WeightedSum()
 *-----------------------------------------------*/
 void WeightedSum::evaluateFitness(const GA_EvaluateFitnessDataInput input, GA_EvaluateFitnessDataOutput& output)
 {
+	PID_FitnessScores localFit;
 
+	/* Copy in the performance metrics for easier reading */
+	double POS = input.POS;
+	double TS = input.TS;
+	double TR = input.TR;
+	double SSERR = input.SSER;
+
+
+	/* Create some additional computational variables */
+	localFit.global_fitness = 0.0;
+	double perfect_fit_val = 1.0;
+	double numValidParameters = 4.0;
+	double error = 0.0;
+	double abs_pct_error = 0.0;
+	double abs_error = 0.0;
+
+	/*-----------------------------------------------
+	* Percent Overshoot
+	*-----------------------------------------------*/
+	if (POS != -1.0 && input.goals.percentOvershoot_goal != -1.0)
+	{
+		if (POS == 0.0)
+		{
+			/* Give partial credit for achieving this. It means that the simulation is more
+			or less an overdamped system that may or may not have properly converged. This value
+			is arbitrarily chosen.*/
+			localFit.percentOvershoot_fitness = 0.25;
+		}
+		else
+		{
+			#ifdef DEBUGGING_ENABLED
+			double maxVal = input.simulationData.maxCoeff();
+			#endif
+
+			// I guess this can represent percent undershoot as well...
+			error = abs(POS) - 100.0*input.goals.percentOvershoot_goal;
+			abs_pct_error = abs(error) - (100.0*input.goals.percentOvershoot_goal);
+
+			/* If we got negative error or are within tolerance, this is good and the solution
+			is given a perfect score. If not, figure out how to derate accordingly. */
+			if (error <= 0.0 || abs_pct_error < input.tolerance.percentOvershoot_pcntTol)
+				localFit.percentOvershoot_fitness = perfect_fit_val;
+
+			/* Derate the solution because it's baaaad. */
+			else
+			{
+				abs_error = abs_pct_error*input.goals.percentOvershoot_goal;
+				localFit.percentOvershoot_fitness = perfect_fit_val*exp(-1.0*abs_error);
+			}
+		}
+
+		localFit.global_fitness += localFit.percentOvershoot_fitness;
+	}
+
+	/*-----------------------------------------------
+	* Settling Time
+	*-----------------------------------------------*/
+	if (TS != -1.0 && input.goals.settlingTime_goal != -1.0)
+	{
+		if (TS == 0.0)
+		{
+			/* Same reasoning as POS is used here. */
+			localFit.settlingTime_fitness = 0.25;
+		}
+		else
+		{
+			error = TS - input.goals.settlingTime_goal;
+			abs_pct_error = abs(error) / input.goals.settlingTime_goal;
+
+			if (error <= 0.0 || abs_pct_error < input.tolerance.settlingTime_pcntTol)
+				localFit.settlingTime_fitness = perfect_fit_val;
+
+			else
+			{
+				abs_error = abs_pct_error*input.goals.settlingTime_goal;
+				localFit.settlingTime_fitness = perfect_fit_val*exp(-1.0*abs_error);
+			}
+		}
+
+		localFit.global_fitness += localFit.settlingTime_fitness;
+	}
+
+	/*-----------------------------------------------
+	* Rise Time
+	*-----------------------------------------------*/
+	if (TR != -1.0 && input.goals.riseTime_goal != -1.0)
+	{
+		error = TR - input.goals.riseTime_goal;
+		abs_pct_error = abs(error) / input.goals.riseTime_goal;
+
+		if (error <= 0.0 || abs_pct_error < input.tolerance.riseTime_pcntTol)
+			localFit.riseTime_fitness = perfect_fit_val;
+
+		else
+		{
+			abs_error = abs_pct_error*input.goals.riseTime_goal;
+			localFit.riseTime_fitness = perfect_fit_val*exp(-1.0*abs_error);
+		}
+		localFit.global_fitness += localFit.riseTime_fitness;
+	}
+
+	/*-----------------------------------------------
+	* Steady State Error
+	*-----------------------------------------------*/
+	if (SSERR != -1.0 && input.goals.steadyStateError_goal != -1.0)
+	{
+		error = abs(SSERR) - input.goals.steadyStateError_goal;
+		abs_pct_error = abs(error) / input.goals.steadyStateError_goal;
+
+		if (error <= 0.0 || abs_pct_error < input.tolerance.steadyStateError_pcntTol)
+			localFit.steadyStateError_fitness = perfect_fit_val;
+
+		else
+		{
+			abs_error = abs_pct_error*input.goals.steadyStateError_goal;
+
+			/* The value is shifted here to enforce a harsher penalty on a solution that
+			does not quite hit the steady state error goal & tolerance. It was found
+			that without shifting, the converged solution would routinely exhibit too
+			large of an error. */
+			localFit.steadyStateError_fitness = perfect_fit_val*exp(-1.0*(abs_error + 0.65));
+		}
+		localFit.global_fitness += localFit.steadyStateError_fitness;
+	}
+
+	/*-----------------------------------------------
+	* Global Fit
+	*-----------------------------------------------*/
+	localFit.global_fitness /= numValidParameters;
+
+	#if (DEBUGGING_ENABLED == 1)
+	double posFit = localFit.percentOvershoot_fitness;
+	double tSettleFit = localFit.settlingTime_fitness;
+	double tRiseFit = localFit.riseTime_fitness;
+	double ssErrorFit = localFit.steadyStateError_fitness;
+	double globalFit = localFit.global_fitness;
+	bool bp_flag = false;
+
+	if (posFit == 1.0 || tSettleFit == 1.0 || tRiseFit == 1.0 || \
+		ssErrorFit == 1.0 || globalFit == 1.0)
+	{
+		bp_flag = true;
+		//std::cout << "Got a perfect fit on a performance criteria" << std::endl;
+	}
+	#endif
+
+	output.fit = localFit;
 }
+
 
 /*-----------------------------------------------
 * Private Functions

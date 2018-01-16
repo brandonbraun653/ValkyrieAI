@@ -220,11 +220,6 @@ struct FCSOptimizer_MappingCoeff
 /*-----------------------------------------------
 * Model Data Types
 *-----------------------------------------------*/
-enum SimulationModelType
-{
-	STATE_SPACE_MODEL,
-	NEURAL_NETWORK_MODEL
-};
 
 enum StateSpaceSimulation
 {
@@ -324,26 +319,23 @@ typedef boost::shared_ptr<SS_NLTIVModel> SS_NLTIVModel_sPtr;
 
 /**
 *	\brief Contains full performance analysis of a system's step response
+* This container stores actual performance metrics of some simulation data and not 
+* fitness values. The fitness values are stored in a PID_FitnessScores container.
 */
 struct StepPerformance
 {
-	PID_Values pidValues = { -1.0, -1.0, -1.0 };
+	PID_Values pidValues = { -1.0, -1.0, -1.0 };	/* PID Values that gave below performance metrics */
+	Eigen::MatrixXd data;							/* Raw data that gave below performance metrics */
 
-	double percentOvershoot_performance = -1.0;	/* Units: none, percentage */
-	double steadyStateError_performance = -1.0;	/* Units: none, absolute */
-	double delta_overshoot_performance = -1.0;	/* Units: none, absolute */
-	double settlingTime_performance = -1.0;		/* Units: seconds */
-	double riseTime_performance = -1.0;			/* Units: seconds */
-	double finalValue_performance = -1.0;		/* Units: user defined by problem */
-
-	double settlingTime_window = 0.0;	/* Percent range around final value */
-	int settlingTime_Idx = 0;			/* Index in given data series */
-	int riseTime_Idx[2] = { 0, 0 };		/* Start/Stop index in given data series */
-
-
-	/* Stores the data that resulted in performance criteria above */
-	bool performance_simulation_data_is_valid = false;
-	Eigen::MatrixXd performance_simulation_data;
+	double percentOvershoot_performance = -1.0;		/* Units: none, percentage */
+	double steadyStateError_performance = -1.0;		/* Units: none, absolute */
+	double delta_overshoot_performance = -1.0;		/* Units: none, absolute */
+	double settlingTime_performance = -1.0;			/* Units: seconds */
+	double riseTime_performance = -1.0;				/* Units: seconds */
+	double finalValue_performance = -1.0;			/* Units: user defined by problem */
+	double settlingTime_window = 0.0;				/* Percent range around final value */
+	int settlingTime_Idx = 0;						/* Index in given data series */
+	int riseTime_Idx[2] = { 0, 0 };					/* Start/Stop index in given data series */
 };
 typedef boost::shared_ptr<StepPerformance> StepPerformance_sPtr;
 typedef boost::container::vector<StepPerformance> StepPerformance_Vec;
@@ -362,7 +354,12 @@ struct PID_FitnessScores
 	double riseTime_fitness = -1.0;
 	double steadyStateError_fitness = -1.0;
 
+	//Associated detailed simulation analysis results from the above scoring
 	StepPerformance stepPerformanceData;
+	//RampPerformance
+	//QuadraticPerformance
+	//CustomPerformance
+	//Add these later.
 };
 typedef boost::shared_ptr<PID_FitnessScores> PIDFitnessScores_sPtr;
 typedef boost::container::vector<PID_FitnessScores> PIDFitness_Vec;

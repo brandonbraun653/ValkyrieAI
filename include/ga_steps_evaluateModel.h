@@ -23,29 +23,27 @@
 #include "config.h"
 #include "types.h"
 #include "model_simulation.h"
+#include "signal_analysis.h"
 
 
 struct StateSpaceModelInput
 {
-	double dt;				/* Simulation dt step for each iteration of the solver (s) */
-	double startTime;		/* Simulation start time (s) */
-	double endTime;			/* Simulation end time (s) */
+	double dt;								/* Simulation dt step for each iteration of the solver (s) */
+	double startTime;						/* Simulation start time (s) */
+	double endTime;							/* Simulation end time (s) */
 	
-	PID_Values pid;
+	PID_Values pid;							/* Specific PID values to use in the simulation */
 
-	SS_ModelBase_sPtr model;	
-	StateSpaceSimulation simulationType;
-
-	
+	SS_ModelBase_sPtr model;				/* Generic State Space Model */
+	StateSpaceSimulation simulationType;	/* Instructs the simulator what kind of simulation to execute */
 };
 
 struct StateSpaceModelOutput
 {
-	StateSpaceSimulation simulationType;		/* Kind of simulation that was run */
-	Eigen::MatrixXd data;						/* Raw simulation data */
-
 	int errorCode;								/* Any possible error codes from the simulation */
 	boost::chrono::microseconds executionTime;	/* Physical time spent solving for results */
+	StateSpaceSimulation simulationType;		/* Kind of simulation that was run */
+	StepPerformance stepPerformance;			/* Calculated performance metrics given a step input */
 };
 
 struct NeuralNetworkModelInput
@@ -90,7 +88,8 @@ public:
 	~StateSpaceEvaluator();
 
 private:
-	StateSpaceSimulator_sPtr simulator;
+	StateSpaceSimulator simulator;
+	StepResponseAnalyzer stepAnalyzer;
 
 };
 typedef boost::shared_ptr<StateSpaceEvaluator> SSModel_sPtr;

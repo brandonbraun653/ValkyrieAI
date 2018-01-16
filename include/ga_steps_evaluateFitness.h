@@ -20,12 +20,21 @@
 
 struct GA_EvaluateFitnessDataInput
 {
-	//Add whatever the heck is needed here
+	PID_PerformanceGoals goals;				/* User defined reference goals for the optimizer to achieve */
+	PID_PerformanceTolerance tolerance;		/* User defined acceptable tolerance bounds for results */
+
+	double POS;								/* Percent Overshoot */
+	double SSER;							/* Steady State Error */
+	double TR;								/* Time Rise */
+	double TS;								/* Time Settle */
+	double FV;								/* Final Value */
+
+	Eigen::MatrixXd simulationData;			/* Raw simulation data */
 };
 
 struct GA_EvaluateFitnessDataOutput
 {
-	//Add whatever the heck is needed here
+	PID_FitnessScores fit;	/* Calculated fitness metrics for the given input data */
 };
 
 class GA_EvaluateFitnessBase

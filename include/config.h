@@ -5,7 +5,7 @@
 /*-----------------------------------------------
 * Global Genetic Algorithm "Stuff"
 *-----------------------------------------------*/
-#define DEBUGGING_ENABLED					0 
+#define DEBUGGING_ENABLED					1 
 #define MAX_THREADS_ALLOWED_PER_OPTIMIZER	16
 
 /*-----------------------------------------------
