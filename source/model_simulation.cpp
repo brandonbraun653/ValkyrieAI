@@ -37,9 +37,9 @@ Eigen::MatrixXd StateSpaceSimulator::stepResponse(const double start, const doub
 	* Calculate any boundary conditions 
 	*-----------------------------------------------*/
 	int numSteps = (int)ceil((stop - start) / dt);	/* Total iterations the Odeint solver will run. Rounded up for non integral values */
-	int outputs = localModel.getNumOutputs();		/* Output vector column dimension, (Nx1) */
+	int outputs = localModel.getNumOutputs();		/* Output vector column dimension, (Mx1) */
 	int inputs = localModel.getNumInputs();			/* Input vector column dimension, (Nx1) */
-	int states = localModel.getNumStates();			/* State vector column dimension, (Nx1) */
+	int states = localModel.getNumStates();			/* State vector column dimension, (Lx1) */
 
 
 	/*-----------------------------------------------
@@ -47,6 +47,7 @@ Eigen::MatrixXd StateSpaceSimulator::stepResponse(const double start, const doub
 	*-----------------------------------------------*/
 	Eigen::MatrixXd reference_input(inputs, 1);		/* User desired set point for the PID controller to reach. Ultimately this translates
 													into the specific evaluation type, which is in this case a step function. */
+	
 	reference_input.setConstant(1.0);				/* Simple step function input beginning at t0. */
 
 	Eigen::MatrixXd U(inputs, 1);					/* Actual plant input after modification by PID controller */
