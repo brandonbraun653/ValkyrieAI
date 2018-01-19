@@ -5,8 +5,15 @@
 /*-----------------------------------------------
 * Global Genetic Algorithm "Stuff"
 *-----------------------------------------------*/
-#define DEBUGGING_ENABLED					1 
-#define MAX_THREADS_ALLOWED_PER_OPTIMIZER	16
+#define DEBUGGING_ENABLED					1		/* Turns on sections of code that provide extra variables for debugging */
+
+#define FILE_LOGGING_ENABLED				1		/* Turns on global file logs of things like warnings, errors, data outputs, etc.
+													The actual behavior of the logs are governed in the below sections.*/
+
+#define CONSOLE_LOGGING_ENABLED				1		/* Prints out general information related to the current algorithm status to the console */
+
+#define MAX_THREADS_ALLOWED_PER_OPTIMIZER	16		/* Limits how many threads can be spawned per optimization instance. This should be
+													limited to max physical cores x 2*/
 
 /*-----------------------------------------------
 * FCS Optimizer Options
@@ -28,6 +35,9 @@
 
 /* Evaluate Fitness Function */
 #define GA_TRACE_EVALUATE_FITNESS			0 
+#define GA_FILELOG_MEMBER_FIT_DATA			1
+
+/* Evaluate Parent Selection */
 #define GA_TRACE_SELECT_PARENTS				0 
 
 /* Breed Generation Function */

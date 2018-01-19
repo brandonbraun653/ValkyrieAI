@@ -1,4 +1,5 @@
 #include "fcs_optimizer.h"
+#include <string>
 
 using namespace boost::interprocess;
 
@@ -144,7 +145,7 @@ void FCSOptimizer::run()
 		*-------------------------------------*/
 		if (currentStatus == GA_OK)
 		{
-			//Current Module: Evaluate Fitness
+			//Current Module: Breed Generation
 
 			evaluateModel();		/* With the current population members, run a test scenario on the chosen model and record output data */
 
@@ -152,11 +153,14 @@ void FCSOptimizer::run()
 
 			checkConvergence();		/* Given the new fitness scores, see if we have a "winner" that met user goals sufficiently */
 
+			//CURRENTLY NOT USED
 			filterPopulation();		/* Apply random "filtering" to the population to stepResponse things like death/disaster/disease etc. */
 
 			selectParents();		/* Of the current population, select those who will mate */
 
 			breedGeneration();		/* Use the selected mating pairs from the last step to create new offspring */
+
+			mutateGeneration();		/* Mutate the new generation's chromosomes based on random chance */
 		}
 
 		/*-------------------------------------
@@ -167,12 +171,18 @@ void FCSOptimizer::run()
 			if (currentStatus == GA_HALT)
 			{
 				//Do any logging that might report why a halt was called. 
+				#if (CONSOLE_LOGGING_ENABLED == 1)
+				std::cout << "GA Solver was halted. Who knows why." << std::endl;
+				#endif
 				break;
 			}
 
 			if (currentStatus == GA_COMPLETE)
 			{
-				//Do other things? 
+				//Do other things?
+				#if (CONSOLE_LOGGING_ENABLED == 1)
+				std::cout << "GA Solver Complete. Exiting Optimizer." << std::endl;
+				#endif
 				break;
 			}
 		}
@@ -186,15 +196,13 @@ void FCSOptimizer::run()
 		boost::this_thread::yield();
 	}
 
-	/* Do some minor post processing here */
-	//What should I do? 
-	std::cout << "Exiting spawned thread" << std::endl;
-
 	#if (FCS_TRACE_EXECUTION_TIME == 1)
 	auto stop = boost::chrono::high_resolution_clock::now();
 	auto totalTime = boost::chrono::duration_cast<boost::chrono::milliseconds>(stop - start);
 
-	std::cout << "Total Execution Time: " << totalTime << std::endl;
+		#if (CONSOLE_LOGGING_ENABLED == 1)
+		std::cout << "Total Execution Time: " << totalTime << std::endl;
+		#endif
 	#endif
 }
 
@@ -209,6 +217,10 @@ void FCSOptimizer::init(FCSOptimizer_Init_t initializationSettings)
 	initRNG();				/* Make sure the RNG is setup and well warmed up before use */
 	initModel();			/* Call the specific model initializer */
 	initPopulation();		/* Set up the initial population */
+
+
+	//TODO: Set up the intelligent strategy selection engine here
+	currentSolverParam = settings.solverParam;
 
 
 	/* Create a new message queue for receiving commands from the main thread.
@@ -244,49 +256,6 @@ void FCSOptimizer::requestOutput(FCSOptimizer_Output_t& output)
 	//here rather than checking for it in the main loop. Log the reference
 	//to the output container so we can write to it later. 
 }
-
-// void FCSOptimizer::run(boost::mutex* resultsMutex, GAEngineStatistics_Vec* resultsStatistics, 
-// 	GAEngineStatistics_Vec* avgResultsStatistics, int threadIndex, int trialNum)
-// {
-// 	currentStatus = GA_OK;
-// 
-// 	auto start_time = boost::chrono::high_resolution_clock::now();
-// 	initPopulation();
-// 
-// 	while (currentStatus == GA_OK)
-// 	{
-// 		evaluateModel();
-// 		evaluateFitness();
-// 		filterPopulation();
-// 		selectParents();
-// 		breedGeneration();
-// 		mutateGeneration();
-// 
-// 		checkConvergence();
-// 
-// 		currentIteration += 1u;
-// 	}
-// 
-// 	auto end_time = boost::chrono::high_resolution_clock::now();
-// 	boost::chrono::duration<double> execution_time = boost::chrono::duration_cast<boost::chrono::duration<double>>(end_time - start_time);
-// 	
-// 	print_to_console_mutex->lock();
-// 	std::cout << "\nFinished optimizing " << ga_instance_optimizer_name << " in " << execution_time << std::endl;
-// 	print_to_console_mutex->unlock();
-// 
-// 	int topPerformerIndex = reportResults(trialNum);
-// 
-// 	resultsMutex->lock();
-// 	
-// 	/* Log results for a one off trial run */
-// 	resultsStatistics->data()[threadIndex].totalRunTime = execution_time;
-// 	resultsStatistics->data()[threadIndex].topPerformer = GA_BestFitnessValues.data()[topPerformerIndex];
-// 
-// 	/* Log results for many runs on a single trial. To be averaged later. */
-// 	avgResultsStatistics->push_back(resultsStatistics->data()[threadIndex]);
-// 
-// 	resultsMutex->unlock();
-// }
 
 /*-----------------------------------------------
 * Private Functions
@@ -423,11 +392,6 @@ void FCSOptimizer::initPopulation()
 }
 
 
-void FCSOptimizer::checkConvergence()
-{
-	//Update the possible selection types here
-}
-
 void FCSOptimizer::evaluateModel()
 {
 	const GA_METHOD_ModelEvaluation modelType = currentSolverParam.modelType;
@@ -460,9 +424,9 @@ void FCSOptimizer::evaluateModel()
 		StateSpaceModelOutput output;
 
 		/* Simulation time constraints */
-		input.dt = 0.1;
+		input.dt = 0.01;			//TODO: Replace with un-hardcoded version
 		input.startTime = 0.0;
-		input.endTime = 3.0;
+		input.endTime = 1.5;
 
 		/* Simulation Model */
 		input.simulationType = STEP;
@@ -516,7 +480,6 @@ void FCSOptimizer::evaluateFitness()
 	input.goals = settings.pidControlSettings.performanceGoals;
 	input.tolerance = settings.pidControlSettings.performanceTolerance;
 
-	
 	/*-----------------------------
 	* Ensure a fitness evaluation instance exists 
 	*----------------------------*/
@@ -539,15 +502,11 @@ void FCSOptimizer::evaluateFitness()
 		}
 	}
 
-	//TESTING ONLY:
-	writeCSV_StepData(fcs_modelEvalutationData[0].ss_output.stepPerformance, "testOut.csv");
-
 	/*-----------------------------
 	* Calculate the fitness 
 	*----------------------------*/
 	if (fitnessType == GA_FITNESS_WEIGHTED_SUM)
 	{
-		
 		if (modelType == GA_MODEL_STATE_SPACE)
 		{
 			for (int member = 0; member < settings.advConvergenceParam.populationSize; member++)
@@ -562,11 +521,9 @@ void FCSOptimizer::evaluateFitness()
 				input.simulationData = fcs_modelEvalutationData[member].ss_output.stepPerformance.data;
 				//NOTE: Eventually I am going to need to specify what kind of simulation was performed...
 
-
 				/* Evaluate fitness */
 				runtimeStep.evaluateFitnessInstances[fitnessType]->evaluateFitness(input, output);
 
-				
 				/* Copy the results of the step performance analyzer into the output struct */
 				output.fit.stepPerformanceData = fcs_modelEvalutationData[member].ss_output.stepPerformance;
 
@@ -577,6 +534,12 @@ void FCSOptimizer::evaluateFitness()
 				#if (DEBUGGING_ENABLED == 1)
 				double memberFit = 0.0;
 				memberFit = output.fit.global_fitness;
+				memberFit += 1.0;
+				#endif
+
+				#if (FILE_LOGGING_ENABLED == 1) && (GA_FILELOG_MEMBER_FIT_DATA == 1)
+				std::string filename = "Member" + std::to_string(member) + "_StepPerformanceFitnessData.csv";
+				writeCSV_StepData(output.fit.stepPerformanceData, filename);
 				#endif
 			}
 		}
@@ -592,6 +555,66 @@ void FCSOptimizer::evaluateFitness()
 	}
 }
 
+void FCSOptimizer::checkConvergence()
+{
+	/*-----------------------------------------------
+	* Save best result from each round
+	*-----------------------------------------------*/
+	double iteration_bestFitScore = 0.0;			/* Keep track of highest fitness score found */
+	FCSOptimizer_FitnessData iteration_bestFit;		/* Copy of associated best fitness results */
+
+	for (unsigned int member = 0; member < settings.advConvergenceParam.populationSize; member++)
+	{
+		if (fcs_fitnessData[member].fit.global_fitness > iteration_bestFitScore)
+		{
+			iteration_bestFitScore = fcs_fitnessData[member].fit.global_fitness;
+			iteration_bestFit = fcs_fitnessData[member];
+		}
+	}
+
+	fcs_generationalBestFitnessData.push_back(iteration_bestFit);
+
+	#if (CONSOLE_LOGGING_ENABLED == 1)
+	//print_to_console_mutex->lock();
+	//TODO: Add which generation this is out of total, ie (1 of 40)
+	std::cout << "Iteration Best Fit: " << iteration_bestFitScore << std::endl;
+	//print_to_console_mutex->unlock();
+	#endif
+
+	/*-----------------------------------------------
+	* Break based on generation limits
+	*-----------------------------------------------*/
+	if (currentIteration >= settings.advConvergenceParam.generationLimit)
+	{
+		#ifdef _DEBUG
+		if (settings.advConvergenceParam.generationLimit == 0)
+			std::cout << "You forgot to specify a generational limit for the algorithm." << std::endl;
+		#endif
+
+		#if (CONSOLE_LOGGING_ENABLED == 1)
+		//print_to_console_mutex->lock();
+		std::cout << "Generational Limit Reached! Done." << std::endl;
+		//print_to_console_mutex->unlock();
+		#endif
+		currentStatus = GA_COMPLETE;
+	}
+
+	/*-----------------------------------------------
+	* Break based on finding a good solution 
+	*-----------------------------------------------*/
+	if (iteration_bestFitScore > 0.95)
+	{
+		#if (CONSOLE_LOGGING_ENABLED == 1)
+		//print_to_console_mutex->lock();
+		std::cout << "\nFound a good enough solution. Done." << std::endl;
+		//print_to_console_mutex->unlock();
+		#endif
+
+		currentStatus = GA_COMPLETE;
+	}
+		
+}
+
 void FCSOptimizer::filterPopulation()
 {
 	const GA_METHOD_PopulationFilter filterType = currentSolverParam.filterType;
@@ -599,8 +622,10 @@ void FCSOptimizer::filterPopulation()
 	GA_PopulationFilterDataInput input;
 	GA_PopulationFilterDataOutput output;
 
-	/* Ensure an instance of the mutation type exists before calling the mutate function */
-	if (!runtimeStep.mutateInstances[filterType])
+	/*-----------------------------
+	* Ensure a filtering evaluation instance exists
+	*----------------------------*/
+	if (!runtimeStep.populationFilterInstances[filterType])
 	{
 		switch (filterType)
 		{
@@ -619,16 +644,29 @@ void FCSOptimizer::filterPopulation()
 		}
 	}
 
-	runtimeStep.populationFilterInstances[filterType]->filter(input, output);
-	//Do any post processing here 
+	/*-----------------------------
+	* Perform the filtering operation
+	*----------------------------*/
+	if (filterType == GA_POPULATION_STATIC_FILTER)
+	{
+		
+	}
+
+	else if (filterType == GA_POPULATION_DYNAMIC_FILTER)
+	{
+		
+	}
 }
 
 void FCSOptimizer::selectParents()
 {
 	const GA_METHOD_ParentSelection selectType = currentSolverParam.selectType;
 
-	GA_SelectParentDataInput input;
-	GA_SelectParentDataOutput output;
+	GA_SelectParentDataInput input; 
+	GA_SelectParentDataOutput output; 
+
+	input.populationSize = settings.advConvergenceParam.populationSize;
+	output.parentSelections.resize(settings.advConvergenceParam.populationSize);
 
 	/* Ensure an instance of the selection type exists before calling the selection function */
 	if (!runtimeStep.selectParentInstances[selectType])
@@ -636,7 +674,7 @@ void FCSOptimizer::selectParents()
 		switch (selectType)
 		{
 		case GA_SELECT_RANDOM:
-			runtimeStep.selectParentInstances[selectType] = boost::make_shared<RandomSelection>();
+			runtimeStep.selectParentInstances[selectType] = boost::make_shared<RandomSelection>(settings.advConvergenceParam.populationSize);
 			break;
 
 		case GA_SELECT_RANKED:
@@ -666,8 +704,39 @@ void FCSOptimizer::selectParents()
 		}
 	}
 
+	/* Fill in the input data structure based on what kind of selectType is used */
+	if (selectType == GA_SELECT_RANDOM)
+	{
+	}
+	else if (selectType == GA_SELECT_RANKED)
+	{
+	}
+	else if (selectType == GA_SELECT_ROULETTE)
+	{
+	}
+	else if (selectType == GA_SELECT_STOCHASTIC_SAMPLING)
+	{
+	}
+	else if (selectType == GA_SELECT_TOURNAMENT)
+	{
+		/* Fancy little iterator that fills temp with the latest global fitness scores */
+		boost::container::vector<double> temp;
+		std::transform(fcs_fitnessData.begin(), fcs_fitnessData.end(), std::back_inserter(temp), \
+			[](const FCSOptimizer_FitnessData& input) { return input.fit.global_fitness; });
+
+		
+		input.popGlobalFitScores = temp;
+	}
+	else if (selectType == GA_SELECT_ELITIST)
+	{
+	}
+	else
+	{
+		std::cout << "You have not chosen a valid Parent Selection strategy" << std::endl;
+	}
+
+	
 	runtimeStep.selectParentInstances[selectType]->selectParent(input, output);
-	//Do any post processing here 
 }
 
 void FCSOptimizer::breedGeneration()
@@ -742,282 +811,6 @@ void FCSOptimizer::mutateGeneration()
 }
 
 
-// void FCSOptimizer::evaluateModel()
-// {
-// 	#ifdef GA_TRACE_EVALUATE_MODEL
-// 	auto start = boost::chrono::high_resolution_clock::now();
-// 	#endif
-// 
-// 	const size_t popSize = hData.sim_data.population_size;
-// 	if (ga_instance_model_name == SSModelName)
-// 	{
-// 		double new_pid_vals[3] = { 0.0, 0.0, 0.0 };
-// 
-// 		SS_NLTIVModel ss_system_dynamics(
-// 			ss_user_system_model->getNumInputs(),
-// 			ss_user_system_model->getNumOutputs(),
-// 			ss_user_system_model->getNumStates());
-// 
-// 		/* Assign the simulation integration parameters */
-// 		ss_system_dynamics.integrator_dt = modelSS->sim_dt;
-// 		ss_system_dynamics.integrator_time_start = modelSS->sim_start_time;
-// 		ss_system_dynamics.integrator_time_end = modelSS->sim_end_time;
-// 
-// 		/* Assign the state matrix equation model. The input U is 
-// 		   given by the simulator. */
-// 		ss_system_dynamics.A = ss_user_system_model->getA();
-// 		ss_system_dynamics.B = ss_user_system_model->getB();
-// 		ss_system_dynamics.C = ss_user_system_model->getC();
-// 		ss_system_dynamics.D = ss_user_system_model->getD();
-// 		ss_system_dynamics.X0 = ss_user_system_model->getX0();
-// 
-// 	#if defined(GA_CPU_SINGLE_THREADED) && !defined(GA_CPU_MULTI_THREADED)
-// 		for (int member = 0; member < popSize; member++)
-// 		{
-// 			/* Update PID control values  */
-// 			#ifndef FIXED_PID_VALUES
-// 			new_pid_vals[0] = hData.pid_data.Kp[member];
-// 			new_pid_vals[1] = hData.pid_data.Ki[member];
-// 			new_pid_vals[2] = hData.pid_data.Kd[member];
-// 			#else
-// 			new_pid_vals[0] = 12.05;
-// 			new_pid_vals[1] = 68.38;
-// 			new_pid_vals[2] = 0.0;
-// 			#endif
-// 
-// 			/* Compute Step Response and Assign Results */
-// 			SS_StepPerformance[member] = modelSS->stepResponseSingleThreaded(member, ss_system_dynamics, new_pid_vals[0], new_pid_vals[1], new_pid_vals[2]);
-// 		}
-// 	#endif
-// 
-// 	#if defined(GA_CPU_MULTI_THREADED) && !defined(GA_CPU_SINGLE_THREADED)
-// 		boost::thread_group tgroup;
-// 
-// 		for (int member = 0; member < popSize; member++)
-// 		{
-// 			/* Update PID control values  */
-// 			#ifndef FIXED_PID_VALUES
-// 			new_pid_vals[0] = hData.pid_data.Kp[member];
-// 			new_pid_vals[1] = hData.pid_data.Ki[member];
-// 			new_pid_vals[2] = hData.pid_data.Kd[member];
-// 			#else
-// 			new_pid_vals[0] = 12.05;
-// 			new_pid_vals[1] = 68.38;
-// 			new_pid_vals[2] = 0.0;
-// 			#endif
-// 
-// 			/* Spawn a new thread to compute system step response for each member */
-// 			tgroup.create_thread(boost::bind(&StateSpaceModel::stepResponseMultiThreaded, modelSS.get(),
-// 				member,
-// 				ss_system_dynamics,
-// 				boost::ref(SS_StepPerformance),
-// 				boost::ref(SS_StepPerformance_mutex),
-// 				new_pid_vals[0],
-// 				new_pid_vals[1],
-// 				new_pid_vals[2]
-// 			));
-// 		}
-// 
-// 		tgroup.join_all();
-// 	#endif
-// 	}
-// 
-// 	#ifdef GA_TRACE_EVALUATE_MODEL
-// 	auto stop = boost::chrono::high_resolution_clock::now();
-// 	for (int member = 0; member < popSize; member++)
-// 	{
-// 		std::string filename = "trace/evaluate_model/" + ga_instance_optimizer_name + "_member_data_" + std::to_string(member) + ".csv";
-// 		writeCSV_StepData(SS_StepPerformance[member], filename);
-// 	}
-// 	#endif
-// }
-// 
-// void FCSOptimizer::evaluateFitness()
-// {
-// 	#ifdef GA_TRACE_EVALUATE_FITNESS
-// 	auto start = boost::chrono::high_resolution_clock::now();
-// 	#endif
-// 
-// 	if (ga_instance_model_name == SSModelName)
-// 	{
-// 	#if defined(GA_CPU_SINGLE_THREADED) && !defined(GA_CPU_MULTI_THREADED)
-// 		if (ga_instance_step_methods.fitnessType == GA_FITNESS_WEIGHTED_SUM)
-// 		{
-// 			WeightedSum ws(SINGLE_THREADED);
-// 			ws.calculateFitness(SS_StepPerformance, ga_instance_pid_config_data, &SS_FitnessValues);
-// 		}
-// 	#endif
-// 
-// 	#if defined(GA_CPU_MULTI_THREADED) && !defined(GA_CPU_SINGLE_THREADED)
-// 		if (ga_instance_step_methods.fitnessType == GA_FITNESS_WEIGHTED_SUM)
-// 		{
-// 			WeightedSum ws(MULTI_THREADED);
-// 			ws.calculateFitness(SS_StepPerformance, ga_instance_pid_config_data, &SS_FitnessValues);
-// 		}
-// 	#endif
-// 	}
-// 
-// 	#ifdef GA_TRACE_EVALUATE_FITNESS
-// 	auto stop = boost::chrono::high_resolution_clock::now();
-// 	#endif
-// }
-// 
-// void FCSOptimizer::filterPopulation()
-// {
-// 	#ifdef GA_TRACE_FILTER_POPULATION
-// 	auto start = boost::chrono::high_resolution_clock::now();
-// 	#endif
-// 
-// 	if (ga_instance_model_name == SSModelName)
-// 	{
-// 		#if defined(GA_CPU_SINGLE_THREADED) || defined(GA_CPU_MULTI_THREADED)
-// 		/*-----------------------------------
-// 		* Elite Performance Set
-// 		*-----------------------------------*/
-// 		if (GA_ElitistSolutions.EliteFitSolutions.size() < 10)
-// 		{
-// 			/* First time around, just update the variables directly */
-// 			if (GA_BestFitnessValues.empty())
-// 			{
-// 				GA_ElitistSolutions.worst_performer_index = 0;
-// 				GA_ElitistSolutions.worst_performer_value = 1.0;
-// 			}
-// 			/* Otherwise, push solution to the end */
-// 			else
-// 				GA_ElitistSolutions.EliteFitSolutions.push_back(GA_BestFitnessValues.back());
-// 		}
-// 
-// 		/* Assuming the buffer is full, decide whether or not to add a solution in. */
-// 		else
-// 		{
-// 			/* IF the latest "BestFitnessValue" is higher than the current worst fitness, this means 
-// 			the Elitist solution set must be updated to include the new value. The goal is for the elite 
-// 			set to update to higher and higher performing members each time, assuming such a member exists. */
-// 			if (GA_ElitistSolutions.worst_performer_value < GA_BestFitnessValues.back().global_fitness)
-// 			{
-// 				GA_ElitistSolutions.EliteFitSolutions.data()[GA_ElitistSolutions.worst_performer_index] =
-// 					GA_BestFitnessValues.back();
-// 			}
-// 		}
-// 
-// 		/* Find the new lowest performing individual out of the full set */
-// 		double worst_performer = 2.0;
-// 		for (int i = 0; i < GA_ElitistSolutions.EliteFitSolutions.size(); i++)
-// 		{
-// 			if (GA_ElitistSolutions.EliteFitSolutions.data()[i].global_fitness < worst_performer)
-// 			{
-// 				GA_ElitistSolutions.worst_performer_value = GA_ElitistSolutions.EliteFitSolutions.data()[i].global_fitness;
-// 				GA_ElitistSolutions.worst_performer_index = i;
-// 
-// 				worst_performer = GA_ElitistSolutions.worst_performer_value;
-// 			}
-// 		}
-// 
-// 		/*-----------------------------------
-// 		* Rejection of Population Members:
-// 		* In this case, it is a simulation of natural disaster/survival of fittest
-// 		*-----------------------------------*/
-// 		boost::container::vector<int> rejectionIdxs;
-// 
-// 		/* Create a random number generator that is used to stepResponse how 
-// 		   many population members are killed off at each generation. */
-// 		int maxReplacements = (int)floor(hData.sim_data.population_size*0.4);
-// 		std::random_device rd1;
-// 		std::mt19937 rng1(rd1());
-// 		std::uniform_int_distribution<uint32_t> uniform_int(0, maxReplacements);
-// 
-// 		/* Use a static threshold to filter through member performance */
-// 		if (ga_instance_step_methods.filterType == GA_POPULATION_STATIC_FILTER)
-// 		{
-// 			int totalReplacements = uniform_int(rng1);
-// 			double filter_threshold = 0.1;
-// 
-// 			for (int i = 0; i < totalReplacements; i++)
-// 			{
-// 				if (SS_FitnessValues.data()[i].global_fitness < filter_threshold)
-// 					rejectionIdxs.push_back(i);
-// 			}
-// 		}
-// 
-// 		/* Dynamically choose a threshold to filter through member performance */
-// 		if (ga_instance_step_methods.filterType == GA_POPULATION_DYNAMIC_FILTER)
-// 		{
-// 			std::random_device rd2;
-// 			std::mt19937 rng2(rd2());
-// 			std::uniform_real_distribution<double> uniform_dbl(0.1, 0.7);
-// 
-// 			int totalReplacements = uniform_int(rng1);
-// 			double filter_threshold = uniform_dbl(rng2);
-// 
-// 			for (int i = 0; i < totalReplacements; i++)
-// 			{
-// 				if (SS_FitnessValues.data()[i].global_fitness < filter_threshold)
-// 					rejectionIdxs.push_back(i);
-// 			}
-// 		}
-// 
-// 		/*-----------------------------------
-// 		* Creation of New Members
-// 		*-----------------------------------*/
-// 		//Random, elite, copy of existing solutions?
-// 
-// 		double kpl = ga_instance_pid_config_data->tuningLimits.Kp_limits_lower;
-// 		double kpu = ga_instance_pid_config_data->tuningLimits.Kp_limits_upper;
-// 
-// 		double kil = ga_instance_pid_config_data->tuningLimits.Ki_limits_lower;
-// 		double kiu = ga_instance_pid_config_data->tuningLimits.Ki_limits_upper;
-// 
-// 		double kdl = ga_instance_pid_config_data->tuningLimits.Kd_limits_lower;
-// 		double kdu = ga_instance_pid_config_data->tuningLimits.Kd_limits_upper;
-// 
-// 		/* Pure random generation of replacement members */
-// 		for (int i = 0; i < rejectionIdxs.size(); i++)
-// 		{
-// 			hData.pid_data.Kp[rejectionIdxs[i]] = uniformRandomNumber(kpl, kpu);
-// 			hData.pid_data.Ki[rejectionIdxs[i]] = uniformRandomNumber(kil, kiu);
-// 			hData.pid_data.Kd[rejectionIdxs[i]] = uniformRandomNumber(kdl, kdu);
-// 		}
-// 		#endif
-// 	}
-// 
-// 	#ifdef GA_TRACE_FILTER_POPULATION
-// 	auto stop = boost::chrono::high_resolution_clock::now();
-// 	#endif
-// }
-// 
-// void FCSOptimizer::selectParents()
-// {
-// 	#ifdef GA_TRACE_SELECT_PARENTS
-// 	auto start = boost::chrono::high_resolution_clock::now();
-// 	#endif
-// 
-// 	const size_t popSize = hData.sim_data.population_size;
-// 
-// 	if (ga_instance_model_name == SSModelName)
-// 	{
-// 		/* For now, only use single threaded parent selection due to small
-// 		   population sizes. Switching over to a multi-threaded version won't
-// 		   give much of a speed up.*/
-// 	#if defined(GA_CPU_SINGLE_THREADED) || defined(GA_CPU_MULTI_THREADED)
-// 		if (ga_instance_step_methods.selectType == GA_SELECT_RANDOM)
-// 		{
-// 			RandomSelection RS(SINGLE_THREADED);
-// 			RS.selectParents(&parentSelection);
-// 		}
-// 
-// 		if (ga_instance_step_methods.selectType == GA_SELECT_TOURNAMENT)
-// 		{
-// 			TournamentSelection TS(SINGLE_THREADED);
-// 			TS.selectParents(SS_FitnessValues, &parentSelection);
-// 		}
-// 	#endif
-// 	}
-// 
-// 	#ifdef GA_TRACE_SELECT_PARENTS
-// 	auto stop = boost::chrono::high_resolution_clock::now();
-// 	#endif
-// }
-// 
 // void FCSOptimizer::breedGeneration()
 // {
 // 	#ifdef GA_TRACE_BREED_GENERATION
@@ -1101,7 +894,7 @@ void FCSOptimizer::mutateGeneration()
 // 	auto trace_end_time = boost::chrono::high_resolution_clock::now();
 // 	#endif
 // }
-// 
+
 // void FCSOptimizer::mutateGeneration()
 // {
 // 	#ifdef GA_TRACE_MUTATE_GENERATION
@@ -1182,51 +975,7 @@ void FCSOptimizer::mutateGeneration()
 // 	auto stop = boost::chrono::high_resolution_clock::now();
 // 	#endif
 // }
-// 
-// void FCSOptimizer::checkConvergence()
-// {
-// 	/*-----------------------------------------------
-// 	* Save best result from each round
-// 	*-----------------------------------------------*/
-// 	double iteration_bestFitGlobal = 0.0;
-// 	PID_FitnessScores iteration_bestFit;
-// 
-// 	for (int member = 0; member < hData.sim_data.population_size; member++)
-// 	{
-// 		if (SS_FitnessValues.data()[member].global_fitness > iteration_bestFitGlobal)
-// 		{
-// 			iteration_bestFit = SS_FitnessValues.data()[member];
-// 			iteration_bestFitGlobal = SS_FitnessValues.data()[member].global_fitness;
-// 		}
-// 	}
-// 
-// 	GA_BestFitnessValues.push_back(iteration_bestFit);
-// 	
-// 	#ifdef GA_REPORT_DATA_CHECK_CONVERGENCE
-// 	print_to_console_mutex->lock();
-// 	std::cout << "Iteration Best Fit: " << iteration_bestFitGlobal << std::endl;
-// 	print_to_console_mutex->unlock();
-// 	#endif
-// 
-// 	/*-----------------------------------------------
-// 	* Break based on generation limits
-// 	*-----------------------------------------------*/
-// 	if (currentIteration >= ga_instance_convergence_criteria->generationLimit)
-// 		currentStatus = GA_COMPLETE;
-// 	
-// 	/*-----------------------------------------------
-// 	* Break based on finding a good solution 
-// 	*-----------------------------------------------*/
-// 	if (iteration_bestFitGlobal > 0.9)
-// 	{
-// 		print_to_console_mutex->lock();
-// 		std::cout << "\nFound a good enough solution. Done." << std::endl;
-// 		print_to_console_mutex->unlock();
-// 		currentStatus = GA_COMPLETE;
-// 	}
-// 		
-// }
-// 
+
 // void FCSOptimizer::enforceResolution()
 // {
 // 	for (int member = 0; member < hData.sim_data.population_size; member++)
@@ -1246,7 +995,7 @@ void FCSOptimizer::mutateGeneration()
 // 		hData.pid_data.Kp.data()[member] = intPart + fracPart;
 // 	}
 // }
-// 
+
 // int FCSOptimizer::reportResults(int trialNum)
 // {
 // 	/* Find the highest performer */
@@ -1281,7 +1030,7 @@ void FCSOptimizer::mutateGeneration()
 // 
 // 	return highestPerformerIndex;
 // }
-// 
+
 // void FCSOptimizer::printResultHighlights(double best_fit, int best_fit_idx)
 // {
 // 	print_to_console_mutex->lock();

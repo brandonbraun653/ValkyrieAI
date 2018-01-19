@@ -49,7 +49,7 @@ enum ControlResponseJargon
 struct PID_PerformanceGoals
 {
 	double percentOvershoot_goal = 0.0;	/* Units: none, absolute percentage -> 0.02 == 2% */
-	double steadyStateError_goal = 0.0;	/* Units: none, absolute */
+	double steadyStateError_goal = 0.0;	/* Units: none, absolute in whatever units the simulation output uses */
 	double settlingTime_goal = 0.0;		/* Units: seconds */
 	double riseTime_goal = 0.0;			/* Units: seconds */
 };
@@ -59,10 +59,10 @@ struct PID_PerformanceGoals
 */
 struct PID_PerformanceTolerance
 {
-	double percentOvershoot_pcntTol = 0.0;
-	double steadyStateError_pcntTol = 0.0;
-	double settlingTime_pcntTol = 0.0;
-	double riseTime_pcntTol = 0.0;
+	double percentOvershoot_pcntTol = 0.0;	/* Percentage -> 0.02 == 2% */
+	double steadyStateError_pcntTol = 0.0;	/* Percentage -> 0.02 == 2% */
+	double settlingTime_pcntTol = 0.0;		/* Percentage -> 0.02 == 2% */
+	double riseTime_pcntTol = 0.0;			/* Percentage -> 0.02 == 2% */
 };
 
 /** 

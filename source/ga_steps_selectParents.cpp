@@ -46,8 +46,10 @@ void RankedSelection::selectParentKd()
 /*-----------------------------------------------
 * Constructors/Destructor
 *-----------------------------------------------*/
-RandomSelection::RandomSelection()
+RandomSelection::RandomSelection(const int populationSize)
 {
+	auto distribution = boost::random::uniform_int_distribution<>(0, populationSize);
+	rng_engine = boost::make_shared<RNGInstance<boost::mt19937, boost::random::uniform_int_distribution<>>>(distribution);
 }
 
 RandomSelection::~RandomSelection()
@@ -58,7 +60,10 @@ RandomSelection::~RandomSelection()
 *-----------------------------------------------*/
 void RandomSelection::selectParent(const GA_SelectParentDataInput input, GA_SelectParentDataOutput& output)
 {
-
+	rng_engine->acquireEngine();
+	for (uint32_t parent = 0; parent < input.populationSize; parent++)
+		output.parentSelections[parent] = rng_engine->getInt();
+	rng_engine->releaseEngine();
 }
 
 /*-----------------------------------------------

@@ -67,6 +67,7 @@ enum GA_METHOD_Breed
 	GA_BREED_FIXED_RATIO_CROSSOVER,
 	GA_BREED_SIMULATED_BINARY_CROSSOVER,
 	GA_BREED_TOTAL_OPTIONS,
+	GA_BREED_DEFAULT = GA_BREED_SIMPLE_CROSSOVER,
 
 	GA_BREED_SIMPLE_CROSSOVER_MSK = (1u << GA_BREED_SIMPLE_CROSSOVER),
 	GA_BREED_DYNAMIC_CROSSOVER_MSK = (1u << GA_BREED_DYNAMIC_CROSSOVER),
@@ -79,6 +80,7 @@ enum GA_METHOD_PopulationFilter
 	GA_POPULATION_STATIC_FILTER,
 	GA_POPULATION_DYNAMIC_FILTER,
 	GA_POPULATION_TOTAL_OPTIONS,
+	GA_POPULATION_FILTER_DEFAULT = GA_POPULATION_STATIC_FILTER,
 
 	GA_POPULATION_STATIC_FILTER_MSK = (1u << GA_POPULATION_STATIC_FILTER),
 	GA_POPULATION_DYNAMIC_FILTER_MSK = (1u << GA_POPULATION_DYNAMIC_FILTER)
@@ -93,6 +95,7 @@ enum GA_METHOD_ParentSelection
 	GA_SELECT_TOURNAMENT,
 	GA_SELECT_ELITIST,
 	GA_SELECT_TOTAL_OPTIONS,
+	GA_SELECT_DEFAULT = GA_SELECT_RANDOM,
 
 	GA_SELECT_RANDOM_MSK = (1u << GA_SELECT_RANDOM),
 	GA_SELECT_RANKED_MSK = (1u << GA_SELECT_RANKED),
@@ -110,6 +113,7 @@ enum GA_METHOD_MutateProbability
 	GA_MUTATE_PROBABILITY_WEIBULL,
 	GA_MUTATE_PROBABILITY_CHI_SQUARED,
 	GA_MUTATE_PROBABILITY_TOTAL_OPTIONS,
+	GA_MUTATE_PROBABILITY_DEFAULT = GA_MUTATE_PROBABILITY_EXPONENTIAL,
 
 	GA_MUTATE_PROBABILITY_POISSON_MSK = (1u << GA_MUTATE_PROBABILITY_POISSON),
 	GA_MUTATE_PROBABILITY_EXPONENTIAL_MSK = (1u << GA_MUTATE_PROBABILITY_EXPONENTIAL),
@@ -123,6 +127,7 @@ enum GA_METHOD_MutateType
 	GA_MUTATE_BIT_FLIP,
 	GA_MUTATE_ADD_SUB,
 	GA_MUTATE_TOTAL_OPTIONS,
+	GA_MUTATE_DEFAULT = GA_MUTATE_BIT_FLIP,
 
 	GA_MUTATE_BIT_FLIP_MSK = (1u << GA_MUTATE_BIT_FLIP),
 	GA_MUTATE_ADD_SUB_MSK = (1u << GA_MUTATE_ADD_SUB)
@@ -133,6 +138,7 @@ enum GA_METHOD_FitnessEvaluation
 	GA_FITNESS_WEIGHTED_SUM,
 	GA_FITNESS_NON_DOMINATED_SORT,
 	GA_FITNESS_TOTAL_OPTIONS,
+	GA_FITNESS_DEFAULT = GA_FITNESS_WEIGHTED_SUM,
 
 	GA_FITNESS_WEIGHTED_SUM_MSK = (1u << GA_FITNESS_WEIGHTED_SUM),
 	GA_FITNESS_NON_DOMINATED_SORT_MSK = (1u << GA_FITNESS_NON_DOMINATED_SORT)
@@ -160,22 +166,23 @@ enum GA_METHOD_Resolution
 	GA_RESOLUTION_7DP,
 	GA_RESOLUTION_8DP,
 	GA_RESOLUTION_9DP,
-	GA_RESOLUTION_10DP
+	GA_RESOLUTION_10DP,
+	GA_RESOLUTION_DEFAULT = GA_RESOLUTION_3DP
 };
 
 struct FCSOptimizer_RuntimeConfig
 {
-	GA_METHOD_Breed					breedType;					/* Breed/Mate step operation */
-	GA_METHOD_PopulationFilter		filterType;					/* Population Filtering step operation */
-	GA_METHOD_ParentSelection		selectType;					/* Parent Selection step operation */
-	GA_METHOD_MutateProbability		mutateProbabilityType;		/* Mutation step operation */
-	GA_METHOD_MutateType			mutateType;					/* Mutation step operation */
-	GA_METHOD_ModelEvaluation		modelType;					/* Model Evaluation step operation */
-	GA_METHOD_FitnessEvaluation		fitnessType;				/* Fitness Evaluation step operation */
-	GA_METHOD_Resolution			resolutionType;				/* Sets mathematical resolution for all chromosomes */
+	GA_METHOD_Breed					breedType = GA_BREED_DEFAULT;							/* Breed/Mate step operation */
+	GA_METHOD_PopulationFilter		filterType = GA_POPULATION_FILTER_DEFAULT;				/* Population Filtering step operation */
+	GA_METHOD_ParentSelection		selectType = GA_SELECT_DEFAULT;							/* Parent Selection step operation */
+	GA_METHOD_MutateProbability		mutateProbabilityType = GA_MUTATE_PROBABILITY_DEFAULT;	/* Mutation step operation */
+	GA_METHOD_MutateType			mutateType = GA_MUTATE_DEFAULT;							/* Mutation step operation */
+	GA_METHOD_ModelEvaluation		modelType;												/* Model Evaluation step operation */
+	GA_METHOD_FitnessEvaluation		fitnessType = GA_FITNESS_DEFAULT;						/* Fitness Evaluation step operation */
+	GA_METHOD_Resolution			resolutionType = GA_RESOLUTION_DEFAULT;					/* Sets mathematical resolution for all chromosomes */
 
-	GA_RNG_Engine					rngEngine;					/* Random Number Generator Engine type */
-	GA_RNG_Distribution				rngDistribution;			/* Random Number Generator Distribution type */
+	GA_RNG_Engine					rngEngine;												/* Random Number Generator Engine type */
+	GA_RNG_Distribution				rngDistribution;										/* Random Number Generator Distribution type */
 };
 
 
@@ -208,18 +215,13 @@ struct FCSOptimizer_Init_t
 
 	std::string messageQueueName;							/* Name used to create a message queue between the main thread and an optimizer thread */
 
-
 	SS_ModelBase_sPtr stateSpaceModel;						/* Possible reference to a State Space Model implementation. Leave empty if unused. */
 
-	
 	//NNModel_sPtr neuralNetModel;							/* Possible reference to a TensorFlow Neural Network Graph. Leave empty if unused.  */
-
 
 	ControlResponseJargon responseFeel;						/* A non-engineering way of describing how the tuner should optimize */
 
-
 	PID_ControlSettings pidControlSettings;					/* A full engineering description of desired PID controller performance and limitations */
-
 
 	FCSOptimizer_BasicConstraints basicConvergenceParam;	/* Simplified global convergence parameters */
 
@@ -366,6 +368,7 @@ private:
 
 	FCSOptimizer_Init_t settings;
 
+
 	/*-----------------------------
 	* Runtime Processing Data
 	*----------------------------*/
@@ -377,12 +380,15 @@ private:
 
 	/* Parent Selections */
 
+
 	/* Bred Chromosomes */
-
 	
-	//boost::function<void GA_BreedBase& (GA_BreedingDataInput, GA_BreedingDataOutput&)> breedFunction;		/* Reference to the current breed function (fast access) */
 
-
+	/* Log of best fitness performance data for each generation.
+	Do not pre-allocate memory as it is "pushed back" to add new data. */
+	boost::container::vector<FCSOptimizer_FitnessData> fcs_generationalBestFitnessData;
+	
+	
 	/*-----------------------------
 	* Constants for Mapping Conversions
 	*-----------------------------*/

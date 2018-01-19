@@ -18,30 +18,49 @@ int main()
 	initStruct.optimizerName = "ROLL";
 	initStruct.messageQueueName = "rollCMD";
 	
+	/*-----------------------------
+	* STEP CHOOSER
+	*----------------------------*/
 	initStruct.solverParam.rngEngine = GA_MERSENNE_TWISTER;
 	initStruct.solverParam.rngDistribution = GA_DISTRIBUTION_UNIFORM_REAL;
+	initStruct.solverParam.breedType = GA_BREED_SIMPLE_CROSSOVER;
+	initStruct.solverParam.fitnessType = GA_FITNESS_WEIGHTED_SUM;
+	initStruct.solverParam.selectType = GA_SELECT_RANDOM;
 
+	/*-----------------------------
+	* DYNAMIC RECONFIGURATION OPTIONS
+	*----------------------------*/
+	initStruct.solverParamOptions.allowedBreedTypes = (
+		GA_BREED_SIMPLE_CROSSOVER_MSK |
+		GA_BREED_SIMULATED_BINARY_CROSSOVER_MSK |
+		GA_BREED_DYNAMIC_CROSSOVER_MSK |
+		GA_BREED_FIXED_RATIO_CROSSOVER_MSK);
+
+	initStruct.solverParamOptions.allowedFitnessTypes = (
+		GA_FITNESS_WEIGHTED_SUM_MSK |
+		GA_FITNESS_NON_DOMINATED_SORT_MSK);
+
+	/*-----------------------------
+	* PID SETTINGS
+	*----------------------------*/
 	initStruct.pidControlSettings.tuningLimits.Kp = { 0.0, 100.0 };
 	initStruct.pidControlSettings.tuningLimits.Ki = { 0.0, 100.0 };
 	initStruct.pidControlSettings.tuningLimits.Kd = { 0.0, 100.0 };
 
+	initStruct.pidControlSettings.performanceGoals.percentOvershoot_goal = 0.10;
+	initStruct.pidControlSettings.performanceGoals.riseTime_goal = 0.50;
+	initStruct.pidControlSettings.performanceGoals.settlingTime_goal = 1.0;
+	initStruct.pidControlSettings.performanceGoals.steadyStateError_goal = 0.05;
 
-	/* Setup the starting operation parameters */
-	initStruct.solverParam.breedType = GA_BREED_SIMPLE_CROSSOVER;
-	initStruct.solverParam.fitnessType = GA_FITNESS_WEIGHTED_SUM;
+	initStruct.pidControlSettings.performanceTolerance.percentOvershoot_pcntTol = 0.1;
+	initStruct.pidControlSettings.performanceTolerance.riseTime_pcntTol = 0.1;
+	initStruct.pidControlSettings.performanceTolerance.settlingTime_pcntTol = 0.1;
+	initStruct.pidControlSettings.performanceTolerance.steadyStateError_pcntTol = 0.1;
 
-	/* Choose which parameters the reconfiguration engine is allowed to use */
-	initStruct.solverParamOptions.allowedBreedTypes = (
-		GA_BREED_SIMPLE_CROSSOVER_MSK | 
-		GA_BREED_SIMULATED_BINARY_CROSSOVER_MSK | 
-		GA_BREED_DYNAMIC_CROSSOVER_MSK |
-		GA_BREED_FIXED_RATIO_CROSSOVER_MSK );
 
-	initStruct.solverParamOptions.allowedFitnessTypes = (
-		GA_FITNESS_WEIGHTED_SUM_MSK | 
-		GA_FITNESS_NON_DOMINATED_SORT_MSK );
-
-	/* Create the State Space Model */
+	/*-----------------------------
+	* SIMULATION MODEL
+	*----------------------------*/
 	SS_NLTIVModel_sPtr model = boost::make_shared<SS_NLTIVModel>(1, 1, 2);
 	model->A << -8.202, -2.029, -0.149, -3.25;
 	model->B << 1.14, -1.23;
@@ -51,15 +70,15 @@ int main()
 
 	//Testing: Purposefully cast back to the base class for abstraction into the model simulation method
 	initStruct.stateSpaceModel = boost::dynamic_pointer_cast<SS_ModelBase, SS_NLTIVModel>(model);
+	initStruct.solverParam.modelType = GA_MODEL_STATE_SPACE;
 
-
+	/*-----------------------------
+	* RUN
+	*----------------------------*/
 	FCSOptimizer_Handle hRollTuner = DroneTuner.newOptimizer(initStruct);
 
 	DroneTuner.initialize(hRollTuner);
 	DroneTuner.start(hRollTuner);
-
-	//std::this_thread::sleep_for(std::chrono::seconds(2));
-	//DroneTuner.stop(hRollTuner);
 
 	DroneTuner.waitForCompletion();
 	return 0;

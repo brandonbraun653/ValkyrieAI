@@ -41,6 +41,14 @@ void WeightedSum::evaluateFitness(const GA_EvaluateFitnessDataInput input, GA_Ev
 	*-----------------------------------------------*/
 	if (POS != -1.0 && input.goals.percentOvershoot_goal != -1.0)
 	{
+		#ifdef _DEBUG
+		if (input.goals.percentOvershoot_goal == 0.0)
+			std::cout << "You forgot to define a percent overshoot goal." << std::endl;
+
+		if (input.tolerance.percentOvershoot_pcntTol == 0.0)
+			std::cout << "You forgot to define a percent overshoot goal tolerance." << std::endl;
+		#endif
+
 		if (POS == 0.0)
 		{
 			/* Give partial credit for achieving this. It means that the simulation is more
@@ -79,6 +87,14 @@ void WeightedSum::evaluateFitness(const GA_EvaluateFitnessDataInput input, GA_Ev
 	*-----------------------------------------------*/
 	if (TS != -1.0 && input.goals.settlingTime_goal != -1.0)
 	{
+		#ifdef _DEBUG
+		if (input.goals.settlingTime_goal == 0.0)
+			std::cout << "You forgot to define a settling time goal." << std::endl;
+
+		if (input.tolerance.settlingTime_pcntTol == 0.0)
+			std::cout << "You forgot to define a settling time goal tolerance." << std::endl;
+		#endif
+
 		if (TS == 0.0)
 		{
 			/* Same reasoning as POS is used here. */
@@ -107,6 +123,14 @@ void WeightedSum::evaluateFitness(const GA_EvaluateFitnessDataInput input, GA_Ev
 	*-----------------------------------------------*/
 	if (TR != -1.0 && input.goals.riseTime_goal != -1.0)
 	{
+		#ifdef _DEBUG
+		if (input.goals.riseTime_goal == 0.0)
+			std::cout << "You forgot to define a rise time goal." << std::endl;
+
+		if (input.tolerance.riseTime_pcntTol == 0.0)
+			std::cout << "You forgot to define a rise time goal tolerance." << std::endl;
+		#endif
+
 		error = TR - input.goals.riseTime_goal;
 		abs_pct_error = abs(error) / input.goals.riseTime_goal;
 
@@ -126,6 +150,14 @@ void WeightedSum::evaluateFitness(const GA_EvaluateFitnessDataInput input, GA_Ev
 	*-----------------------------------------------*/
 	if (SSERR != -1.0 && input.goals.steadyStateError_goal != -1.0)
 	{
+		#ifdef _DEBUG
+		if (input.goals.steadyStateError_goal == 0.0)
+			std::cout << "You forgot to define a steady state error goal." << std::endl;
+
+		if (input.tolerance.steadyStateError_pcntTol == 0.0)
+			std::cout << "You forgot to define a stready stater error goal tolerance." << std::endl;
+		#endif 
+
 		error = abs(SSERR) - input.goals.steadyStateError_goal;
 		abs_pct_error = abs(error) / input.goals.steadyStateError_goal;
 

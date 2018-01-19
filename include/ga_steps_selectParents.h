@@ -17,15 +17,21 @@
 #include "config.h"
 #include "ga_helper.h"
 #include "types.h"
+#include "rng.hpp"
 
 struct GA_SelectParentDataInput
 {
-	//Add whatever the heck is needed here
+	size_t populationSize = 0;
+	boost::container::vector<double> popGlobalFitScores;	/* Latest fitness scores for all population members */
+	//Do I need a mutex?
+	//Add more as needed 
 };
 
 struct GA_SelectParentDataOutput
 {
-	//Add whatever the heck is needed here
+	/* Ordered list of which parents mate together. Should be 2x population size
+	so that parent 1 mates with parent 2, 3 with 4, 5 with 6, etc */
+	boost::container::vector<int> parentSelections;	
 };
 
 class GA_SelectParentBase
@@ -65,12 +71,14 @@ class RandomSelection : public GA_SelectParentBase
 public:
 	void selectParent(const GA_SelectParentDataInput input, GA_SelectParentDataOutput& output) override;
 
-	RandomSelection();
+	RandomSelection(const int populationSize);
 	~RandomSelection();
 private:
-	void selectParentKp() override;
-	void selectParentKi() override;
-	void selectParentKd() override;
+	void selectParentKp() override; //Not actually used in this class 
+	void selectParentKi() override; //Not actually used in this class
+	void selectParentKd() override; //Not actually used in this class
+
+	RNGManager_sPtr rng_engine;
 };
 
 ///////////////////////////////////////////////////

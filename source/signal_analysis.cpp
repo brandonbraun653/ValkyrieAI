@@ -97,9 +97,9 @@ void StepResponseAnalyzer::solveSettlingValue()
 	avg /= 10.0;
 
 	if (avg > sim_data(0, 0))
-		searchDirection = true;		//Increasing search first
+		searchDirection = true;		//Increasing search
 	else
-		searchDirection = false;	//Decreasing search first
+		searchDirection = false;	//Decreasing search
 
 	/*-----------------------------------------------
 	* Find all the inflection points
@@ -222,7 +222,9 @@ void StepResponseAnalyzer::solveSettlingValue()
 			int eLastVal = extrema.values.size() - 1;
 			int simLastVal = sim_data.cols() - 1;
 
-			double offset = (sim_data(0, simLastVal) - extrema.values[eLastVal]) / 2.0;
+			//Because the decision for where to place the guessed finalValue is based on offsets and
+			//information on the last search direction, the offset must be positive. (Found this out the hard way)
+			double offset = abs((sim_data(0, simLastVal) - extrema.values[eLastVal]) / 2.0);
 			if (searchDirection)
 				performance.finalValue_performance = extrema.values[eLastVal] + offset;
 			else
