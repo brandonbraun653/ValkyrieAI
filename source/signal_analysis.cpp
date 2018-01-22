@@ -1,5 +1,33 @@
 #include "signal_analysis.h"
 
+
+double findMinValue(double* arr, int arr_size)
+{
+	double smallestValue = DBL_MAX;
+
+	for (int i = 0; i < arr_size; i++)
+	{
+		if (arr[i] < smallestValue)
+			smallestValue = arr[i];
+	}
+
+	return smallestValue;
+}
+
+double findMaxValue(double* arr, int arr_size)
+{
+	double biggestValue = DBL_MIN;
+
+	for (int i = 0; i < arr_size; i++)
+	{
+		if (arr[i] > biggestValue)
+			biggestValue = arr[i];
+	}
+
+	return biggestValue;
+}
+
+
 //////////////////////////////////////////////////////////////////
 /* CLASS: StepResponseAnalyzer */
 //////////////////////////////////////////////////////////////////
@@ -46,6 +74,12 @@ StepPerformance StepResponseAnalyzer::analyze(Eigen::MatrixXd data)
 	sim_data = data;				/* Local copy of simulation data for below functions */
 	performance.data = sim_data;	/* Log of simulation data for FCS Optimizer */
 
+	/* Use primitive types for faster calculations (avoids legacy version push_back operations) */
+	extrema.values = new double(sim_data.cols());
+	extrema.time = new double(sim_data.cols());
+	extrema.diff = new double(sim_data.cols());
+	extrema.index = new int(sim_data.cols());
+
 	/*-----------------------------------------------
 	* Run through each step successively
 	*-----------------------------------------------*/
@@ -54,6 +88,12 @@ StepPerformance StepResponseAnalyzer::analyze(Eigen::MatrixXd data)
 	solveSettlingTime();
 	solveRiseTime();
 	solveSteadyStateError();
+
+
+	delete[] extrema.values; //Technically not necessary, but good practice
+	delete[] extrema.time;
+	delete[] extrema.index;
+	delete[] extrema.diff;
 
 	return performance;
 }
@@ -105,17 +145,24 @@ void StepResponseAnalyzer::solveSettlingValue()
 	* Find all the inflection points
 	*-----------------------------------------------*/
 	double lastVal = sim_data(0, 0);
+	extrema.valueSize = 0;
+	extrema.diffSize = 0;
+
 	for (int i = 0; i < sim_data.cols(); i++)
 	{
-		/* Searching for a maximum */
+		/*-----------------------------
+		* Searching for a maximum 
+		*-----------------------------*/
 		if (searchDirection)
 		{
 			// Just switched from positive/zero slope to negative
 			if (sim_data(0, i) < lastVal)
 			{
-				extrema.values.push_back(lastVal);
-				extrema.time.push_back(sim_data(1, i - 1));
-				extrema.index.push_back(i - 1);
+				extrema.values[extrema.valueSize] = lastVal;
+				extrema.time[extrema.valueSize] = sim_data(1, i - 1);
+				extrema.index[extrema.valueSize] = i - 1;
+
+				extrema.valueSize += 1;
 
 				searchDirection = false;
 			}
@@ -124,15 +171,19 @@ void StepResponseAnalyzer::solveSettlingValue()
 			lastVal = sim_data(0, i);
 		}
 
-		/* Searching for a minimum */
+		/*-----------------------------
+		* Searching for a minimum
+		*-----------------------------*/
 		if (!searchDirection)
 		{
 			// Just switched from negative/zero slope to positive
 			if (sim_data(0, i) > lastVal)
 			{
-				extrema.values.push_back(lastVal);
-				extrema.time.push_back(sim_data(1, i - 1));
-				extrema.index.push_back(i - 1);
+				extrema.values[extrema.valueSize] = lastVal;
+				extrema.time[extrema.valueSize] = sim_data(1, i - 1);
+				extrema.index[extrema.valueSize] = i - 1;
+
+				extrema.valueSize += 1;
 
 				searchDirection = true;
 			}
@@ -142,21 +193,26 @@ void StepResponseAnalyzer::solveSettlingValue()
 		}
 	}
 
+	
 	/*-----------------------------------------------
 	* Figure out what kind of system is present
 	*-----------------------------------------------*/
 	/* At least 1 inflection point is found */
-	if (!extrema.values.empty())
+	if (extrema.valueSize)
 	{
 		/* If at least 1 pair of inflection points, calculate their difference and check for convergence */
-		if (extrema.values.size() >= 2)
+		if (extrema.valueSize >= 2)
 		{
 			//Calculate distance pairs...
-			for (int i = 0; i < extrema.values.size() - 1; i++)
-				extrema.differences.push_back(abs(extrema.values[i] - extrema.values[i + 1]));
+			for (int i = 0; i < extrema.valueSize - 1; i++)
+			{
+				extrema.diff[i] = abs(extrema.values[i] - extrema.values[i + 1]);
+				extrema.diffSize += 1;
+			}
 
 			//Find the minimum of all pairs
-			double minDiffValue = *std::min_element(extrema.differences.begin(), extrema.differences.end());
+			double minDiffValue = findMinValue(extrema.diff, extrema.diffSize);
+
 
 			//Check for convergence
 			if (minDiffValue < minSettlingVariance)
@@ -167,14 +223,14 @@ void StepResponseAnalyzer::solveSettlingValue()
 		if (settling_state == NOT_CONVERGED)
 		{
 			int simSize = sim_data.cols();			//Num time steps
-			int infPtSize = extrema.values.size();	//Num inflection points
 
 			//Check the slope between the last data point and the last inflection point.
-			int nPts = simSize - extrema.index[infPtSize - 1];
+			//int nPts = simSize - extrema.index[infPtSize - 1];
+			int nPts = simSize - extrema.index[extrema.valueSize - 1];
 
 			//testing
 			double y1 = sim_data(0, simSize - 1);
-			double y2 = extrema.values[infPtSize - 1];
+			double y2 = extrema.values[extrema.valueSize - 1];
 
 			double ydiff = abs(y1 - y2);
 			double slope = ydiff / (double)nPts;
@@ -208,18 +264,18 @@ void StepResponseAnalyzer::solveSettlingValue()
 	{
 		if (settling_state == SUFFICIENTLY_DAMPED)
 		{
-			int eLastVal = extrema.values.size() - 1;
-			int eDiffLastVal = extrema.differences.size() - 1;
+			int eLastVal = extrema.valueSize - 1;
+			int eDiffLastVal = extrema.diffSize - 1;
 
 			if (searchDirection)
-				performance.finalValue_performance = extrema.values[eLastVal] + extrema.differences[eDiffLastVal] / 2.0;
+				performance.finalValue_performance = extrema.values[eLastVal] + extrema.diff[eDiffLastVal] / 2.0;
 			else
-				performance.finalValue_performance = extrema.values[eLastVal] - extrema.differences[eDiffLastVal] / 2.0;
+				performance.finalValue_performance = extrema.values[eLastVal] - extrema.diff[eDiffLastVal] / 2.0;
 		}
 
 		if (settling_state == UNDER_DAMPED)
 		{
-			int eLastVal = extrema.values.size() - 1;
+			int eLastVal = extrema.valueSize - 1;
 			int simLastVal = sim_data.cols() - 1;
 
 			//Because the decision for where to place the guessed finalValue is based on offsets and
@@ -242,7 +298,8 @@ void StepResponseAnalyzer::solveOvershoot()
 {	
 	if (settling_state == SUFFICIENTLY_DAMPED || settling_state == UNDER_DAMPED)
 	{
-		double peak = *std::max_element(extrema.values.begin(), extrema.values.end());
+		double peak = findMaxValue(extrema.values, extrema.valueSize);
+
 		performance.delta_overshoot_performance = peak - performance.finalValue_performance;
 		performance.percentOvershoot_performance = 100.0*(performance.delta_overshoot_performance) / performance.finalValue_performance;
 	}
@@ -266,7 +323,7 @@ void StepResponseAnalyzer::solveSettlingTime()
 		boost::container::vector<double> extreme_deltas;
 
 		/* First, find the extrema that is closest to but just below the delta threshold */
-		for (int i = 0; i < extrema.values.size(); i++)
+		for (int i = 0; i < extrema.valueSize; i++)
 		{
 			extreme_deltas.push_back(abs(extrema.values[i] - performance.finalValue_performance));
 

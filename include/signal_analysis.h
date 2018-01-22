@@ -29,11 +29,13 @@
 *-----------------------------------------------*/
 struct InflectionPoints
 {
-	boost::container::vector<double> values;    /* Data Value */
-	boost::container::vector<double> time;		/* Time Stamp */
-	boost::container::vector<int> index;		/* Step Index */
+	int* index;			/* Step index where an inflection point is found */
+	double* time;		/* Time stamp where an inflection point is found */
+	double* values;		/* Actual inflection point value */
+	double* diff;		/* Differences between successive inflection points */
 
-	boost::container::vector<double> differences;
+	int valueSize;		/* Tracks the number of inflection points found */
+	int diffSize;		/* Tracks the number of inflection point differences calculated */
 };
 
 enum SystemDamping

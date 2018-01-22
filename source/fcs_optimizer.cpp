@@ -152,16 +152,18 @@ void FCSOptimizer::run()
 			checkConvergence();		/* Given the new fitness scores, see if we have a "winner" that met user goals sufficiently */
 
 			//CURRENTLY NOT USED
-			filterPopulation();		/* Apply random "filtering" to the population to stepResponse things like death/disaster/disease etc. */
+			//filterPopulation();		/* Apply random "filtering" to the population to stepResponse things like death/disaster/disease etc. */
 
-			selectParents();		/* Of the current population, select those who will mate */
+			//selectParents();		/* Of the current population, select those who will mate */
 
-			breedGeneration();		/* Use the selected mating pairs from the last step to create new offspring */
+			//breedGeneration();		/* Use the selected mating pairs from the last step to create new offspring */
 
-			mutateGeneration();		/* Mutate the new generation's chromosomes based on random chance */
+			//mutateGeneration();		/* Mutate the new generation's chromosomes based on random chance */
 			
 			//CURRENTLY NOT USED
-			boundaryCheck();		/* Ensure the newly generated data falls within the user constraints */
+			//boundaryCheck();		/* Ensure the newly generated data falls within the user constraints */
+
+			currentIteration += 1;
 		}
 
 		/*-------------------------------------
@@ -455,10 +457,10 @@ void FCSOptimizer::evaluateModel()
 			processor cores. */
 
 			/* Swap out the PID values and simulate */
-			input.pid = population[member].realPID;
-// 			input.pid.Kp = 12.05;
-// 			input.pid.Ki = 68.38;
-// 			input.pid.Kd = 0.0;
+			//input.pid = population[member].realPID;
+
+			input.pid = { 12.05, 68.38, 0.0 };
+
 			runtimeStep.evaluateModelInstances[modelType]->evaluate(input, output);
 
 			/* Pass on the resulting data to the optimizer's record of everything */

@@ -57,6 +57,10 @@ int main()
 	initStruct.pidControlSettings.performanceTolerance.settlingTime_pcntTol = 0.1;
 	initStruct.pidControlSettings.performanceTolerance.steadyStateError_pcntTol = 0.1;
 
+	/*-----------------------------
+	* ADVANCED PARAMETER SETTINGS
+	*----------------------------*/
+	initStruct.advConvergenceParam.generationLimit = 10;
 
 	/*-----------------------------
 	* SIMULATION MODEL
