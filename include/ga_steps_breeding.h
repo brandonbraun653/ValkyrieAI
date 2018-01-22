@@ -12,20 +12,34 @@
 /* Boost Includes */
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/container/vector.hpp>
 
 /* Local Includes */
 #include "config.h"
 #include "ga_helper.h"
 #include "types.h"
  
+
 struct GA_BreedingDataInput
 {
-	//Add whatever the heck is needed here
+	GA_ChromosomeMappingType chromType;									/* Informs the user as to how the chromosomes are being represented */
+
+	boost::container::vector<int> parentSelections;						/* Chosen parents that will mate */
+
+	boost::container::vector<GA_PIDChromosome<double>> d_chrom;			/* Real valued representation of chromosomes*/
+	boost::container::vector<GA_PIDChromosome<uint16_t>> u16_chrom;		/* Bit field mapped chromosomes */
+
+	FCSOptimizer_MappingCoeff* mapCoeff_Kp;								/* Precalculated mapping coefficients to convert between chrom types */
+	FCSOptimizer_MappingCoeff* mapCoeff_Ki;
+	FCSOptimizer_MappingCoeff* mapCoeff_Kd;
 };
 
 struct GA_BreedingDataOutput
 {
-	//Add whatever the heck is needed here
+	GA_ChromosomeMappingType chromType;									/* Informs the user as to how the chromosomes are being represented */
+	
+	boost::container::vector<GA_PIDChromosome<double>> d_chrom;			/* Real valued representation of chromosomes*/
+	boost::container::vector<GA_PIDChromosome<uint16_t>> u16_chrom;		/* Bit field mapped chromosomes */
 };
 
 class GA_BreedBase

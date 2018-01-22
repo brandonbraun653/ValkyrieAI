@@ -48,7 +48,7 @@ void RankedSelection::selectParentKd()
 *-----------------------------------------------*/
 RandomSelection::RandomSelection(const int populationSize)
 {
-	auto distribution = boost::random::uniform_int_distribution<>(0, populationSize);
+	auto distribution = boost::random::uniform_int_distribution<>(0, populationSize - 1);
 	rng_engine = boost::make_shared<RNGInstance<boost::mt19937, boost::random::uniform_int_distribution<>>>(distribution);
 }
 

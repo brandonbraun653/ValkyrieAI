@@ -145,8 +145,6 @@ void FCSOptimizer::run()
 		*-------------------------------------*/
 		if (currentStatus == GA_OK)
 		{
-			//Current Module: Breed Generation
-
 			evaluateModel();		/* With the current population members, run a test scenario on the chosen model and record output data */
 
 			evaluateFitness();		/* Use recorded performance data from last step to gauge how well it meets user goals */
@@ -161,6 +159,9 @@ void FCSOptimizer::run()
 			breedGeneration();		/* Use the selected mating pairs from the last step to create new offspring */
 
 			mutateGeneration();		/* Mutate the new generation's chromosomes based on random chance */
+			
+			//CURRENTLY NOT USED
+			boundaryCheck();		/* Ensure the newly generated data falls within the user constraints */
 		}
 
 		/*-------------------------------------
@@ -189,8 +190,14 @@ void FCSOptimizer::run()
 
 		#ifdef _DEBUG
 		//We only want to run one time through just to make sure stuff executes ok. To be removed later.
-		currentStatus = GA_COMPLETE;
+		//currentStatus = GA_COMPLETE;
 		#endif
+
+
+		/*-------------------------------------
+		* Handle post-processing of round for reporting status to user
+		*-------------------------------------*/
+		//Do stuff
 
 		/* Allow other waiting threads to run */
 		boost::this_thread::yield();
@@ -269,6 +276,7 @@ void FCSOptimizer::initMemory()
 	/* Glue memory between the GA functions */
 	fcs_modelEvalutationData.resize(popSize);
 	fcs_fitnessData.resize(popSize);
+	fcs_parentSelections.resize(popSize);
 
 	/* Allocate the memory needed to hold all the operation functions */
 	runtimeStep.populationFilterInstances.resize(GA_POPULATION_TOTAL_OPTIONS);
@@ -447,10 +455,10 @@ void FCSOptimizer::evaluateModel()
 			processor cores. */
 
 			/* Swap out the PID values and simulate */
-			//input.pid = population[member].realPID;
-			input.pid.Kp = 12.05;
-			input.pid.Ki = 68.38;
-			input.pid.Kd = 0.0;
+			input.pid = population[member].realPID;
+// 			input.pid.Kp = 12.05;
+// 			input.pid.Ki = 68.38;
+// 			input.pid.Kd = 0.0;
 			runtimeStep.evaluateModelInstances[modelType]->evaluate(input, output);
 
 			/* Pass on the resulting data to the optimizer's record of everything */
@@ -719,13 +727,8 @@ void FCSOptimizer::selectParents()
 	}
 	else if (selectType == GA_SELECT_TOURNAMENT)
 	{
-		/* Fancy little iterator that fills temp with the latest global fitness scores */
-		boost::container::vector<double> temp;
-		std::transform(fcs_fitnessData.begin(), fcs_fitnessData.end(), std::back_inserter(temp), \
+		std::transform(fcs_fitnessData.begin(), fcs_fitnessData.end(), std::back_inserter(input.popGlobalFitScores),
 			[](const FCSOptimizer_FitnessData& input) { return input.fit.global_fitness; });
-
-		
-		input.popGlobalFitScores = temp;
 	}
 	else if (selectType == GA_SELECT_ELITIST)
 	{
@@ -737,6 +740,9 @@ void FCSOptimizer::selectParents()
 
 	
 	runtimeStep.selectParentInstances[selectType]->selectParent(input, output);
+
+	
+	fcs_parentSelections = output.parentSelections;
 }
 
 void FCSOptimizer::breedGeneration()
@@ -774,9 +780,39 @@ void FCSOptimizer::breedGeneration()
 		}
 	}
 
+
+	/*-----------------------------------------------
+	* Assign data to the input struct. For now, force
+	* chromosomes to be real valued.
+	*-----------------------------------------------*/
+	input.parentSelections = fcs_parentSelections;
+
+	if (currentSolverParam.chromType == MAPPING_TYPE_REAL)
+	{
+		input.chromType = currentSolverParam.chromType;
+
+		/* Fancy iterator to copy over the relevant genetic material */
+		std::transform(population.begin(), population.end(), std::back_inserter(input.d_chrom),
+			[](const FCSOptimizer_PopulationMember& member)
+		{
+			return GA_PIDChromosome<double>() = { member.realPID.Kp, member.realPID.Ki, member.realPID.Kd };
+		}
+		);
+	}
+
+	else if (currentSolverParam.chromType == MAPPING_TYPE_BIT_FIELD)
+	{
+		std::cout << "Global bit field mapping type not supported yet." << std::endl;
+	}
+	
+
+	input.mapCoeff_Kp = &mapCoefficients_Kp;
+	input.mapCoeff_Ki = &mapCoefficients_Ki;
+	input.mapCoeff_Kd = &mapCoefficients_Kd;
+
 	runtimeStep.breedInstances[breedType]->breed(input, output);
 
-	//Do any post processing here 
+	fcs_bredChromosomes = output;
 }
 
 void FCSOptimizer::mutateGeneration()
@@ -806,175 +842,50 @@ void FCSOptimizer::mutateGeneration()
 		}
 	}
 
+
+	input.mutateProbType = currentSolverParam.mutateProbabilityType;
+	input.optimizerChromType = currentSolverParam.chromType;			/* Final desired chromosome type */
+	input.chromType = fcs_bredChromosomes.chromType;					/* Current input data chromosome type*/
+
+	if (input.chromType == MAPPING_TYPE_REAL)
+		input.d_chrom = fcs_bredChromosomes.d_chrom;
+
+	else if (input.chromType == MAPPING_TYPE_BIT_FIELD)
+		input.u16_chrom = fcs_bredChromosomes.u16_chrom;
+
+	input.mapCoeff_Kp = &mapCoefficients_Kp;
+	input.mapCoeff_Ki = &mapCoefficients_Ki;
+	input.mapCoeff_Kd = &mapCoefficients_Kd;
+
+
 	runtimeStep.mutateInstances[mutateType]->mutate(input, output);
-	//Do any post processing here 
+
+
+	//Put the mutated data back into the population
+	if (currentSolverParam.chromType == MAPPING_TYPE_REAL && output.chromType == MAPPING_TYPE_REAL)
+	{
+		for (int i = 0; i < population.size(); i++)
+		{
+			population[i].realPID.Kp = output.d_chrom[i].Kp;
+			population[i].realPID.Ki = output.d_chrom[i].Ki;
+			population[i].realPID.Kd = output.d_chrom[i].Kd;
+		}
+	}
+	else if (currentSolverParam.chromType == MAPPING_TYPE_BIT_FIELD && output.chromType == MAPPING_TYPE_BIT_FIELD)
+	{
+		for (int i = 0; i < population.size(); i++)
+		{
+			population[i].mappedPID.Kp = output.u16_chrom[i].Kp;
+			population[i].mappedPID.Ki = output.u16_chrom[i].Ki;
+			population[i].mappedPID.Kd = output.u16_chrom[i].Kd;
+		}
+	}
 }
 
-
-// void FCSOptimizer::breedGeneration()
-// {
-// 	#ifdef GA_TRACE_BREED_GENERATION
-// 	auto trace_start_time = boost::chrono::high_resolution_clock::now();
-// 	#endif
-// 
-// 	const size_t popSize = hData.sim_data.population_size;
-// 	if (ga_instance_model_name == SSModelName)
-// 	{
-// 	#ifdef GA_ENFORCE_RESOLUTION_BG
-// 	enforceResolution();
-// 	#endif
-// 
-// 	#if defined(GA_CPU_SINGLE_THREADED) && !defined(GA_CPU_MULTI_THREADED)
-// 	
-// 		/*-----------------------------------------------
-// 		* Simple Crossover 
-// 		*-----------------------------------------------*/
-// 		if (ga_instance_step_methods.breedType == GA_BREED_SIMPLE_CROSSOVER)
-// 		{
-// 			SimpleCrossover SC(SINGLE_THREADED);
-// 			SC.breed(parentSelection, &hData.pid_data, &bredChromosomes, &mapCoefficients_Kp, &mapCoefficients_Ki, &mapCoefficients_Kd);
-// 		}
-// 
-// 		/*-----------------------------------------------
-// 		* Dynamic Crossover
-// 		*-----------------------------------------------*/
-// 		if (ga_instance_step_methods.breedType == GA_BREED_DYNAMIC_CROSSOVER)
-// 		{
-// 			DynamicCrossover DC(SINGLE_THREADED);
-// 			DC.breed(parentSelection, &hData.pid_data, &bredChromosomes, &mapCoefficients_Kp, &mapCoefficients_Ki, &mapCoefficients_Kd);
-// 		}
-// 
-// 		/*-----------------------------------------------
-// 		* Fixed Ratio Crossover
-// 		*-----------------------------------------------*/
-// 		if (ga_instance_step_methods.breedType == GA_BREED_FIXED_RATIO_CROSSOVER)
-// 		{
-// 			FixedRatioCrossover FRC(SINGLE_THREADED, 0.25);
-// 			FRC.breed(parentSelection, &hData.pid_data, &bredChromosomes, &mapCoefficients_Kp, &mapCoefficients_Ki, &mapCoefficients_Kd);
-// 		}
-// 
-// 	
-// 	#endif
-// 
-// 	#if defined(GA_CPU_MULTI_THREADED) && !defined(GA_CPU_SINGLE_THREADED)
-// 		/*-----------------------------------------------
-// 		* Simple Crossover
-// 		*-----------------------------------------------*/
-// 		if (ga_instance_step_methods.breedType == GA_BREED_SIMPLE_CROSSOVER)
-// 		{
-// 			#ifdef DEBUGGING_ENABLED
-// 			size_t pidSize = hData.pid_data.Kd.size();
-// 			#endif
-// 
-// 			SimpleCrossover SC(MULTI_THREADED);
-// 			SC.breed(parentSelection, &hData.pid_data, &bredChromosomes, &mapCoefficients_Kp, &mapCoefficients_Ki, &mapCoefficients_Kd);
-// 		}
-// 
-// 		/*-----------------------------------------------
-// 		* Dynamic Crossover
-// 		*-----------------------------------------------*/
-// 		if (ga_instance_step_methods.breedType == GA_BREED_DYNAMIC_CROSSOVER)
-// 		{
-// 			DynamicCrossover DC(MULTI_THREADED);
-// 			DC.breed(parentSelection, &hData.pid_data, &bredChromosomes, &mapCoefficients_Kp, &mapCoefficients_Ki, &mapCoefficients_Kd);
-// 		}
-// 
-// 		/*-----------------------------------------------
-// 		* Fixed Ratio Crossover
-// 		*-----------------------------------------------*/
-// 		if (ga_instance_step_methods.breedType == GA_BREED_FIXED_RATIO_CROSSOVER)
-// 		{
-// 			FixedRatioCrossover FRC(MULTI_THREADED, 0.25);
-// 			FRC.breed(parentSelection, &hData.pid_data, &bredChromosomes, &mapCoefficients_Kp, &mapCoefficients_Ki, &mapCoefficients_Kd);
-// 		}
-// 	#endif
-// 	}
-// 	
-// 	#ifdef GA_TRACE_BREED_GENERATION
-// 	auto trace_end_time = boost::chrono::high_resolution_clock::now();
-// 	#endif
-// }
-
-// void FCSOptimizer::mutateGeneration()
-// {
-// 	#ifdef GA_TRACE_MUTATE_GENERATION
-// 	auto start = boost::chrono::high_resolution_clock::now();
-// 	#endif
-// 
-// 	const size_t popSize = hData.sim_data.population_size;
-// 	if (ga_instance_model_name == SSModelName)
-// 	{
-// 	#if defined(GA_CPU_SINGLE_THREADED) && !defined(GA_CPU_MULTI_THREADED)
-// 		/*-----------------------------------------------
-// 		* Bit Flipping Mutator
-// 		*-----------------------------------------------*/
-// 		if (ga_instance_step_methods.mutateType == GA_MUTATE_BIT_FLIP)
-// 		{
-// 			BitFlipMutator mutator(SINGLE_THREADED, ga_instance_step_methods.mutateProbabilityType);
-// 
-// 			mutator.mutate(&bredChromosomes, ga_instance_convergence_criteria, ga_instance_pid_config_data,
-// 				&hData.pid_data, &mapCoefficients_Kp, &mapCoefficients_Ki, &mapCoefficients_Kd);
-// 		}
-// 
-// 		/*-----------------------------------------------
-// 		* Add-Subtract Mutator
-// 		*-----------------------------------------------*/
-// 		if (ga_instance_step_methods.mutateType == GA_MUTATE_ADD_SUB)
-// 		{
-// 			AddSubMutator mutator(SINGLE_THREADED,
-// 				ga_instance_step_methods.mutateProbabilityType,
-// 				ga_instance_step_methods.resolutionType);
-// 
-// 			mutator.mutate(&bredChromosomes,
-// 				ga_instance_convergence_criteria,
-// 				ga_instance_pid_config_data,
-// 				&hData.pid_data,
-// 				&mapCoefficients_Kp,
-// 				&mapCoefficients_Ki,
-// 				&mapCoefficients_Kd);
-// 		}
-// 	#endif
-// 
-// 	#if defined(GA_CPU_MULTI_THREADED) && !defined(GA_CPU_SINGLE_THREADED)
-// 		/*-----------------------------------------------
-// 		* Bit Flipping Mutator
-// 		*-----------------------------------------------*/
-// 		if (ga_instance_step_methods.mutateType == GA_MUTATE_BIT_FLIP)
-// 		{
-// 			BitFlipMutator mutator(MULTI_THREADED, ga_instance_step_methods.mutateProbabilityType);
-// 
-// 			mutator.mutate(&bredChromosomes, ga_instance_convergence_criteria, ga_instance_pid_config_data,
-// 				&hData.pid_data, &mapCoefficients_Kp, &mapCoefficients_Ki, &mapCoefficients_Kd);
-// 		}
-// 
-// 		/*-----------------------------------------------
-// 		* Add-Subtract Mutator
-// 		*-----------------------------------------------*/
-// 		if (ga_instance_step_methods.mutateType == GA_MUTATE_ADD_SUB)
-// 		{
-// 			AddSubMutator mutator(MULTI_THREADED,
-// 				ga_instance_step_methods.mutateProbabilityType,
-// 				ga_instance_step_methods.resolutionType);
-// 
-// 			mutator.mutate(&bredChromosomes,
-// 				ga_instance_convergence_criteria,
-// 				ga_instance_pid_config_data,
-// 				&hData.pid_data,
-// 				&mapCoefficients_Kp,
-// 				&mapCoefficients_Ki,
-// 				&mapCoefficients_Kd);
-// 		}
-// 	#endif
-// 
-// 	#ifdef GA_ENFORCE_RESOLUTION_MG
-// 		enforceResolution();
-// 	#endif
-// 	}
-// 	
-// 	#ifdef GA_TRACE_MUTATE_GENERATION
-// 	auto stop = boost::chrono::high_resolution_clock::now();
-// 	#endif
-// }
+void FCSOptimizer::boundaryCheck()
+{
+	//TODO: Implement the boundaryCheck function
+}
 
 // void FCSOptimizer::enforceResolution()
 // {

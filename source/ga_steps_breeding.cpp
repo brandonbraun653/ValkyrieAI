@@ -19,7 +19,70 @@ SimpleCrossover::~SimpleCrossover()
 *-----------------------------------------------*/
 void SimpleCrossover::breed(GA_BreedingDataInput input, GA_BreedingDataOutput& output)
 {
-	std::cout << "Hello from the simple crossover breeding function!" << std::endl;
+	uint16_t upper_mask = 0xFF00;
+	uint16_t lower_mask = 0x00FF;
+	uint16_t parent1_chrom, parent2_chrom, child1_chrom, child2_chrom;
+
+	int parent1_idx, parent2_idx;
+	double parent1_data, parent2_data;
+
+	/* Simple crossover outputs data as a bit field regardless of input type */
+	output.chromType = MAPPING_TYPE_BIT_FIELD;
+
+	if (input.chromType == MAPPING_TYPE_REAL)
+	{
+		/* Ensure the output has been correctly allocated */
+		if (output.u16_chrom.size() != input.d_chrom.size())
+			output.u16_chrom.resize(input.d_chrom.size());
+
+
+		/* First, convert everything over to a bitfield. Not all population members will be selected 
+		to breed. This ensures that every PID field has an accurate value whether it was mated or not. */
+		for (int member = 0; member < input.d_chrom.size(); member++)
+		{
+			output.u16_chrom[member].Kp = data2Chromosome(input.mapCoeff_Kp, input.d_chrom[member].Kp);
+			output.u16_chrom[member].Ki = data2Chromosome(input.mapCoeff_Ki, input.d_chrom[member].Ki);
+			output.u16_chrom[member].Kd = data2Chromosome(input.mapCoeff_Kd, input.d_chrom[member].Kd);
+		}
+
+
+		/* Now perform the actual mating procedure. Indexing limits must be size()-1 to account for
+		the +2 increment */
+		for (int parent = 0; parent < input.parentSelections.size() - 1; parent += 2)
+		{
+			parent1_idx = input.parentSelections[parent];
+			parent2_idx = input.parentSelections[parent + 1];
+
+			//KP 
+			parent1_chrom = output.u16_chrom[parent1_idx].Kp;
+			parent2_chrom = output.u16_chrom[parent2_idx].Kp;
+
+			output.u16_chrom[parent1_idx].Kp = (parent1_chrom & upper_mask) | (parent2_chrom & lower_mask);
+			output.u16_chrom[parent2_idx].Kp = (parent1_chrom & lower_mask) | (parent2_chrom & upper_mask);
+
+
+			//Ki 
+			parent1_chrom = output.u16_chrom[parent1_idx].Ki;
+			parent2_chrom = output.u16_chrom[parent2_idx].Ki;
+
+			output.u16_chrom[parent1_idx].Ki = (parent1_chrom & upper_mask) | (parent2_chrom & lower_mask);
+			output.u16_chrom[parent2_idx].Ki = (parent1_chrom & lower_mask) | (parent2_chrom & upper_mask);
+
+
+			//Kd 
+			parent1_chrom = output.u16_chrom[parent1_idx].Kd;
+			parent2_chrom = output.u16_chrom[parent2_idx].Kd;
+
+			output.u16_chrom[parent1_idx].Kd = (parent1_chrom & upper_mask) | (parent2_chrom & lower_mask);
+			output.u16_chrom[parent2_idx].Kd = (parent1_chrom & lower_mask) | (parent2_chrom & upper_mask);
+		}
+
+		
+	}
+	else if (input.chromType == MAPPING_TYPE_BIT_FIELD)
+	{
+		std::cout << "Using bit field map for breeding...not currently implemented!!" << std::endl;
+	}
 }
 
 /*-----------------------------------------------
