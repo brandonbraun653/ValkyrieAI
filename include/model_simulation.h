@@ -19,7 +19,7 @@ class StateSpaceSimulator
 public:
 
 	Eigen::MatrixXd stepResponse(const double start, const double stop, const double dt, 
-		SS_ModelBase_sPtr model, PID_Values pid);
+		const SS_ModelBase_sPtr& model, const PID_Values pid);
 
 	Eigen::MatrixXd rampResponse(const double start, const double stop, const double dt,
 		SS_NLTIVModel model, PID_Values pid);

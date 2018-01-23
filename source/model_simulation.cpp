@@ -11,7 +11,7 @@ StateSpaceSimulator::~StateSpaceSimulator()
 }
 
 Eigen::MatrixXd StateSpaceSimulator::stepResponse(const double start, const double stop, const double dt, 
-	SS_ModelBase_sPtr model, PID_Values pid)
+	const SS_ModelBase_sPtr& model, const PID_Values pid)
 {
 	/* Due to how Odeint works internally, it's not feasible to pass in a full state space model object 
 	and run the algorithm directly on that. (Odeint REALLY dislikes pointers) Instead, a local copy of the 
@@ -52,6 +52,7 @@ Eigen::MatrixXd StateSpaceSimulator::stepResponse(const double start, const doub
 
 	Eigen::MatrixXd U(inputs, 1);					/* Actual plant input after modification by PID controller */
 	U.setZero();
+	localModel.U = U;
 
 	Eigen::MatrixXd error(inputs, 1);				/* PID runtime error value */
 	error.setZero();

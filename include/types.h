@@ -410,13 +410,6 @@ public:
 		D.resize(outputs, inputs); D.setZero(outputs, inputs);
 		X0.resize(states, 1); X0.setZero(states, 1);
 		U.resize(inputs, 1); U.setZero(inputs, 1);
-
-
-		A << base->getA();
-		B << base->getB();
-		C << base->getC();
-		D << base->getD();
-		X0 << base->getX0();
 	}
 
 	SS_NLTIVModel(const int Inputs, const int Outputs, const int States) : \
