@@ -37,6 +37,10 @@ double findMaxValue(double* arr, int arr_size)
 *-----------------------------------------------*/
 StepResponseAnalyzer::StepResponseAnalyzer()
 {
+	extrema.values = new double(1000);
+	extrema.time = new double(1000);
+	extrema.diff = new double(1000);
+	extrema.index = new int(1000);
 }
 
 StepResponseAnalyzer::~StepResponseAnalyzer()
@@ -75,10 +79,13 @@ StepPerformance StepResponseAnalyzer::analyze(Eigen::MatrixXd data)
 	performance.data = sim_data;	/* Log of simulation data for FCS Optimizer */
 
 	/* Use primitive types for faster calculations (avoids legacy version push_back operations) */
-	extrema.values = new double(sim_data.cols());
-	extrema.time = new double(sim_data.cols());
-	extrema.diff = new double(sim_data.cols());
-	extrema.index = new int(sim_data.cols());
+// 	extrema.values = new double(sim_data.cols());
+// 	extrema.time = new double(sim_data.cols());
+// 	extrema.diff = new double(sim_data.cols());
+// 	extrema.index = new int(sim_data.cols());
+
+	extrema.valueSize = 0;
+	extrema.diffSize = 0;
 
 	/*-----------------------------------------------
 	* Run through each step successively
@@ -90,10 +97,10 @@ StepPerformance StepResponseAnalyzer::analyze(Eigen::MatrixXd data)
 	solveSteadyStateError();
 
 
-	delete[] extrema.values; //Technically not necessary, but good practice
-	delete[] extrema.time;
-	delete[] extrema.index;
-	delete[] extrema.diff;
+	//delete[](extrema.values); //Technically not necessary, but good practice
+	//delete[](extrema.time);
+	//delete[](extrema.index);
+	//delete[](extrema.diff);
 
 	return performance;
 }
@@ -320,22 +327,23 @@ void StepResponseAnalyzer::solveSettlingTime()
 		double delta = abs(settlingBoundary * performance.finalValue_performance);
 		bool found = false;
 		int time_index = 0;
-		boost::container::vector<double> extreme_deltas;
+
+		double extreme_delta = 0;
 
 		/* First, find the extrema that is closest to but just below the delta threshold */
 		for (int i = 0; i < extrema.valueSize; i++)
 		{
-			extreme_deltas.push_back(abs(extrema.values[i] - performance.finalValue_performance));
+			extreme_delta = abs(extrema.values[i] - performance.finalValue_performance);
 
 			//Found a possible value
-			if (extreme_deltas[i] < delta && found == false)
+			if (extreme_delta < delta && found == false)
 			{
 				time_index = extrema.index[i];
 				found = true;
 			}
 
 			//Oops. Went back outside the delta boundary at some point
-			if (extreme_deltas[i] > delta && found == true)
+			if (extreme_delta > delta && found == true)
 			{
 				time_index = 0;
 				found = false;

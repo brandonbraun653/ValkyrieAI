@@ -1,3 +1,6 @@
+#pragma comment(linker, "/STACK:5000000")
+#pragma comment(linker, "/HEAP:5000000")
+
 #include <stdlib.h>
 #include <iostream>
 #include <thread>

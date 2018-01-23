@@ -154,11 +154,11 @@ void FCSOptimizer::run()
 			//CURRENTLY NOT USED
 			//filterPopulation();		/* Apply random "filtering" to the population to stepResponse things like death/disaster/disease etc. */
 
-			//selectParents();		/* Of the current population, select those who will mate */
+			selectParents();		/* Of the current population, select those who will mate */
 
-			//breedGeneration();		/* Use the selected mating pairs from the last step to create new offspring */
+			breedGeneration();		/* Use the selected mating pairs from the last step to create new offspring */
 
-			//mutateGeneration();		/* Mutate the new generation's chromosomes based on random chance */
+			mutateGeneration();		/* Mutate the new generation's chromosomes based on random chance */
 			
 			//CURRENTLY NOT USED
 			//boundaryCheck();		/* Ensure the newly generated data falls within the user constraints */
@@ -189,12 +189,6 @@ void FCSOptimizer::run()
 				break;
 			}
 		}
-
-		#ifdef _DEBUG
-		//We only want to run one time through just to make sure stuff executes ok. To be removed later.
-		//currentStatus = GA_COMPLETE;
-		#endif
-
 
 		/*-------------------------------------
 		* Handle post-processing of round for reporting status to user
@@ -457,9 +451,8 @@ void FCSOptimizer::evaluateModel()
 			processor cores. */
 
 			/* Swap out the PID values and simulate */
-			//input.pid = population[member].realPID;
-
-			input.pid = { 12.05, 68.38, 0.0 };
+			input.pid = population[member].realPID;
+			//input.pid = { 12.05, 68.38, 0.0 };
 
 			runtimeStep.evaluateModelInstances[modelType]->evaluate(input, output);
 
@@ -888,6 +881,7 @@ void FCSOptimizer::boundaryCheck()
 {
 	//TODO: Implement the boundaryCheck function
 }
+
 
 // void FCSOptimizer::enforceResolution()
 // {

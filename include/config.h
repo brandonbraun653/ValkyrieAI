@@ -7,8 +7,8 @@
 *-----------------------------------------------*/
 #define DEBUGGING_ENABLED					1		/* Turns on sections of code that provide extra variables for debugging */
 
-#define FILE_LOGGING_ENABLED				1		/* Turns on global file logs of things like warnings, errors, data outputs, etc.
-													The actual behavior of the logs are governed in the below sections.*/
+#define FILE_LOGGING_ENABLED				0		/* Turns on global file logs of things like warnings, errors, data outputs, etc.
+													This significantly impacts speed performance. */
 
 #define CONSOLE_LOGGING_ENABLED				1		/* Prints out general information related to the current algorithm status to the console */
 
