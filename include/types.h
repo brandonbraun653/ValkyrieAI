@@ -383,6 +383,7 @@ public:
 	virtual int getNumOutputs() = 0;
 	virtual int getNumStates() = 0;
 
+	virtual ~SS_ModelBase() = default;
 private:
 };
 typedef boost::shared_ptr<SS_ModelBase> SS_ModelBase_sPtr;
@@ -395,6 +396,7 @@ public:
 	int inputs, outputs, states;
 
 	SS_NLTIVModel() = default;
+	~SS_NLTIVModel() = default;
 
 	/* Copy constructor */
 	SS_NLTIVModel(const SS_ModelBase_sPtr& base)

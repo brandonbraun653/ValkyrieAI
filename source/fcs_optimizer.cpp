@@ -145,14 +145,15 @@ void FCSOptimizer::run()
 		*-------------------------------------*/
 		if (currentStatus == GA_OK)
 		{
+			boundaryCheck();		/* Ensure the newly generated data falls within the user constraints */
+
 			evaluateModel();		/* With the current population members, run a test scenario on the chosen model and record output data */
 
 			evaluateFitness();		/* Use recorded performance data from last step to gauge how well it meets user goals */
 
 			checkConvergence();		/* Given the new fitness scores, see if we have a "winner" that met user goals sufficiently */
 
-			//CURRENTLY NOT USED
-			//filterPopulation();		/* Apply random "filtering" to the population to stepResponse things like death/disaster/disease etc. */
+			filterPopulation();		/* Apply random "filtering" to the population to stepResponse things like death/disaster/disease etc. */
 
 			selectParents();		/* Of the current population, select those who will mate */
 
@@ -160,9 +161,6 @@ void FCSOptimizer::run()
 
 			mutateGeneration();		/* Mutate the new generation's chromosomes based on random chance */
 			
-			//CURRENTLY NOT USED
-			//boundaryCheck();		/* Ensure the newly generated data falls within the user constraints */
-
 			currentIteration += 1;
 		}
 
@@ -633,7 +631,13 @@ void FCSOptimizer::filterPopulation()
 		switch (filterType)
 		{
 		case GA_POPULATION_STATIC_FILTER:
-			runtimeStep.populationFilterInstances[filterType] = boost::make_shared<StaticFilter>();
+			runtimeStep.populationFilterInstances[filterType] = boost::make_shared<StaticFilter>(
+				settings.pidControlSettings.tuningLimits.Kp.upper,
+				settings.pidControlSettings.tuningLimits.Kp.lower,
+				settings.pidControlSettings.tuningLimits.Ki.upper,
+				settings.pidControlSettings.tuningLimits.Ki.lower,
+				settings.pidControlSettings.tuningLimits.Kd.upper,
+				settings.pidControlSettings.tuningLimits.Kd.lower);
 			break;
 
 		case GA_POPULATION_DYNAMIC_FILTER:
@@ -650,15 +654,19 @@ void FCSOptimizer::filterPopulation()
 	/*-----------------------------
 	* Perform the filtering operation
 	*----------------------------*/
-	if (filterType == GA_POPULATION_STATIC_FILTER)
-	{
-		
-	}
+	
+	/* Populate the input struct */
+	std::transform(fcs_fitnessData.begin(), fcs_fitnessData.end(), std::back_inserter(input.currentGlobalFitScores),
+		[](const FCSOptimizer_FitnessData& input) { return input.fit.global_fitness; });
 
-	else if (filterType == GA_POPULATION_DYNAMIC_FILTER)
-	{
-		
-	}
+	input.static_performanceThreshold = 0.4;
+
+	runtimeStep.populationFilterInstances[filterType]->filter(input, output);
+
+
+	/* Replace the indicated population members */
+	for (int member = 0; member < output.replacedMemberIndexes.size(); member++)
+		population[output.replacedMemberIndexes[member]].realPID = output.replacementPIDValues[member];
 }
 
 void FCSOptimizer::selectParents()
@@ -879,29 +887,50 @@ void FCSOptimizer::mutateGeneration()
 
 void FCSOptimizer::boundaryCheck()
 {
-	//TODO: Implement the boundaryCheck function
+	/* Force decimal point resolution so we aren't searching through an ENORMOUS space */
+	enforceResolution();
+
+	//Do other things
 }
 
 
-// void FCSOptimizer::enforceResolution()
-// {
-// 	for (int member = 0; member < hData.sim_data.population_size; member++)
-// 	{
-// 		double fracPart = 0.0;
-// 		double intPart = 0.0;
-// 
-// 		/* Decompose the data into integral and fractional parts */
-// 		fracPart = std::modf(hData.pid_data.Kp.data()[member], &intPart);
-// 
-// 		/* Shift up, truncate, shift down data */
-// 		fracPart *= std::pow(10.0, (int)ga_instance_step_methods.resolutionType);
-// 		fracPart = floor(fracPart);
-// 		fracPart /= std::pow(10.0, (int)ga_instance_step_methods.resolutionType);
-// 
-// 		/* Reassign truncated value */
-// 		hData.pid_data.Kp.data()[member] = intPart + fracPart;
-// 	}
-// }
+void FCSOptimizer::enforceResolution()
+{
+	double fracPart = 0.0;
+	double intPart = 0.0;
+
+	for (int member = 0; member < settings.advConvergenceParam.populationSize; member++)
+	{
+		/* Decompose the data into integral and fractional parts */
+		fracPart = std::modf(population[member].realPID.Kp, &intPart);
+
+		/* Shift up, truncate, shift down data */
+		fracPart *= std::pow(10.0, (int)currentSolverParam.resolutionType);
+		fracPart = floor(fracPart);
+		fracPart /= std::pow(10.0, (int)currentSolverParam.resolutionType);
+
+		/* Reassign truncated value */
+		population[member].realPID.Kp = intPart + fracPart;
+
+		/*KI*/
+		fracPart = std::modf(population[member].realPID.Ki, &intPart);
+
+		fracPart *= std::pow(10.0, (int)currentSolverParam.resolutionType);
+		fracPart = floor(fracPart);
+		fracPart /= std::pow(10.0, (int)currentSolverParam.resolutionType);
+
+		population[member].realPID.Ki = intPart + fracPart;
+
+		/*KD*/
+		fracPart = std::modf(population[member].realPID.Kd, &intPart);
+
+		fracPart *= std::pow(10.0, (int)currentSolverParam.resolutionType);
+		fracPart = floor(fracPart);
+		fracPart /= std::pow(10.0, (int)currentSolverParam.resolutionType);
+
+		population[member].realPID.Kd = intPart + fracPart;
+	}
+}
 
 // int FCSOptimizer::reportResults(int trialNum)
 // {

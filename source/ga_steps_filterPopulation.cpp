@@ -130,9 +130,16 @@
 /*-----------------------------------------------
 * Constructors/Destructor
 *-----------------------------------------------*/
-StaticFilter::StaticFilter()
+StaticFilter::StaticFilter(const double KpMax, const double KpMin, const double KiMax, const double KiMin, const double KdMax, const double KdMin)
 {
+	auto distKp = boost::random::uniform_real_distribution<>(KpMin, KpMax);
+	rngKp = boost::make_shared <RNGInstance<boost::mt19937, boost::random::uniform_real_distribution<>>>(distKp);
 
+	auto distKi = boost::random::uniform_real_distribution<>(KiMin, KiMax);
+	rngKi = boost::make_shared <RNGInstance<boost::mt19937, boost::random::uniform_real_distribution<>>>(distKi);
+
+	auto distKd = boost::random::uniform_real_distribution<>(KdMin, KdMax);
+	rngKd = boost::make_shared <RNGInstance<boost::mt19937, boost::random::uniform_real_distribution<>>>(distKd);
 }
 
 StaticFilter::~StaticFilter()
@@ -145,7 +152,34 @@ StaticFilter::~StaticFilter()
 *-----------------------------------------------*/
 void StaticFilter::filter(const GA_PopulationFilterDataInput input, GA_PopulationFilterDataOutput& output)
 {
+	double performanceThreshold = 0.0;
+	if (input.static_performanceThreshold == 0.0)
+		performanceThreshold = 0.1;
+	else
+		performanceThreshold = input.static_performanceThreshold;
 
+
+	/* Generate new genetic material if a population member doesn't meet spec */
+	rngKp->acquireEngine();
+	rngKi->acquireEngine();
+	rngKd->acquireEngine();
+
+	for (int member = 0; member < input.currentGlobalFitScores.size(); member++)
+	{
+		if (input.currentGlobalFitScores[member] < performanceThreshold)
+		{
+			output.replacedMemberIndexes.push_back(member);
+			output.replacementPIDValues.push_back({
+				rngKp->getDouble(),
+				rngKi->getDouble(),
+				rngKd->getDouble()
+			});
+		}
+	}
+
+	rngKp->releaseEngine();
+	rngKi->releaseEngine();
+	rngKd->releaseEngine();
 }
 
 /*-----------------------------------------------

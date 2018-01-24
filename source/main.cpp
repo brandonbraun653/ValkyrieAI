@@ -29,6 +29,8 @@ int main()
 	initStruct.solverParam.breedType = GA_BREED_SIMPLE_CROSSOVER;
 	initStruct.solverParam.fitnessType = GA_FITNESS_WEIGHTED_SUM;
 	initStruct.solverParam.selectType = GA_SELECT_RANDOM;
+	initStruct.solverParam.filterType = GA_POPULATION_STATIC_FILTER;
+	initStruct.solverParam.resolutionType = GA_RESOLUTION_2DP;
 
 	/*-----------------------------
 	* DYNAMIC RECONFIGURATION OPTIONS
@@ -46,9 +48,9 @@ int main()
 	/*-----------------------------
 	* PID SETTINGS
 	*----------------------------*/
-	initStruct.pidControlSettings.tuningLimits.Kp = { 0.0, 100.0 };
-	initStruct.pidControlSettings.tuningLimits.Ki = { 0.0, 100.0 };
-	initStruct.pidControlSettings.tuningLimits.Kd = { 0.0, 100.0 };
+	initStruct.pidControlSettings.tuningLimits.Kp = { 0.0, 15.0 };
+	initStruct.pidControlSettings.tuningLimits.Ki = { 0.0, 70.0 };
+	initStruct.pidControlSettings.tuningLimits.Kd = { 0.0, 1.0 };
 
 	initStruct.pidControlSettings.performanceGoals.percentOvershoot_goal = 0.10;
 	initStruct.pidControlSettings.performanceGoals.riseTime_goal = 0.50;

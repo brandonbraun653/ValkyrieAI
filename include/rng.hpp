@@ -20,7 +20,7 @@ public:
 	virtual bool acquireEngine() = 0;
 	virtual void releaseEngine() = 0;
 
-	
+	virtual ~RNGManager() = default;
 private:
 	virtual void warmup() = 0;
 };
@@ -82,7 +82,14 @@ private:
 
 	void warmup() override
 	{
-		for (int i = 0; i < 100; i++)
+		//This should hopefully further randomize the differences between rng objects
+		//generated one after the other in quick succession.
+		int warmupLen = abs((int)dist(eng));
+		
+		if (warmupLen < 25)
+			warmupLen *= 10;
+
+		for (int i = 0; i < warmupLen; i++)
 			dist(eng);
 	}
 };

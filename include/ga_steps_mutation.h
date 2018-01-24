@@ -51,6 +51,8 @@ class GA_MutateBase
 public:
 	virtual void mutate(const GA_MutateDataInput, GA_MutateDataOutput&) = 0;
 
+	virtual ~GA_MutateBase() = default;
+
 private:
 	virtual void mutateKp() = 0;
 	virtual void mutateKi() = 0;
