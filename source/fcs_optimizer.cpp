@@ -768,8 +768,8 @@ void FCSOptimizer::breedGeneration()
 			runtimeStep.breedInstances[breedType] = boost::make_shared<DynamicCrossover>();
 			break;
 
-		case GA_BREED_FIXED_RATIO_CROSSOVER:
-			runtimeStep.breedInstances[breedType] = boost::make_shared<FixedRatioCrossover>();
+		case GA_BREED_FIXED_POINT_CROSSOVER:
+			runtimeStep.breedInstances[breedType] = boost::make_shared<FixedPointCrossover>();
 			break;
 
 		case GA_BREED_SIMULATED_BINARY_CROSSOVER:
@@ -794,7 +794,12 @@ void FCSOptimizer::breedGeneration()
 	{
 		input.chromType = currentSolverParam.chromType;
 
-		/* Fancy iterator to copy over the relevant genetic material */
+		//TODO: I need the user to specify these variable values in some kind of advanced initializer....
+		input.crossoverPoint = 9;
+		input.swap_both_chrom_halves = false;
+		input.swap_lower_chrom_half = false;
+
+		/* Fancy iterator to copy over the relevant genetic material. TODO: Switch out population real/mapped types into chrom type */
 		std::transform(population.begin(), population.end(), std::back_inserter(input.d_chrom),
 			[](const FCSOptimizer_PopulationMember& member)
 		{
@@ -849,6 +854,9 @@ void FCSOptimizer::mutateGeneration()
 	input.mutateProbType = currentSolverParam.mutateProbabilityType;
 	input.optimizerChromType = currentSolverParam.chromType;			/* Final desired chromosome type */
 	input.chromType = fcs_bredChromosomes.chromType;					/* Current input data chromosome type*/
+
+	//TODO: I need the user to specify these parameters!!!
+	input.mutationProbabilityThreshold = 0.25;
 
 	if (input.chromType == MAPPING_TYPE_REAL)
 		input.d_chrom = fcs_bredChromosomes.d_chrom;

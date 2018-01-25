@@ -29,9 +29,23 @@ struct GA_BreedingDataInput
 	boost::container::vector<GA_PIDChromosome<double>> d_chrom;			/* Real valued representation of chromosomes*/
 	boost::container::vector<GA_PIDChromosome<uint16_t>> u16_chrom;		/* Bit field mapped chromosomes */
 
-	FCSOptimizer_MappingCoeff* mapCoeff_Kp;								/* Precalculated mapping coefficients to convert between chrom types */
+	FCSOptimizer_MappingCoeff* mapCoeff_Kp;								/* Pre-calculated mapping coefficients to convert between chrom types */
 	FCSOptimizer_MappingCoeff* mapCoeff_Ki;
 	FCSOptimizer_MappingCoeff* mapCoeff_Kd;
+
+	/* Options specific to implementation type. Most will be left blank/defaulted. */
+
+	bool swap_both_chrom_halves = false;	/* When doing crossover, swap both halves of data between parents (total gene replacement).
+											   Default is False.*/
+
+	bool swap_lower_chrom_half = true;		/* ENABLED ONLY WHEN "swap_both_chroms" IS FALSE!
+											   Controls which half of the chromosome is actually swapped. If false, the upper half will
+											   be switched. The variable is true by default. */
+	
+	uint16_t crossoverPoint = 7;			/* Selects where to cut the gene for crossover (range 0-15). This effectively selects the 
+											   number of bits to use, starting from the LSB. Leave empty if unused. */
+
+
 };
 
 struct GA_BreedingDataOutput
@@ -96,14 +110,14 @@ private:
 ///////////////////////////////////////////////////
 /* CLASS:  FixedRatioCrossover */
 ///////////////////////////////////////////////////
-class FixedRatioCrossover : public GA_BreedBase
+class FixedPointCrossover : public GA_BreedBase
 {
 public:
 
 	void breed(const GA_BreedingDataInput input, GA_BreedingDataOutput& output) override;
 
-	FixedRatioCrossover();
-	~FixedRatioCrossover();
+	FixedPointCrossover();
+	~FixedPointCrossover();
 
 private:
 	void breedKp() override;
