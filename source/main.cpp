@@ -24,15 +24,15 @@ int main()
 	/*-----------------------------
 	* STEP CHOOSER
 	*----------------------------*/
-	initStruct.solverParam.rngEngine = GA_MERSENNE_TWISTER;
-	initStruct.solverParam.rngDistribution = GA_DISTRIBUTION_UNIFORM_REAL;
-	initStruct.solverParam.breedType = GA_BREED_FIXED_POINT_CROSSOVER;
-	initStruct.solverParam.fitnessType = GA_FITNESS_WEIGHTED_SUM;
-	initStruct.solverParam.selectType = GA_SELECT_RANDOM;
-	initStruct.solverParam.filterType = GA_POPULATION_STATIC_FILTER;
-	initStruct.solverParam.resolutionType = GA_RESOLUTION_2DP;
-	initStruct.solverParam.mutateType = GA_MUTATE_BIT_FLIP;
-	initStruct.solverParam.mutateProbabilityType = GA_MUTATE_PROBABILITY_EXPONENTIAL;
+	initStruct.solverParam.rngEngine				= GA_MERSENNE_TWISTER;
+	initStruct.solverParam.rngDistribution			= GA_DISTRIBUTION_UNIFORM_REAL;
+	initStruct.solverParam.breedType				= GA_BREED_FIXED_POINT_CROSSOVER;
+	initStruct.solverParam.fitnessType				= GA_FITNESS_WEIGHTED_SUM;
+	initStruct.solverParam.selectType				= GA_SELECT_TOURNAMENT;
+	initStruct.solverParam.filterType				= GA_POPULATION_STATIC_FILTER;
+	initStruct.solverParam.resolutionType			= GA_RESOLUTION_2DP;
+	initStruct.solverParam.mutateType				= GA_MUTATE_BIT_FLIP;
+	initStruct.solverParam.mutateProbabilityType	= GA_MUTATE_PROBABILITY_EXPONENTIAL;
 
 	/*-----------------------------
 	* DYNAMIC RECONFIGURATION OPTIONS
@@ -50,9 +50,9 @@ int main()
 	/*-----------------------------
 	* PID SETTINGS
 	*----------------------------*/
-	initStruct.pidControlSettings.tuningLimits.Kp = { 0.0, 15.0 };
-	initStruct.pidControlSettings.tuningLimits.Ki = { 0.0, 70.0 };
-	initStruct.pidControlSettings.tuningLimits.Kd = { 0.0, 1.0 };
+	initStruct.pidControlSettings.tuningLimits.Kp = { 0.0, 100.0 };
+	initStruct.pidControlSettings.tuningLimits.Ki = { 0.0, 100.0 };
+	initStruct.pidControlSettings.tuningLimits.Kd = { 0.0, 10.0 };
 
 	initStruct.pidControlSettings.performanceGoals.percentOvershoot_goal = 0.10;
 	initStruct.pidControlSettings.performanceGoals.riseTime_goal = 0.50;
@@ -69,6 +69,7 @@ int main()
 	*----------------------------*/
 	initStruct.advConvergenceParam.populationSize = 20;
 	initStruct.advConvergenceParam.generationLimit = 10;
+	initStruct.advConvergenceParam.limitingBehavior = FCS_LIMITER_REGENERATE_CHROMOSOME;
 
 	/*-----------------------------
 	* SIMULATION MODEL

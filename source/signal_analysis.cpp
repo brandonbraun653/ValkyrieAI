@@ -37,10 +37,6 @@ double findMaxValue(double* arr, int arr_size)
 *-----------------------------------------------*/
 StepResponseAnalyzer::StepResponseAnalyzer()
 {
-	extrema.values = new double(1000);
-	extrema.time = new double(1000);
-	extrema.diff = new double(1000);
-	extrema.index = new int(1000);
 }
 
 StepResponseAnalyzer::~StepResponseAnalyzer()
@@ -79,10 +75,10 @@ StepPerformance StepResponseAnalyzer::analyze(Eigen::MatrixXd data)
 	performance.data = sim_data;	/* Log of simulation data for FCS Optimizer */
 
 	/* Use primitive types for faster calculations (avoids legacy version push_back operations) */
-// 	extrema.values = new double(sim_data.cols());
-// 	extrema.time = new double(sim_data.cols());
-// 	extrema.diff = new double(sim_data.cols());
-// 	extrema.index = new int(sim_data.cols());
+ 	extrema.values = new double[sim_data.cols()];
+ 	extrema.time = new double[sim_data.cols()];
+ 	extrema.diff = new double[sim_data.cols()];
+ 	extrema.index = new int[sim_data.cols()];
 
 	extrema.valueSize = 0;
 	extrema.diffSize = 0;
@@ -97,10 +93,10 @@ StepPerformance StepResponseAnalyzer::analyze(Eigen::MatrixXd data)
 	solveSteadyStateError();
 
 
-	//delete[](extrema.values); //Technically not necessary, but good practice
-	//delete[](extrema.time);
-	//delete[](extrema.index);
-	//delete[](extrema.diff);
+	delete[] extrema.values;
+	delete[] extrema.time;
+	delete[] extrema.index;
+	delete[] extrema.diff;
 
 	return performance;
 }
@@ -204,7 +200,7 @@ void StepResponseAnalyzer::solveSettlingValue()
 	/*-----------------------------------------------
 	* Figure out what kind of system is present
 	*-----------------------------------------------*/
-	/* At least 1 inflection point is found */
+	/* At least 1 inflection point is settled_extrema_point_found */
 	if (extrema.valueSize)
 	{
 		/* If at least 1 pair of inflection points, calculate their difference and check for convergence */
@@ -226,7 +222,7 @@ void StepResponseAnalyzer::solveSettlingValue()
 				settling_state = SUFFICIENTLY_DAMPED;
 		}
 
-		/* 1 or more inflection points found, but not converged yet. Still has a shot though! */
+		/* 1 or more inflection points settled_extrema_point_found, but not converged yet. Still has a shot though! */
 		if (settling_state == NOT_CONVERGED)
 		{
 			int simSize = sim_data.cols();			//Num time steps
@@ -249,15 +245,15 @@ void StepResponseAnalyzer::solveSettlingValue()
 		}
 	}
 
-	/* No inflection points found, thus it may be critically damped or maybe exponential/ramp */
+	/* No inflection points settled_extrema_point_found, thus it may be critically damped or maybe exponential/ramp */
 	else
 	{
 		//Figure out how many data points correspond to the last 15% of sim
 		int lastIdx = sim_data.cols() - 1;
-		int nPts = (int)floor(0.15*lastIdx);
+		double nPts = floor(0.15*lastIdx);
 
 		//Calculate the slope over the last 15% of sim
-		double slope = (sim_data(0, lastIdx) - sim_data(0, lastIdx - nPts)) / nPts;
+		double slope = (sim_data(0, lastIdx) - sim_data(0, lastIdx - (int)nPts)) / nPts;
 
 		//If the slope is small enough, we assume it's an over/critically damped system
 		if (slope < maxSlopeCritDamp)
@@ -275,9 +271,9 @@ void StepResponseAnalyzer::solveSettlingValue()
 			int eDiffLastVal = extrema.diffSize - 1;
 
 			if (searchDirection)
-				performance.finalValue_performance = extrema.values[eLastVal] + extrema.diff[eDiffLastVal] / 2.0;
+				performance.steadyStateValue_performance = extrema.values[eLastVal] + extrema.diff[eDiffLastVal] / 2.0;
 			else
-				performance.finalValue_performance = extrema.values[eLastVal] - extrema.diff[eDiffLastVal] / 2.0;
+				performance.steadyStateValue_performance = extrema.values[eLastVal] - extrema.diff[eDiffLastVal] / 2.0;
 		}
 
 		if (settling_state == UNDER_DAMPED)
@@ -289,14 +285,14 @@ void StepResponseAnalyzer::solveSettlingValue()
 			//information on the last search direction, the offset must be positive. (Found this out the hard way)
 			double offset = abs((sim_data(0, simLastVal) - extrema.values[eLastVal]) / 2.0);
 			if (searchDirection)
-				performance.finalValue_performance = extrema.values[eLastVal] + offset;
+				performance.steadyStateValue_performance = extrema.values[eLastVal] + offset;
 			else
-				performance.finalValue_performance = extrema.values[eLastVal] - offset;
+				performance.steadyStateValue_performance = extrema.values[eLastVal] - offset;
 		}
 
 		if (settling_state == OVER_DAMPED)
 		{
-			performance.finalValue_performance = sim_data(0, sim_data.cols() - 1);
+			performance.steadyStateValue_performance = sim_data(0, sim_data.cols() - 1);
 		}
 	}
 }
@@ -307,8 +303,8 @@ void StepResponseAnalyzer::solveOvershoot()
 	{
 		double peak = findMaxValue(extrema.values, extrema.valueSize);
 
-		performance.delta_overshoot_performance = peak - performance.finalValue_performance;
-		performance.percentOvershoot_performance = 100.0*(performance.delta_overshoot_performance) / performance.finalValue_performance;
+		performance.delta_overshoot_performance = peak - performance.steadyStateValue_performance;
+		performance.percentOvershoot_performance = 100.0*(performance.delta_overshoot_performance) / performance.steadyStateValue_performance;
 	}
 
 	/* The OVERDAMPED case does not have any overshoot */
@@ -319,66 +315,74 @@ void StepResponseAnalyzer::solveOvershoot()
 void StepResponseAnalyzer::solveSettlingTime()
 {
 	/* Percent range +/- around final value that indicates settling */
-	double settlingBoundary = 0.05;
-	performance.settlingTime_window = settlingBoundary;
+	double settleRangePcnt = 0.05;
+	performance.settlingPcntRange = settleRangePcnt;
 
 	if (settling_state == SUFFICIENTLY_DAMPED || settling_state == UNDER_DAMPED)
 	{
-		double delta = abs(settlingBoundary * performance.finalValue_performance);
-		bool found = false;
-		int time_index = 0;
+		double abs_settling_range = abs(settleRangePcnt * performance.steadyStateValue_performance);
+		bool settled_extrema_point_found = false;
+		int settled_time_index = 0;
 
 		double extreme_delta = 0;
 
-		/* First, find the extrema that is closest to but just below the delta threshold */
+		/* First, find the extrema that is closest to but just below the abs_settling_range threshold, IFF it exists. */
 		for (int i = 0; i < extrema.valueSize; i++)
 		{
-			extreme_delta = abs(extrema.values[i] - performance.finalValue_performance);
+			extreme_delta = abs(extrema.values[i] - performance.steadyStateValue_performance);
 
 			//Found a possible value
-			if (extreme_delta < delta && found == false)
+			if (extreme_delta < abs_settling_range && settled_extrema_point_found == false)
 			{
-				time_index = extrema.index[i];
-				found = true;
+				settled_time_index = extrema.index[i];
+				settled_extrema_point_found = true;
 			}
 
-			//Oops. Went back outside the delta boundary at some point
-			if (extreme_delta > delta && found == true)
+			//Oops. Went back outside the abs_settling_range boundary at some point
+			if (extreme_delta > abs_settling_range && settled_extrema_point_found == true)
 			{
-				time_index = 0;
-				found = false;
+				settled_time_index = 0;
+				settled_extrema_point_found = false;
 			}
 		}
 
 		/* Now work backwards until you find the time step that corresponds
-		 * to when you first enter the delta range
+		 * to when you first enter the abs_settling_range range
 		 */
-		for (int i = time_index; 0 < i; --i)
+		if (settled_extrema_point_found)
 		{
-			if (abs(sim_data(0, i) - performance.finalValue_performance) > delta)
+			for (int i = settled_time_index; 0 < i; --i)
 			{
-				time_index = i + 1;
-				break;
+				if (abs(sim_data(0, i) - performance.steadyStateValue_performance) > abs_settling_range)
+				{
+					settled_time_index = i + 1;
+					break;
+				}
 			}
-		}
 
-		double dt = sim_data(1, (sim_data.cols() - 1)) / sim_data.cols();
-		performance.settlingTime_performance = time_index*dt;
-		performance.settlingTime_Idx = time_index;
+			double dt = sim_data(1, (sim_data.cols() - 1)) / sim_data.cols();
+			performance.settlingTime_performance = settled_time_index*dt;
+			performance.settlingTime_Idx = settled_time_index;
+		}
+		else
+		{
+			performance.settlingTime_performance = -1.0;
+			performance.settlingTime_Idx = 0;
+		}
 	}
 
 	/* The over damped case does not have settling time. Might need to change
 	this value in practice though. */
 	if (settling_state == OVER_DAMPED)
-		performance.settlingTime_performance = 0.0;
+		performance.settlingTime_performance = 0.0; /* Use 0.0 instead of -1.0 to allow fitness function to give possible partial credit */
 }
 
 void StepResponseAnalyzer::solveRiseTime()
 {
 	if (settling_state != NOT_CONVERGED)
 	{
-		double rise_start = 0.1*performance.finalValue_performance;
-		double rise_end = 0.9*performance.finalValue_performance;
+		double rise_start = 0.1*performance.steadyStateValue_performance;
+		double rise_end = 0.9*performance.steadyStateValue_performance;
 
 		double dt = sim_data(1, (sim_data.cols() - 1)) / sim_data.cols();
 
@@ -414,6 +418,6 @@ void StepResponseAnalyzer::solveSteadyStateError()
 		/* Because this is a step response analyzer, the output of this system 
 		   SHOULD eventually converge to 1.0. This is our reference for error.*/
 
-		performance.steadyStateError_performance = performance.finalValue_performance - 1.0;
+		performance.steadyStateError_performance = performance.steadyStateValue_performance - 1.0;
 	}
 }

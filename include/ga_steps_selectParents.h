@@ -39,6 +39,7 @@ class GA_SelectParentBase
 public:
 	virtual void selectParent(const GA_SelectParentDataInput, GA_SelectParentDataOutput&) = 0;
 
+	virtual ~GA_SelectParentBase() = default;
 private:
 	virtual void selectParentKp() = 0;
 	virtual void selectParentKi() = 0;
@@ -121,12 +122,15 @@ class TournamentSelection : public GA_SelectParentBase
 public:
 	void selectParent(const GA_SelectParentDataInput input, GA_SelectParentDataOutput& output) override;
 
-	TournamentSelection();
+	TournamentSelection(const int populationSize);
 	~TournamentSelection();
 private:
 	void selectParentKp() override;
 	void selectParentKi() override;
 	void selectParentKd() override;
+
+	RNGManager_sPtr tourneySizeSelectorRNG;
+	RNGManager_sPtr tourneyCompetitorSelectorRNG;
 };
 
 ///////////////////////////////////////////////////

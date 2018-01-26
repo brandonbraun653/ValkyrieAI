@@ -37,7 +37,7 @@ void writeCSV(T matrix, StepPerformance data, std::string filename)
 	}
 
 	//Write the performance data
-	csvFile << data.finalValue_performance << "," << data.settlingTime_window << "\n";
+	csvFile << data.steadyStateValue_performance << "," << data.settlingPcntRange << "\n";
 	csvFile << data.delta_overshoot_performance << "\n";
 	csvFile << data.percentOvershoot_performance << "\n";
 	csvFile << data.riseTime_performance << "," << data.riseTime_Idx[0] << "," << data.riseTime_Idx[1] << "\n";
@@ -68,7 +68,7 @@ void writeCSV_StepPerfData(StepPerformance data, std::string filename)
 	}
 
 	//Write the performance data
-	csvFile << data.finalValue_performance << "," << data.settlingTime_window << "\n";
+	csvFile << data.steadyStateValue_performance << "," << data.settlingPcntRange << "\n";
 	csvFile << data.delta_overshoot_performance << "\n";
 	csvFile << data.percentOvershoot_performance << "\n";
 	csvFile << data.riseTime_performance << "," << data.riseTime_Idx[0] << "," << data.riseTime_Idx[1] << "\n";

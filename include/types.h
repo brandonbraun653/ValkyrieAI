@@ -281,6 +281,12 @@ enum GA_METHOD_Resolution
 /*-----------------------------------------------
 * FCSOptimizer Data Types
 *-----------------------------------------------*/
+enum FCSOptimizer_TunerLimiterBehavior
+{
+	FCS_LIMITER_FORCE_TO_BOUNDARY,			/* Upon exceeding user limits, it caps at the max/min values */
+	FCS_LIMITER_REGENERATE_CHROMOSOME,		/* Upon exceeding user limits, a new random chromosome will be generated */
+	FCS_LIMITER_DEFAULT = FCS_LIMITER_FORCE_TO_BOUNDARY
+};
 
 /**
 * \brief Specifies basic solver convergence constraints
@@ -311,15 +317,16 @@ struct FCSOptimizer_BasicConstraints
 */
 struct FCSOptimizer_AdvConstraints
 {
-	uint32_t populationSize = 50;			/* GA Population Size */
-	uint32_t generationLimit = 50;			/* GA Generation Limit before exit */
+	uint32_t populationSize = 20;			/* GA Population Size */
+	uint32_t generationLimit = 100;			/* GA Generation Limit before exit */
 
 	int iterations_before_refresh = 10;		/* Max number of iterations without progress using current GA Methods */
 	int refresh_parameter_number = 2;		/* Specifies how many methods to replace when refreshing */
 	int mutation_severity = 8;				/* Specifies how strong of a mutation can occur. Min: 1; Max: 16, increasing severity */
 	double mutation_threshold = 0.5;		/* Specifies probability threshold for mutation. Range: 0-1, lower #s == higher probability */
 
-	//Add more as needed 
+	//Add more as needed
+	FCSOptimizer_TunerLimiterBehavior limitingBehavior = FCS_LIMITER_DEFAULT;
 };
 
 /**
@@ -355,6 +362,7 @@ struct FCSOptimizer_MappingCoeff
 	double x_sF;
 	double x_sR;
 };
+
 
 
 /*-----------------------------------------------
@@ -406,11 +414,17 @@ public:
 		outputs = base->getNumOutputs();
 		states = base->getNumStates();
 
-		A.resize(states, states); A.setZero(states, states);
-		B.resize(states, inputs); B.setZero(states, inputs);
-		C.resize(outputs, states); C.setZero(outputs, states);
-		D.resize(outputs, inputs); D.setZero(outputs, inputs);
-		X0.resize(states, 1); X0.setZero(states, 1);
+		A = base->getA();
+		B = base->getB();
+		C = base->getC();
+		D = base->getD();
+		X0 = base->getX0();
+
+		//A.resize(states, states); A.setZero(states, states);
+		//B.resize(states, inputs); B.setZero(states, inputs);
+		//C.resize(outputs, states); C.setZero(outputs, states);
+		//D.resize(outputs, inputs); D.setZero(outputs, inputs);
+		//X0.resize(states, 1); X0.setZero(states, 1);
 		U.resize(inputs, 1); U.setZero(inputs, 1);
 	}
 
@@ -467,8 +481,10 @@ struct StepPerformance
 	double delta_overshoot_performance = -1.0;		/* Units: none, absolute */
 	double settlingTime_performance = -1.0;			/* Units: seconds */
 	double riseTime_performance = -1.0;				/* Units: seconds */
-	double finalValue_performance = -1.0;			/* Units: user defined by problem */
-	double settlingTime_window = 0.0;				/* Percent range around final value */
+	double steadyStateValue_performance = -1.0;		/* Units: user defined by problem */
+
+
+	double settlingPcntRange = 0.0;					/* Percent range around final value that determines if a signal has settled */
 	int settlingTime_Idx = 0;						/* Index in given data series */
 	int riseTime_Idx[2] = { 0, 0 };					/* Start/Stop index in given data series */
 };

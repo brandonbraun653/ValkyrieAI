@@ -72,6 +72,8 @@ enum FCSOptimizer_Commands
 	REPORT_STATUS
 };
 
+
+
 /*-----------------------------------------------
 * Input/Output/Referencing Containers 
 *-----------------------------------------------*/
@@ -292,6 +294,7 @@ private:
 	* Useful Helper Functions
 	*----------------------------*/
 	void enforceResolution();
+	void enforceTunerLimits();
 	int reportResults(int trialNum);
 	void printResultHighlights(double best_fit, int best_fit_idx);
 };

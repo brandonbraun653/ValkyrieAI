@@ -64,7 +64,7 @@ void writeCSV_StepData(StepPerformance data, std::string filename)
 	}
 
 	//Write the performance data
-	csvFile << data.finalValue_performance << "," << data.settlingTime_window << "\n";
+	csvFile << data.steadyStateValue_performance << "," << data.settlingPcntRange << "\n";
 	csvFile << data.delta_overshoot_performance << "\n";
 	csvFile << data.percentOvershoot_performance << "\n";
 	csvFile << data.riseTime_performance << "," << data.riseTime_Idx[0] << "," << data.riseTime_Idx[1] << "\n";
@@ -517,7 +517,7 @@ void FCSOptimizer::evaluateFitness()
 				input.SSER = fcs_modelEvalutationData[member].ss_output.stepPerformance.steadyStateError_performance;
 				input.TR = fcs_modelEvalutationData[member].ss_output.stepPerformance.percentOvershoot_performance;
 				input.TS = fcs_modelEvalutationData[member].ss_output.stepPerformance.settlingTime_performance;
-				input.FV = fcs_modelEvalutationData[member].ss_output.stepPerformance.finalValue_performance;
+				input.FV = fcs_modelEvalutationData[member].ss_output.stepPerformance.steadyStateValue_performance;
 
 				input.simulationData = fcs_modelEvalutationData[member].ss_output.stepPerformance.data;
 				//NOTE: Eventually I am going to need to specify what kind of simulation was performed...
@@ -533,9 +533,12 @@ void FCSOptimizer::evaluateFitness()
 				fcs_fitnessData[member].fit = output.fit;
 
 				#if (DEBUGGING_ENABLED == 1)
-				double memberFit = 0.0;
-				memberFit = output.fit.global_fitness;
-				memberFit += 1.0;
+				std::cout
+					<< "Fitness: "	<< output.fit.global_fitness*0.9999
+					<< "\tKp: "		<< output.fit.stepPerformanceData.pidValues.Kp
+					<< "\tKi: "		<< output.fit.stepPerformanceData.pidValues.Ki
+					<< "\tKd: "		<< output.fit.stepPerformanceData.pidValues.Kd 
+					<< std::endl;
 				#endif
 
 				#if (FILE_LOGGING_ENABLED == 1) && (GA_FILELOG_MEMBER_FIT_DATA == 1)
@@ -701,7 +704,7 @@ void FCSOptimizer::selectParents()
 			break;
 
 		case GA_SELECT_TOURNAMENT:
-			runtimeStep.selectParentInstances[selectType] = boost::make_shared<TournamentSelection>();
+			runtimeStep.selectParentInstances[selectType] = boost::make_shared<TournamentSelection>(settings.advConvergenceParam.populationSize);
 			break;
 
 		case GA_SELECT_ELITIST:
@@ -898,9 +901,9 @@ void FCSOptimizer::boundaryCheck()
 	/* Force decimal point resolution so we aren't searching through an ENORMOUS space */
 	enforceResolution();
 
-	//Do other things
+	/* Ensure we aren't accidentally exceeding the tuning limits */
+	enforceTunerLimits();
 }
-
 
 void FCSOptimizer::enforceResolution()
 {
@@ -937,6 +940,66 @@ void FCSOptimizer::enforceResolution()
 		fracPart /= std::pow(10.0, (int)currentSolverParam.resolutionType);
 
 		population[member].realPID.Kd = intPart + fracPart;
+	}
+}
+
+void FCSOptimizer::enforceTunerLimits()
+{
+	if (settings.advConvergenceParam.limitingBehavior == FCS_LIMITER_FORCE_TO_BOUNDARY)
+	{
+		for (int i = 0; i < settings.advConvergenceParam.populationSize; i++)
+		{
+			//Kp
+			if (population[i].realPID.Kp > settings.pidControlSettings.tuningLimits.Kp.upper)
+				population[i].realPID.Kp = settings.pidControlSettings.tuningLimits.Kp.upper;
+
+			else if (population[i].realPID.Kp < settings.pidControlSettings.tuningLimits.Kp.lower)
+				population[i].realPID.Kp = settings.pidControlSettings.tuningLimits.Kp.lower;
+
+			//Ki
+			if (population[i].realPID.Ki > settings.pidControlSettings.tuningLimits.Ki.upper)
+				population[i].realPID.Ki = settings.pidControlSettings.tuningLimits.Ki.upper;
+
+			else if (population[i].realPID.Ki < settings.pidControlSettings.tuningLimits.Ki.lower)
+				population[i].realPID.Ki = settings.pidControlSettings.tuningLimits.Ki.lower;
+
+			//Kd
+			if (population[i].realPID.Kd > settings.pidControlSettings.tuningLimits.Kd.upper)
+				population[i].realPID.Kd = settings.pidControlSettings.tuningLimits.Kd.upper;
+
+			else if (population[i].realPID.Kd < settings.pidControlSettings.tuningLimits.Kd.lower)
+				population[i].realPID.Kd = settings.pidControlSettings.tuningLimits.Kd.lower;
+		}
+	}
+
+	else if (settings.advConvergenceParam.limitingBehavior == FCS_LIMITER_REGENERATE_CHROMOSOME)
+	{
+		PID_RNG.Kp->acquireEngine();
+		PID_RNG.Ki->acquireEngine();
+		PID_RNG.Kd->acquireEngine();
+
+		for (int i = 0; i < settings.advConvergenceParam.populationSize; i++)
+		{
+			//Kp
+			if (population[i].realPID.Kp > settings.pidControlSettings.tuningLimits.Kp.upper ||
+				population[i].realPID.Kp < settings.pidControlSettings.tuningLimits.Kp.lower)
+				population[i].realPID.Kp = PID_RNG.Kp->getDouble();
+
+
+			//Ki
+			if (population[i].realPID.Ki > settings.pidControlSettings.tuningLimits.Ki.upper ||
+				population[i].realPID.Ki < settings.pidControlSettings.tuningLimits.Ki.lower)
+				population[i].realPID.Ki = PID_RNG.Ki->getDouble();
+
+			//Kd
+			if (population[i].realPID.Kd > settings.pidControlSettings.tuningLimits.Kd.upper ||
+				population[i].realPID.Kd < settings.pidControlSettings.tuningLimits.Kd.lower)
+				population[i].realPID.Kd = PID_RNG.Kd->getDouble();
+		}
+
+		PID_RNG.Kp->releaseEngine();
+		PID_RNG.Ki->releaseEngine();
+		PID_RNG.Kd->releaseEngine();
 	}
 }
 
@@ -992,7 +1055,7 @@ void FCSOptimizer::enforceResolution()
 // 	*-----------------------------------------------*/
 // 	std::cout << "\n" << std::endl;
 // 	std::cout << "Final Value:\t\t"
-// 		<< GA_BestFitnessValues.data()[best_fit_idx].fitness_performance.finalValue_performance
+// 		<< GA_BestFitnessValues.data()[best_fit_idx].fitness_performance.steadyStateValue_performance
 // 		<< std::endl;
 // 
 // 	/*-----------------------------------------------

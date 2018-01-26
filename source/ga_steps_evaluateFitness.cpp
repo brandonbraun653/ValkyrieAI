@@ -182,22 +182,6 @@ void WeightedSum::evaluateFitness(const GA_EvaluateFitnessDataInput input, GA_Ev
 	*-----------------------------------------------*/
 	localFit.global_fitness /= numValidParameters;
 
-	#if (DEBUGGING_ENABLED == 1)
-	double posFit = localFit.percentOvershoot_fitness;
-	double tSettleFit = localFit.settlingTime_fitness;
-	double tRiseFit = localFit.riseTime_fitness;
-	double ssErrorFit = localFit.steadyStateError_fitness;
-	double globalFit = localFit.global_fitness;
-	bool bp_flag = false;
-
-	if (posFit == 1.0 || tSettleFit == 1.0 || tRiseFit == 1.0 || \
-		ssErrorFit == 1.0 || globalFit == 1.0)
-	{
-		bp_flag = true;
-		//std::cout << "Got a perfect fit on a performance criteria" << std::endl;
-	}
-	#endif
-
 	output.fit = localFit;
 }
 
