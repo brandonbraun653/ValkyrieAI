@@ -31,7 +31,7 @@
 // 			/* IF the latest "BestFitnessValue" is higher than the current worst fitness, this means 
 // 			the Elitist solution set must be updated to include the new value. The goal is for the elite 
 // 			set to update to higher and higher performing members each time, assuming such a member exists. */
-// 			if (GA_ElitistSolutions.worst_performer_value < GA_BestFitnessValues.back().global_fitness)
+// 			if (GA_ElitistSolutions.worst_performer_value < GA_BestFitnessValues.back().fitness_total)
 // 			{
 // 				GA_ElitistSolutions.EliteFitSolutions.data()[GA_ElitistSolutions.worst_performer_index] =
 // 					GA_BestFitnessValues.back();
@@ -42,9 +42,9 @@
 // 		double worst_performer = 2.0;
 // 		for (int i = 0; i < GA_ElitistSolutions.EliteFitSolutions.size(); i++)
 // 		{
-// 			if (GA_ElitistSolutions.EliteFitSolutions.data()[i].global_fitness < worst_performer)
+// 			if (GA_ElitistSolutions.EliteFitSolutions.data()[i].fitness_total < worst_performer)
 // 			{
-// 				GA_ElitistSolutions.worst_performer_value = GA_ElitistSolutions.EliteFitSolutions.data()[i].global_fitness;
+// 				GA_ElitistSolutions.worst_performer_value = GA_ElitistSolutions.EliteFitSolutions.data()[i].fitness_total;
 // 				GA_ElitistSolutions.worst_performer_index = i;
 // 
 // 				worst_performer = GA_ElitistSolutions.worst_performer_value;
@@ -72,7 +72,7 @@
 // 
 // 			for (int i = 0; i < totalReplacements; i++)
 // 			{
-// 				if (SS_FitnessValues.data()[i].global_fitness < filter_threshold)
+// 				if (SS_FitnessValues.data()[i].fitness_total < filter_threshold)
 // 					rejectionIdxs.push_back(i);
 // 			}
 // 		}
@@ -89,7 +89,7 @@
 // 
 // 			for (int i = 0; i < totalReplacements; i++)
 // 			{
-// 				if (SS_FitnessValues.data()[i].global_fitness < filter_threshold)
+// 				if (SS_FitnessValues.data()[i].fitness_total < filter_threshold)
 // 					rejectionIdxs.push_back(i);
 // 			}
 // 		}

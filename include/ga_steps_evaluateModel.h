@@ -32,7 +32,7 @@ struct StateSpaceModelInput
 	double startTime;						/* Simulation start time (s) */
 	double endTime;							/* Simulation end time (s) */
 	
-	PID_Values pid;							/* Specific PID values to use in the simulation */
+	GA_PIDChromosome<double> pid;			/* Specific PID values to use in the simulation */
 
 	SS_ModelBase_sPtr model;				/* Generic State Space Model */
 	StateSpaceSimulation simulationType;	/* Instructs the simulator what kind of simulation to execute */

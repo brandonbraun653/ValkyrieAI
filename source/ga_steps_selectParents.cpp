@@ -393,7 +393,7 @@ void ElitistSelection::selectParentKd()
 // 		for (int x = 0; x < num_competitors; x++)
 // 		{
 // 			uint32_t competitor_idx = competitor[x];
-// 			double currentFitVal = ts_data.data()[competitor_idx].global_fitness;
+// 			double currentFitVal = ts_data.data()[competitor_idx].fitness_total;
 // 
 // 			//Maximization problem
 // 			if (currentFitVal > bestFitVal)

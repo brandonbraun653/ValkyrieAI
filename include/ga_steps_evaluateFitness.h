@@ -34,7 +34,8 @@ struct GA_EvaluateFitnessDataInput
 
 struct GA_EvaluateFitnessDataOutput
 {
-	PID_FitnessScores fit;	/* Calculated fitness metrics for the given input data */
+	PID_FitnessScores fitness;	/* Calculated fitness metrics for the given input data */
+	PID_PerformanceData performance;
 };
 
 class GA_EvaluateFitnessBase
@@ -56,21 +57,21 @@ class WeightedSum : public GA_EvaluateFitnessBase
 public:
 	void evaluateFitness(const GA_EvaluateFitnessDataInput input, GA_EvaluateFitnessDataOutput& output) override;
 
-	WeightedSum();
-	~WeightedSum();
+	WeightedSum() = default;
+	~WeightedSum() = default;
 private:
 };
 
 ///////////////////////////////////////////////////
-/* CLASS:  NonDominatedSort */
+/* CLASS:  MeanSquareError */
 ///////////////////////////////////////////////////
-class NonDominatedSort : public GA_EvaluateFitnessBase
+class MeanSquareError : public GA_EvaluateFitnessBase
 {
 public:
 	void evaluateFitness(const GA_EvaluateFitnessDataInput input, GA_EvaluateFitnessDataOutput& output) override;
 
-	NonDominatedSort();
-	~NonDominatedSort();
+	MeanSquareError() = default;
+	~MeanSquareError() = default;
 private:
 };
 

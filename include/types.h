@@ -122,12 +122,6 @@ struct PID_ControlSettings
 * Genetic Algorithm Data Types 
 *-----------------------------------------------*/
 
-/**
-* \brief Chromosome representation for a set of PID values
-*
-* A highly generic way of representing PID data so that many 
-* different approaches can be used for manipulation
-*/
 template<typename ChromType>
 struct GA_PIDChromosome
 {
@@ -243,12 +237,12 @@ enum GA_METHOD_MutateType
 enum GA_METHOD_FitnessEvaluation
 {
 	GA_FITNESS_WEIGHTED_SUM,
-	GA_FITNESS_NON_DOMINATED_SORT,
+	GA_FITNESS_MEAN_SQUARE_ERROR,
 	GA_FITNESS_TOTAL_OPTIONS,
 	GA_FITNESS_DEFAULT = GA_FITNESS_WEIGHTED_SUM,
 
 	GA_FITNESS_WEIGHTED_SUM_MSK = (1u << GA_FITNESS_WEIGHTED_SUM),
-	GA_FITNESS_NON_DOMINATED_SORT_MSK = (1u << GA_FITNESS_NON_DOMINATED_SORT)
+	GA_FITNESS_MEAN_SQUARE_ERROR_MSK = (1u << GA_FITNESS_MEAN_SQUARE_ERROR)
 };
 
 enum GA_METHOD_ModelEvaluation
@@ -277,91 +271,6 @@ enum GA_METHOD_Resolution
 	GA_RESOLUTION_DEFAULT = GA_RESOLUTION_3DP
 };
 
-
-/*-----------------------------------------------
-* FCSOptimizer Data Types
-*-----------------------------------------------*/
-enum FCSOptimizer_TunerLimiterBehavior
-{
-	FCS_LIMITER_FORCE_TO_BOUNDARY,			/* Upon exceeding user limits, it caps at the max/min values */
-	FCS_LIMITER_REGENERATE_CHROMOSOME,		/* Upon exceeding user limits, a new random chromosome will be generated */
-	FCS_LIMITER_DEFAULT = FCS_LIMITER_FORCE_TO_BOUNDARY
-};
-
-/**
-* \brief Specifies basic solver convergence constraints
-*/
-struct FCSOptimizer_BasicConstraints
-{
-	struct RunTime
-	{
-		int minutes = 3;
-		int seconds = 0;
-	};
-
-	RunTime timeConstraints;			/* Time based limitation given in minutes and seconds */
-
-	double overallPerformance = 0.95;	/* Exits the solver if a solution is found that meets "x" percent of the specified goals.
-											Essentially this is setting how good is "good enough" of a solution. */
-
-	int maxNumberOfThreads = 16;		/* Forcefully limit how many threads can be spawned for a given optimizer. It's useful to 
-											specify this in multiples of 2. Currently the maximum value is hard limited to 16 threads. */
-	
-	int systemPrecision = 3;			/* Limit how many decimal places are used in calculations. This can speed up result generation. */
-
-	//Add more as needed 
-};
-
-/** 
-* \brief Specifies advanced solver convergence constraints 
-*/
-struct FCSOptimizer_AdvConstraints
-{
-	uint32_t populationSize = 20;			/* GA Population Size */
-	uint32_t generationLimit = 100;			/* GA Generation Limit before exit */
-
-	int iterations_before_refresh = 10;		/* Max number of iterations without progress using current GA Methods */
-	int refresh_parameter_number = 2;		/* Specifies how many methods to replace when refreshing */
-	int mutation_severity = 8;				/* Specifies how strong of a mutation can occur. Min: 1; Max: 16, increasing severity */
-	double mutation_threshold = 0.5;		/* Specifies probability threshold for mutation. Range: 0-1, lower #s == higher probability */
-
-	//Add more as needed
-	FCSOptimizer_TunerLimiterBehavior limitingBehavior = FCS_LIMITER_DEFAULT;
-};
-
-/**
-* \brief Descriptive information about a population member
-*/
-struct FCSOptimizer_PopulationMember
-{
-	PID_Values realPID;							/* Real valued representation of PID tuning parameters */
-
-	GA_PIDChromosome<uint16_t> mappedPID;		/* Mapped representation (double -> uint16_t) of realPID over the min/max
-												range specified in the PID_ControlSettings.tuningLimits struct */
-
-	double fitnessScore;						/* A generic score that is independent of fitness metrics. More specific
-												performance indices will need to be stored elsewhere */
-	
-	int age;									/* Records how many iterations the particular instance has been alive */
-};
-
-/**
-* \brief Conversion constants between uint16_t and double
-* Holds pre-calculated constants used to map doubles into uint16_t
-* types and back. This is useful for when chromosomes are represented
-* as some form of bits instead of real numbers
-*/
-struct FCSOptimizer_MappingCoeff
-{
-	double bytes_precision;
-	double x_offset;
-	double x_lo;
-	double x_hi;
-	double x_dPow;
-	double x_bPow;
-	double x_sF;
-	double x_sR;
-};
 
 
 
@@ -465,12 +374,39 @@ typedef boost::shared_ptr<SS_NLTIVModel> SS_NLTIVModel_sPtr;
 /*-----------------------------------------------
 * OUTPUT DATA
 *-----------------------------------------------*/
+enum PerformanceType
+{
+	PT_MEAN_SQUARED_ERROR,
+	PT_NORMALIZED_MEAN_SQUARED_ERROR,
+	PT_STEP,
+	PT_RAMP,
+	PT_QUADRATIC,
+	PT_CUSTOM,
+	PT_TOTAL_OPTIONS
+};
 
-/**
-*	\brief Contains full performance analysis of a system's step response
-* This container stores actual performance metrics of some simulation data and not 
-* fitness values. The fitness values are stored in a PID_FitnessScores container.
-*/
+
+struct MSEPerformance
+{
+	double POS = -1.0;		/* Percent Overshoot */
+	double SSER = -1.0;		/* Steady State Error */
+	double TS = -1.0;		/* Settling Time */
+	double TR = -1.0;		/* Rise Time */
+	double SSV = -1.0;		/* Steady State Value */
+};
+typedef boost::shared_ptr<MSEPerformance> MSEPerformance_sPtr;
+
+struct NMSEPerformance
+{
+	double POS = -1.0;		/* Percent Overshoot */
+	double SSER = -1.0;		/* Steady State Error */
+	double dOS = -1.0;		/* delta Overshoot */
+	double TS = -1.0;		/* Settling Time */
+	double TR = -1.0;		/* Rise Time */
+	double SSV = -1.0;		/* Steady State Value */
+};
+typedef boost::shared_ptr<NMSEPerformance> NMSEPerformance_sPtr;
+
 struct StepPerformance
 {
 	PID_Values pidValues = { -1.0, -1.0, -1.0 };	/* PID Values that gave below performance metrics */
@@ -489,31 +425,135 @@ struct StepPerformance
 	int riseTime_Idx[2] = { 0, 0 };					/* Start/Stop index in given data series */
 };
 typedef boost::shared_ptr<StepPerformance> StepPerformance_sPtr;
-typedef boost::container::vector<StepPerformance> StepPerformance_Vec;
 
-/**
-*	\brief Fitness score for a given chromosome
-*/
+struct RampPerformance
+{
+	//currently just a placeholder
+};
+typedef boost::shared_ptr<RampPerformance> RampPerformance_sPtr;
+
+struct QuadraticPerformance
+{
+	//currently just a placeholder
+};
+typedef boost::shared_ptr<QuadraticPerformance> QuadraticPerformance_sPtr;
+
+struct CustomPerformance
+{
+	//currently just a placeholder
+};
+typedef boost::shared_ptr<CustomPerformance> CustomPerformance_sPtr;
+
+
+struct PID_PerformanceData
+{
+	PerformanceType performanceDataType;
+
+	StepPerformance_sPtr stepPerformanceData;	
+	RampPerformance_sPtr rampPerformanceData;		
+	QuadraticPerformance_sPtr quadPerformanceData;	
+	CustomPerformance_sPtr customPerformanceData;	
+	MSEPerformance_sPtr meanSquaredError;
+	NMSEPerformance_sPtr normMeanSquaredError;
+};
+
 struct PID_FitnessScores
 {
-	//Overall fitness score
-	double global_fitness = -1.0;
+	/* Overall fitness score */
+	double fitness_total = -1.0;				
 
-	//Sub fitness score
-	double percentOvershoot_fitness = -1.0;
-	double settlingTime_fitness = -1.0;
-	double riseTime_fitness = -1.0;
-	double steadyStateError_fitness = -1.0;
-
-	//Associated detailed simulation analysis results from the above scoring
-	StepPerformance stepPerformanceData;
-	//RampPerformance
-	//QuadraticPerformance
-	//CustomPerformance
-	//Add these later.
+	/* Sub fitness score */
+	double fitness_POS = -1.0;
+	double fitness_TS = -1.0;
+	double fitness_TR = -1.0;
+	double fitness_SSER = -1.0;
 };
-typedef boost::shared_ptr<PID_FitnessScores> PIDFitnessScores_sPtr;
-typedef boost::container::vector<PID_FitnessScores> PIDFitness_Vec;
+
+
+/*-----------------------------------------------
+* FCSOptimizer Data Types
+*-----------------------------------------------*/
+
+/**
+* \brief Describes how the optimizer will behave when limiting PID values to a user range
+*/
+enum FCSOptimizer_TunerLimiterBehavior
+{
+	FCS_LIMITER_FORCE_TO_BOUNDARY,			/* Upon exceeding user limits, it caps at the max/min values */
+	FCS_LIMITER_REGENERATE_CHROMOSOME,		/* Upon exceeding user limits, a new random chromosome will be generated */
+	FCS_LIMITER_DEFAULT = FCS_LIMITER_FORCE_TO_BOUNDARY
+};
+
+/**
+* \brief Specifies basic solver convergence constraints
+*/
+struct FCSOptimizer_BasicConstraints
+{
+	struct RunTime
+	{
+		int minutes = 3;
+		int seconds = 0;
+	};
+
+	RunTime timeConstraints;			/* Time based limitation given in minutes and seconds */
+
+	double overallPerformance = 0.95;	/* Exits the solver if a solution is found that meets "x" percent of the specified goals.
+										Essentially this is setting how good is "good enough" of a solution. */
+
+	int maxNumberOfThreads = 16;		/* Forcefully limit how many threads can be spawned for a given optimizer. It's useful to
+										specify this in multiples of 2. Currently the maximum value is hard limited to 16 threads. */
+
+	int systemPrecision = 3;			/* Limit how many decimal places are used in calculations. This can speed up result generation. */
+
+										//Add more as needed 
+};
+
+/**
+* \brief Specifies advanced solver convergence constraints
+*/
+struct FCSOptimizer_AdvConstraints
+{
+	uint32_t populationSize = 20;			/* GA Population Size */
+	uint32_t generationLimit = 100;			/* GA Generation Limit before exit */
+
+	int iterations_before_refresh = 10;		/* Max number of iterations without progress using current GA Methods */
+	int refresh_parameter_number = 2;		/* Specifies how many methods to replace when refreshing */
+	int mutation_severity = 8;				/* Specifies how strong of a mutation can occur. Min: 1; Max: 16, increasing severity */
+	double mutation_threshold = 0.5;		/* Specifies probability threshold for mutation. Range: 0-1, lower #s == higher probability */
+
+											//Add more as needed
+	FCSOptimizer_TunerLimiterBehavior limitingBehavior = FCS_LIMITER_DEFAULT;
+};
+
+/**
+* \brief Descriptive information about a population member
+*/
+struct FCSOptimizer_PopulationMember
+{
+	GA_PIDChromosome<double> dChrom;			
+	GA_PIDChromosome<uint16_t> u16Chrom;		
+
+	PID_FitnessScores fitnessScores;			/* Fitness score for the specified chromosome */
+	PID_PerformanceData evaluationPerformance;	/* Evaluation performance for the specified chromosome */
+};
+
+/**
+* \brief Conversion constants between uint16_t and double
+* Holds pre-calculated constants used to map doubles into uint16_t
+* types and back. This is useful for when chromosomes are represented
+* as some form of bits instead of real numbers
+*/
+struct FCSOptimizer_MappingCoeff
+{
+	double bytes_precision;
+	double x_offset;
+	double x_lo;
+	double x_hi;
+	double x_dPow;
+	double x_bPow;
+	double x_sF;
+	double x_sR;
+};
 
 
 

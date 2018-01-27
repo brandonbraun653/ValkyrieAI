@@ -189,7 +189,7 @@ private:
 	{
 		GA_METHOD_ModelEvaluation modelType;
 
-		PID_FitnessScores fit;
+		PID_FitnessScores fitness;
 	};
 
 	/*-----------------------------

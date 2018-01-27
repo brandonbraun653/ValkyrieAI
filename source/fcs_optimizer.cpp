@@ -134,7 +134,7 @@ void FCSOptimizer::run()
 
 			case REPORT_STATUS:
 				//TODO: Enable passing back data to the main thread here
-				//Or maybe do it in the error handling section??? doesn't quite fit either place...
+				//Or maybe do it in the error handling section??? doesn't quite fitness either place...
 				break;
 			}
 		}
@@ -383,9 +383,9 @@ void FCSOptimizer::initPopulation()
 	for (size_t i = 0; i < settings.advConvergenceParam.populationSize; i++)
 	{
 		/* Get some random PID values to start off with */
-		population[i].realPID.Kp = PID_RNG.Kp->getDouble();
-		population[i].realPID.Ki = PID_RNG.Ki->getDouble();
-		population[i].realPID.Kd = PID_RNG.Kd->getDouble();
+		population[i].dChrom.Kp = PID_RNG.Kp->getDouble();
+		population[i].dChrom.Ki = PID_RNG.Ki->getDouble();
+		population[i].dChrom.Kd = PID_RNG.Kd->getDouble();
 	}
 
 	PID_RNG.Kp->releaseEngine();
@@ -434,8 +434,7 @@ void FCSOptimizer::evaluateModel()
 		input.simulationType = STEP;
 		input.model = settings.stateSpaceModel;
 
-		/* This is incredibly slow (~6mS, eT3.0, dT0.1) per member...ridiculous. More than likely
-		this is due to being single threaded and not taking up enough logical cores. */
+		
 		//TODO: Enforce machine specific multi threading based on number of logical cores 
 		for (int member = 0; member < settings.advConvergenceParam.populationSize; member++)
 		{
@@ -449,9 +448,7 @@ void FCSOptimizer::evaluateModel()
 			processor cores. */
 
 			/* Swap out the PID values and simulate */
-			input.pid = population[member].realPID;
-			//input.pid = { 12.05, 68.38, 0.0 };
-
+			input.pid = population[member].dChrom;
 			runtimeStep.evaluateModelInstances[modelType]->evaluate(input, output);
 
 			/* Pass on the resulting data to the optimizer's record of everything */
@@ -492,8 +489,8 @@ void FCSOptimizer::evaluateFitness()
 			runtimeStep.evaluateFitnessInstances[fitnessType] = boost::make_shared<WeightedSum>();
 			break;
 
-		case GA_FITNESS_NON_DOMINATED_SORT:
-			runtimeStep.evaluateFitnessInstances[fitnessType] = boost::make_shared<NonDominatedSort>();
+		case GA_FITNESS_MEAN_SQUARE_ERROR:
+			runtimeStep.evaluateFitnessInstances[fitnessType] = boost::make_shared<MeanSquareError>();
 			break;
 
 		//Add more as needed here
@@ -526,24 +523,24 @@ void FCSOptimizer::evaluateFitness()
 				runtimeStep.evaluateFitnessInstances[fitnessType]->evaluateFitness(input, output);
 
 				/* Copy the results of the step performance analyzer into the output struct */
-				output.fit.stepPerformanceData = fcs_modelEvalutationData[member].ss_output.stepPerformance;
+				output.performance.stepPerformanceData = fcs_modelEvalutationData[member].ss_output.stepPerformance;
 
 				/* Pass on the resulting data to the optimizer's record of everything */
 				fcs_fitnessData[member].modelType = modelType;
-				fcs_fitnessData[member].fit = output.fit;
+				fcs_fitnessData[member].fitness = output.fitness;
 
 				#if (DEBUGGING_ENABLED == 1)
 				std::cout
-					<< "Fitness: "	<< output.fit.global_fitness*0.9999
-					<< "\tKp: "		<< output.fit.stepPerformanceData.pidValues.Kp
-					<< "\tKi: "		<< output.fit.stepPerformanceData.pidValues.Ki
-					<< "\tKd: "		<< output.fit.stepPerformanceData.pidValues.Kd 
+					<< "Fitness: "	<< output.fitness.fitness_total*0.9999
+					<< "\tKp: "		<< output.fitness.stepPerformanceData.pidValues.Kp
+					<< "\tKi: "		<< output.fitness.stepPerformanceData.pidValues.Ki
+					<< "\tKd: "		<< output.fitness.stepPerformanceData.pidValues.Kd 
 					<< std::endl;
 				#endif
 
 				#if (FILE_LOGGING_ENABLED == 1) && (GA_FILELOG_MEMBER_FIT_DATA == 1)
 				std::string filename = "Member" + std::to_string(member) + "_StepPerformanceFitnessData.csv";
-				writeCSV_StepData(output.fit.stepPerformanceData, filename);
+				writeCSV_StepData(output.fitness.stepPerformanceData, filename);
 				#endif
 			}
 		}
@@ -553,9 +550,18 @@ void FCSOptimizer::evaluateFitness()
 		}
 	}
 
-	else if (fitnessType == GA_FITNESS_NON_DOMINATED_SORT)
+	else if (fitnessType == GA_FITNESS_MEAN_SQUARE_ERROR)
 	{
+		if (modelType == GA_MODEL_STATE_SPACE)
+		{
 
+
+		}
+
+		else if (modelType == GA_MODEL_NEURAL_NETWORK)
+		{
+
+		}
 	}
 }
 
@@ -569,9 +575,9 @@ void FCSOptimizer::checkConvergence()
 
 	for (unsigned int member = 0; member < settings.advConvergenceParam.populationSize; member++)
 	{
-		if (fcs_fitnessData[member].fit.global_fitness > iteration_bestFitScore)
+		if (fcs_fitnessData[member].fitness.fitness_total > iteration_bestFitScore)
 		{
-			iteration_bestFitScore = fcs_fitnessData[member].fit.global_fitness;
+			iteration_bestFitScore = fcs_fitnessData[member].fitness.fitness_total;
 			iteration_bestFit = fcs_fitnessData[member];
 		}
 	}
@@ -660,7 +666,7 @@ void FCSOptimizer::filterPopulation()
 	
 	/* Populate the input struct */
 	std::transform(fcs_fitnessData.begin(), fcs_fitnessData.end(), std::back_inserter(input.currentGlobalFitScores),
-		[](const FCSOptimizer_FitnessData& input) { return input.fit.global_fitness; });
+		[](const FCSOptimizer_FitnessData& input) { return input.fitness.fitness_total; });
 
 	input.static_performanceThreshold = 0.4;
 
@@ -734,7 +740,7 @@ void FCSOptimizer::selectParents()
 	else if (selectType == GA_SELECT_TOURNAMENT)
 	{
 		std::transform(fcs_fitnessData.begin(), fcs_fitnessData.end(), std::back_inserter(input.popGlobalFitScores),
-			[](const FCSOptimizer_FitnessData& input) { return input.fit.global_fitness; });
+			[](const FCSOptimizer_FitnessData& input) { return input.fitness.fitness_total; });
 	}
 	else if (selectType == GA_SELECT_ELITIST)
 	{
@@ -1010,9 +1016,9 @@ void FCSOptimizer::enforceTunerLimits()
 // 	int highestPerformerIndex = 0;
 // 	for (int i = 0; i < GA_BestFitnessValues.size(); i++)
 // 	{
-// 		if (GA_BestFitnessValues.data()[i].global_fitness > highestPerformerVal)
+// 		if (GA_BestFitnessValues.data()[i].fitness_total > highestPerformerVal)
 // 		{
-// 			highestPerformerVal = GA_BestFitnessValues.data()[i].global_fitness;
+// 			highestPerformerVal = GA_BestFitnessValues.data()[i].fitness_total;
 // 			highestPerformerIndex = i;
 // 		}
 // 	}
@@ -1063,7 +1069,7 @@ void FCSOptimizer::enforceTunerLimits()
 // 	*-----------------------------------------------*/
 // 	std::cout << "\n" << std::endl;
 // 	std::cout << "POS Fitness:\t\t"
-// 		<< GA_BestFitnessValues.data()[best_fit_idx].percentOvershoot_fitness
+// 		<< GA_BestFitnessValues.data()[best_fit_idx].fitness_POS
 // 		<< std::endl;
 // 	std::cout << "POS Actual:\t\t"
 // 		<< GA_BestFitnessValues.data()[best_fit_idx].fitness_performance.percentOvershoot_performance
@@ -1083,7 +1089,7 @@ void FCSOptimizer::enforceTunerLimits()
 // 	*-----------------------------------------------*/
 // 	std::cout << "\n" << std::endl;
 // 	std::cout << "RiseTime Fitness:\t"
-// 		<< GA_BestFitnessValues.data()[best_fit_idx].riseTime_fitness
+// 		<< GA_BestFitnessValues.data()[best_fit_idx].fitness_TR
 // 		<< std::endl;
 // 	std::cout << "RiseTime Actual:\t"
 // 		<< GA_BestFitnessValues.data()[best_fit_idx].fitness_performance.riseTime_performance
@@ -1099,7 +1105,7 @@ void FCSOptimizer::enforceTunerLimits()
 // 	*-----------------------------------------------*/
 // 	std::cout << "\n" << std::endl;
 // 	std::cout << "SettleTime Fitness:\t"
-// 		<< GA_BestFitnessValues.data()[best_fit_idx].settlingTime_fitness
+// 		<< GA_BestFitnessValues.data()[best_fit_idx].fitness_TS
 // 		<< std::endl;
 // 	std::cout << "SettleTime Actual:\t"
 // 		<< GA_BestFitnessValues.data()[best_fit_idx].fitness_performance.settlingTime_performance
@@ -1115,7 +1121,7 @@ void FCSOptimizer::enforceTunerLimits()
 // 	*-----------------------------------------------*/
 // 	std::cout << "\n" << std::endl;
 // 	std::cout << "SSErr Fitness:\t\t"
-// 		<< GA_BestFitnessValues.data()[best_fit_idx].steadyStateError_fitness
+// 		<< GA_BestFitnessValues.data()[best_fit_idx].fitness_SSER
 // 		<< std::endl;
 // 	std::cout << "SSErr Actual:\t\t"
 // 		<< GA_BestFitnessValues.data()[best_fit_idx].fitness_performance.steadyStateError_performance
