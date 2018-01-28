@@ -18,6 +18,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/interprocess/ipc/message_queue.hpp>
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics.hpp>
 
 /* Local Includes */
 #include "config.h"
@@ -136,6 +138,12 @@ extern void calculateMappingCoefficients(FCSOptimizer_MappingCoeff *mapping, dou
 extern double enforceResolution(double in, GA_METHOD_Resolution res);
 
 
+typedef boost::accumulators::accumulator_set<
+	double,
+	boost::accumulators::features<
+	boost::accumulators::tag::mean,
+	boost::accumulators::tag::variance>> StatisticsType;
+
 //////////////////////////////////////////////////////////////////
 /* CLASS: FCSOptimizer */
 //////////////////////////////////////////////////////////////////
@@ -163,35 +171,6 @@ public:
 	~FCSOptimizer();
 
 private:
-	/*-----------------------------
-	* Custom structures for passing information around to internal functions. These
-	* essentially work as glue and help keep the actual algorithm as abstract as possible.
-	* Each structure corresponds to the output data for each step and should only reference
-	* a single population member. See "Runtime Processing Data" section below for actual 
-	* implementation of this concept. 
-	*----------------------------*/
-
-	struct FCSOptimzer_SimulationData
-	{
-		/* Generic information about the results of the simulation step. Not all of 
-		 * these fields will be used depending on the type of simulation that has been
-		 * performed by the user.
-		 */
-		GA_METHOD_ModelEvaluation modelType;
-
-		StateSpaceModelOutput ss_output;
-		NeuralNetworkModelOutput nn_output;
-
-		/* Add more support here as necessary */
-	};
-
-	struct FCSOptimizer_FitnessData
-	{
-		GA_METHOD_ModelEvaluation modelType;
-
-		PID_FitnessScores fitness;
-	};
-
 	/*-----------------------------
 	* Runtime Flags
 	*----------------------------*/
@@ -242,25 +221,18 @@ private:
 	/*-----------------------------
 	* Runtime Processing Data
 	*----------------------------*/
-	/* Model Evaluation Data */
-	boost::container::vector<FCSOptimzer_SimulationData> fcs_modelEvalutationData;
-
-	/* Fitness Data */
-	boost::container::vector<FCSOptimizer_FitnessData> fcs_fitnessData;
-
 	/* Parent Selections */
 	boost::container::vector<int> fcs_parentSelections;
 
 	/* Bred Chromosomes */
 	GA_BreedingDataOutput fcs_bredChromosomes;
 
-	/* Mutated Chromosomes */
 
 
 
 	/* Log of best fitness performance data for each generation.
 	Do not pre-allocate memory as it is "pushed back" to add new data. */
-	boost::container::vector<FCSOptimizer_FitnessData> fcs_generationalBestFitnessData;
+	boost::container::vector<PID_FitnessScores> fcs_generationalBestFitnessData;
 	
 	
 	/*-----------------------------
@@ -277,6 +249,7 @@ private:
 	void initRNG();
 	void initModel();
 	void initPopulation();
+	void initStatistics();
 
 	/*-----------------------------
 	* Primary Algorithm Functions
@@ -289,14 +262,37 @@ private:
 	void breedGeneration();
 	void mutateGeneration();
 	void boundaryCheck();
-	
-	/*-----------------------------
-	* Useful Helper Functions
-	*----------------------------*/
 	void enforceResolution();
 	void enforceTunerLimits();
-	int reportResults(int trialNum);
-	void printResultHighlights(double best_fit, int best_fit_idx);
+
+
+	/*-----------------------------
+	* Data Collection and Reporting
+	*----------------------------*/
+	void gatherStatisticalData();
+
+	
+
+	struct GlobalStatistics
+	{
+		StatisticsType Kp;
+		StatisticsType Ki;
+		StatisticsType Kd;
+	} GlobalChromStats;
+
+	struct GenerationalStatistics
+	{
+		boost::container::vector<StatisticsType> Kp;
+		boost::container::vector<StatisticsType> Ki;
+		boost::container::vector<StatisticsType> Kd;
+	} GenerationalChromStats;
+
+	struct ChromosomeFrequency
+	{
+		boost::container::vector<int> Kp;
+		boost::container::vector<int> Ki;
+		boost::container::vector<int> Kd;
+	} ChromOccurance;
 };
 
 

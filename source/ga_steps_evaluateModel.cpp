@@ -5,17 +5,6 @@
 /* CLASS:  StateSpaceModel */
 //////////////////////////////////////////////////////////////////
 /*-----------------------------------------------
-* Constructors/Destructor
-*-----------------------------------------------*/
-StateSpaceEvaluator::StateSpaceEvaluator()
-{
-}
-
-StateSpaceEvaluator::~StateSpaceEvaluator()
-{
-}
-
-/*-----------------------------------------------
 * Public Functions
 *-----------------------------------------------*/
 void StateSpaceEvaluator::evaluate(const StateSpaceModelInput input, StateSpaceModelOutput& output)
@@ -26,7 +15,8 @@ void StateSpaceEvaluator::evaluate(const StateSpaceModelInput input, StateSpaceM
 		#endif
 	#endif
 
-		output.errorCode = 0; //currently just default to zero
+		output.stepPerformance = boost::make_shared<StepPerformance>();
+
 
 		/*-----------------------------
 		* Simulate the state space model using the given parameters and then perform 
@@ -40,8 +30,9 @@ void StateSpaceEvaluator::evaluate(const StateSpaceModelInput input, StateSpaceM
 			output.stepPerformance = stepAnalyzer.analyze(raw_simulation_data);
 
 			//Need to set these AFTER the simulation completes otherwise the output of analyze() resets them
-			output.stepPerformance.pidValues = input.pid; 
-			output.stepPerformance.data = raw_simulation_data;
+			output.stepPerformance->data = raw_simulation_data;
+			output.stepPerformance->pidValues = input.pid; 
+			
 			break;
 
 		case RAMP:
@@ -69,27 +60,11 @@ void StateSpaceEvaluator::evaluate(const StateSpaceModelInput input, StateSpaceM
 	#endif
 }
 
-/*-----------------------------------------------
-* Private Functions
-*-----------------------------------------------*/
-
-
 
 
 //////////////////////////////////////////////////////////////////
 /* CLASS:  NeuralNetworkModel */
 //////////////////////////////////////////////////////////////////
-/*-----------------------------------------------
-* Constructors/Destructor
-*-----------------------------------------------*/
-NeuralNetworkEvaluator::NeuralNetworkEvaluator()
-{
-}
-
-NeuralNetworkEvaluator::~NeuralNetworkEvaluator()
-{
-}
-
 /*-----------------------------------------------
 * Public Functions
 *-----------------------------------------------*/
@@ -97,7 +72,3 @@ void NeuralNetworkEvaluator::evaluate(const NeuralNetworkModelInput input, Neura
 {
 
 }
-
-/*-----------------------------------------------
-* Private Functions
-*-----------------------------------------------*/

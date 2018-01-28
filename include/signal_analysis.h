@@ -14,6 +14,8 @@
 #include <eigen/StdVector>
 
 /* Boost Includes */
+#include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/timer/timer.hpp>
 #include <boost/numeric/odeint.hpp>
@@ -50,10 +52,10 @@ class StepResponseAnalyzer
 {
 public:
 
-	StepPerformance analyze(Eigen::MatrixXd data);
+	StepPerformance_sPtr analyze(Eigen::MatrixXd data);
 
-	StepResponseAnalyzer();
-	~StepResponseAnalyzer();
+	StepResponseAnalyzer() = default;
+	~StepResponseAnalyzer() = default;
 
 private:
 
@@ -63,7 +65,8 @@ private:
 	Eigen::MatrixXd sim_data;
 	SystemDamping settling_state;
 	InflectionPoints extrema;
-	StepPerformance performance;
+	StepPerformance_sPtr performance;
+	
 
 	bool prefilter(double abs_threshold);
 	void solveSettlingValue();

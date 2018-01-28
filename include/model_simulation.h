@@ -19,7 +19,7 @@ class StateSpaceSimulator
 public:
 
 	Eigen::MatrixXd stepResponse(const double start, const double stop, const double dt, 
-		const SS_ModelBase_sPtr& model, const PID_Values pid);
+		const SS_ModelBase_sPtr& model, const GA_PIDChromosome<double> pid);
 
 	Eigen::MatrixXd rampResponse(const double start, const double stop, const double dt,
 		SS_NLTIVModel model, PID_Values pid);
@@ -30,10 +30,9 @@ public:
 	Eigen::MatrixXd customResponse(const double start, const double stop, const double dt,
 		SS_NLTIVModel model, PID_Values pid, Eigen::MatrixXd customInput);
 
-	StateSpaceSimulator();
-	~StateSpaceSimulator();
+	StateSpaceSimulator() = default;
+	~StateSpaceSimulator() = default;
 private:
-
 };
 typedef boost::shared_ptr<StateSpaceSimulator> StateSpaceSimulator_sPtr;
 

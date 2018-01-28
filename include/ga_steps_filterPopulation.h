@@ -35,8 +35,8 @@ struct GA_PopulationFilterDataInput
 
 struct GA_PopulationFilterDataOutput
 {
-	boost::container::vector<int> replacedMemberIndexes;			/* Index of the population member that is to be killed */
-	boost::container::vector<PID_Values> replacementPIDValues;		/* For a given member, this is the new genetic material */
+	boost::container::vector<int> replacedMemberIndexes;							/* Index of the population member that is to be killed */
+	boost::container::vector<GA_PIDChromosome<double>> replacementPIDValues;		/* For a given member, this is the new genetic material */
 };
 
 class GA_PopulationFilterBase

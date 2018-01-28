@@ -40,10 +40,10 @@ struct StateSpaceModelInput
 
 struct StateSpaceModelOutput
 {
-	int errorCode;								/* Any possible error codes from the simulation */
-	boost::chrono::microseconds executionTime;	/* Physical time spent solving for results */
-	StateSpaceSimulation simulationType;		/* Kind of simulation that was run */
-	StepPerformance stepPerformance;			/* Calculated performance metrics given a step input */
+	int errorCode;									/* Any possible error codes from the simulation */
+	boost::chrono::microseconds executionTime;		/* Physical time spent solving for results */
+	StateSpaceSimulation simulationType;			/* Kind of simulation that was run */
+	StepPerformance_sPtr stepPerformance;			/* Calculated performance metrics given a step input */
 };
 
 struct NeuralNetworkModelInput
@@ -62,6 +62,8 @@ class GA_EvaluateModelBase
 public:
 	virtual void evaluate(const StateSpaceModelInput, StateSpaceModelOutput&) {};
 	virtual void evaluate(const NeuralNetworkModelInput, NeuralNetworkModelOutput&) {};
+
+	virtual ~GA_EvaluateModelBase() = default;
 private:
 
 };
@@ -84,8 +86,8 @@ public:
 	void evaluate(const StateSpaceModelInput input, StateSpaceModelOutput& output) override;
 
 
-	StateSpaceEvaluator();
-	~StateSpaceEvaluator();
+	StateSpaceEvaluator() = default;
+	~StateSpaceEvaluator() = default;
 
 private:
 	StateSpaceSimulator simulator;
@@ -103,8 +105,8 @@ class NeuralNetworkEvaluator : public GA_EvaluateModelBase
 public:
 	void evaluate(const NeuralNetworkModelInput input, NeuralNetworkModelOutput& output) override;
 
-	NeuralNetworkEvaluator();
-	~NeuralNetworkEvaluator();
+	NeuralNetworkEvaluator() = default;
+	~NeuralNetworkEvaluator() = default;
 
 private:
 

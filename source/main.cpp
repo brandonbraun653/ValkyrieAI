@@ -27,7 +27,7 @@ int main()
 	initStruct.solverParam.rngEngine				= GA_MERSENNE_TWISTER;
 	initStruct.solverParam.rngDistribution			= GA_DISTRIBUTION_UNIFORM_REAL;
 	initStruct.solverParam.breedType				= GA_BREED_FIXED_POINT_CROSSOVER;
-	initStruct.solverParam.fitnessType				= GA_FITNESS_MEAN_SQUARE_ERROR;
+	initStruct.solverParam.fitnessType				= GA_FITNESS_WEIGHTED_SUM;
 	initStruct.solverParam.selectType				= GA_SELECT_TOURNAMENT;
 	initStruct.solverParam.filterType				= GA_POPULATION_STATIC_FILTER;
 	initStruct.solverParam.resolutionType			= GA_RESOLUTION_2DP;
@@ -68,7 +68,7 @@ int main()
 	* ADVANCED PARAMETER SETTINGS
 	*----------------------------*/
 	initStruct.advConvergenceParam.populationSize = 20;
-	initStruct.advConvergenceParam.generationLimit = 50;
+	initStruct.advConvergenceParam.generationLimit = 10;
 	initStruct.advConvergenceParam.limitingBehavior = FCS_LIMITER_REGENERATE_CHROMOSOME;
 
 	/*-----------------------------

@@ -35,7 +35,7 @@ struct GA_EvaluateFitnessDataInput
 struct GA_EvaluateFitnessDataOutput
 {
 	PID_FitnessScores fitness;	/* Calculated fitness metrics for the given input data */
-	PID_PerformanceData performance;
+	//PID_PerformanceData performance;
 };
 
 class GA_EvaluateFitnessBase

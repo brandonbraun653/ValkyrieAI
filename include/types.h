@@ -409,20 +409,20 @@ typedef boost::shared_ptr<NMSEPerformance> NMSEPerformance_sPtr;
 
 struct StepPerformance
 {
-	PID_Values pidValues = { -1.0, -1.0, -1.0 };	/* PID Values that gave below performance metrics */
-	Eigen::MatrixXd data;							/* Raw data that gave below performance metrics */
+	GA_PIDChromosome<double> pidValues = { -1.0, -1.0, -1.0 };	/* PID Values that gave below performance metrics */
+	Eigen::MatrixXd data;										/* Raw data that gave below performance metrics */
 
-	double percentOvershoot_performance = -1.0;		/* Units: none, percentage */
-	double steadyStateError_performance = -1.0;		/* Units: none, absolute */
-	double delta_overshoot_performance = -1.0;		/* Units: none, absolute */
-	double settlingTime_performance = -1.0;			/* Units: seconds */
-	double riseTime_performance = -1.0;				/* Units: seconds */
-	double steadyStateValue_performance = -1.0;		/* Units: user defined by problem */
-
-
-	double settlingPcntRange = 0.0;					/* Percent range around final value that determines if a signal has settled */
-	int settlingTime_Idx = 0;						/* Index in given data series */
-	int riseTime_Idx[2] = { 0, 0 };					/* Start/Stop index in given data series */
+	double percentOvershoot_performance = -1.0;					/* Units: none, percentage */
+	double steadyStateError_performance = -1.0;					/* Units: none, absolute */
+	double delta_overshoot_performance = -1.0;					/* Units: none, absolute */
+	double settlingTime_performance = -1.0;						/* Units: seconds */
+	double riseTime_performance = -1.0;							/* Units: seconds */
+	double steadyStateValue_performance = -1.0;					/* Units: user defined by problem */
+			
+			
+	double settlingPcntRange = 0.0;								/* Percent range around final value that determines if a signal has settled */
+	int settlingTime_Idx = 0;									/* Index in given data series */
+	int riseTime_Idx[2] = { 0, 0 };								/* Start/Stop index in given data series */
 };
 typedef boost::shared_ptr<StepPerformance> StepPerformance_sPtr;
 
@@ -530,6 +530,8 @@ struct FCSOptimizer_AdvConstraints
 */
 struct FCSOptimizer_PopulationMember
 {
+	GA_METHOD_ModelEvaluation modelType;		/* Specifies what kind of simulation model was used to generate member data */
+
 	GA_PIDChromosome<double> dChrom;			
 	GA_PIDChromosome<uint16_t> u16Chrom;		
 

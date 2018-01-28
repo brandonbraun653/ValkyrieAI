@@ -2,16 +2,9 @@
 
 namespace odeint = boost::numeric::odeint;
 
-StateSpaceSimulator::StateSpaceSimulator()
-{
-}
-
-StateSpaceSimulator::~StateSpaceSimulator()
-{
-}
 
 Eigen::MatrixXd StateSpaceSimulator::stepResponse(const double start, const double stop, const double dt, 
-	const SS_ModelBase_sPtr& model, const PID_Values pid)
+	const SS_ModelBase_sPtr& model, const GA_PIDChromosome<double> pid)
 {
 	/* Due to how Odeint works internally, it's not feasible to pass in a full state space model object 
 	and run the algorithm directly on that. (Odeint REALLY dislikes pointers) Instead, a local copy of the 
