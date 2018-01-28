@@ -61,6 +61,8 @@ class GA_BreedBase
 public:
 	virtual void breed(const GA_BreedingDataInput, GA_BreedingDataOutput&) = 0;
 
+	virtual ~GA_BreedBase() = default;
+
 private:
 	virtual void breedKp() = 0;
 	virtual void breedKi() = 0;
@@ -75,16 +77,15 @@ typedef boost::shared_ptr<GA_BreedBase> GA_BreedBase_sPtr;
 class SimpleCrossover : public GA_BreedBase
 {
 public:
-
 	void breed(const GA_BreedingDataInput input, GA_BreedingDataOutput& output) override;
 
-	SimpleCrossover();
-	~SimpleCrossover();
+	SimpleCrossover() = default;
+	~SimpleCrossover() = default;
 
 private:
-	void breedKp() override;
-	void breedKi() override;
-	void breedKd() override;
+	void breedKp() override {};
+	void breedKi() override {};
+	void breedKd() override {};
 
 };
 

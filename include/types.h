@@ -460,13 +460,13 @@ struct PID_PerformanceData
 struct PID_FitnessScores
 {
 	/* Overall fitness score */
-	double fitness_total = -1.0;				
+	double fitness_total = 0.0;				
 
 	/* Sub fitness score */
-	double fitness_POS = -1.0;
-	double fitness_TS = -1.0;
-	double fitness_TR = -1.0;
-	double fitness_SSER = -1.0;
+	double fitness_POS = 0.0;
+	double fitness_TS = 0.0;
+	double fitness_TR = 0.0;
+	double fitness_SSER = 0.0;
 };
 
 

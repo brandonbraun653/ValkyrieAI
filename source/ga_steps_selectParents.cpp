@@ -89,16 +89,6 @@ void RandomSelection::selectParentKd()
 /* CLASS:  RouletteSelection */
 ///////////////////////////////////////////////////
 /*-----------------------------------------------
-* Constructors/Destructor
-*-----------------------------------------------*/
-RouletteSelection::RouletteSelection()
-{
-}
-
-RouletteSelection::~RouletteSelection()
-{
-}
-/*-----------------------------------------------
 * Public Functions
 *-----------------------------------------------*/
 void RouletteSelection::selectParent(const GA_SelectParentDataInput input, GA_SelectParentDataOutput& output)
@@ -182,9 +172,6 @@ TournamentSelection::TournamentSelection(const int populationSize)
 	tourneyCompetitorSelectorRNG = boost::make_shared <RNGInstance<boost::mt19937, boost::random::uniform_int_distribution<>>>(dist2);
 }
 
-TournamentSelection::~TournamentSelection()
-{
-}
 /*-----------------------------------------------
 * Public Functions
 *-----------------------------------------------*/
@@ -228,7 +215,7 @@ void TournamentSelection::selectParent(const GA_SelectParentDataInput input, GA_
 		/* It's possible to get all -1.0 fitness values (i.e. nothing met criteria). If so, just
 		* choose the last idx value in the competitor[] selections as the winner for now.
 		*/
-		if (bestFitVal == -1.0)
+		if (bestFitVal == 0.0)
 			bestFitIdx = competitor[competitionSize - 1];
 
 		output.parentSelections[parent] = bestFitIdx;
@@ -239,23 +226,6 @@ void TournamentSelection::selectParent(const GA_SelectParentDataInput input, GA_
 	tourneyCompetitorSelectorRNG->releaseEngine();
 }
 
-/*-----------------------------------------------
-* Private Functions
-*-----------------------------------------------*/
-void TournamentSelection::selectParentKp()
-{
-
-}
-
-void TournamentSelection::selectParentKi()
-{
-
-}
-
-void TournamentSelection::selectParentKd()
-{
-
-}
 
 
 ///////////////////////////////////////////////////

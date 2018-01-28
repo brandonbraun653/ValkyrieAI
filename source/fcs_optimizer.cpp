@@ -1,5 +1,7 @@
 #include "fcs_optimizer.h"
 #include <string>
+#include <iostream>
+#include <fstream>
 
 using namespace boost::interprocess;
 
@@ -83,7 +85,7 @@ void writeCSV_StepData(StepPerformance data, std::string filename)
 FCSOptimizer::FCSOptimizer()
 {
 	currentStatus = GA_IDLE;
-	currentIteration = 0;
+	currentGeneration = 0;
 }
 
 FCSOptimizer::~FCSOptimizer()
@@ -151,7 +153,7 @@ void FCSOptimizer::run()
 
 			checkConvergence();		/* Given the new fitness scores, see if we have a "winner" that met user goals sufficiently */
 
-			filterPopulation();		/* Apply random "filtering" to the population to simulate things like death/disaster/disease etc. */
+			//filterPopulation();		/* Apply random "filtering" to the population to simulate things like death/disaster/disease etc. */
 
 			selectParents();		/* Of the current population, select those who will mate */
 
@@ -192,9 +194,11 @@ void FCSOptimizer::run()
 		gatherStatisticalData();
 
 		/* Allow other waiting threads to run */
-		currentIteration += 1;
+		currentGeneration += 1;
 		boost::this_thread::yield();
 	}
+
+	logData();
 
 	#if (FCS_TRACE_EXECUTION_TIME == 1)
 	auto stop = boost::chrono::high_resolution_clock::now();
@@ -283,9 +287,9 @@ void FCSOptimizer::initMemory()
 	GenerationalChromStats.Ki.resize(genLimit+1);
 	GenerationalChromStats.Kd.resize(genLimit+1);
 
-	ChromOccurance.Kp.resize((int)(settings.pidControlSettings.tuningLimits.Kp.upper - settings.pidControlSettings.tuningLimits.Kp.lower));
-	ChromOccurance.Ki.resize((int)(settings.pidControlSettings.tuningLimits.Ki.upper - settings.pidControlSettings.tuningLimits.Ki.lower));
-	ChromOccurance.Kd.resize((int)(settings.pidControlSettings.tuningLimits.Kd.upper - settings.pidControlSettings.tuningLimits.Kd.lower));
+	ChromOccurance.Kp.resize((int)(settings.pidControlSettings.tuningLimits.Kp.upper - settings.pidControlSettings.tuningLimits.Kp.lower)+1);
+	ChromOccurance.Ki.resize((int)(settings.pidControlSettings.tuningLimits.Ki.upper - settings.pidControlSettings.tuningLimits.Ki.lower)+1);
+	ChromOccurance.Kd.resize((int)(settings.pidControlSettings.tuningLimits.Kd.upper - settings.pidControlSettings.tuningLimits.Kd.lower)+1);
 }
 
 void FCSOptimizer::initRNG()
@@ -406,6 +410,14 @@ void FCSOptimizer::initStatistics()
 	std::for_each(ChromOccurance.Kp.begin(), ChromOccurance.Kp.end(), [](int& val) {val = 0; });
 	std::for_each(ChromOccurance.Ki.begin(), ChromOccurance.Ki.end(), [](int& val) {val = 0; });
 	std::for_each(ChromOccurance.Kd.begin(), ChromOccurance.Kd.end(), [](int& val) {val = 0; });
+
+	/* Calculate the ideal variance of the chromosomes given a uniform distribution (hard-coded) 
+	See: https://en.wikibooks.org/wiki/Statistics/Distributions/Uniform */
+
+	IdealChromVariance.Kp = pow((settings.pidControlSettings.tuningLimits.Kp.upper - settings.pidControlSettings.tuningLimits.Kp.lower), 2) / 12.0;
+	IdealChromVariance.Ki = pow((settings.pidControlSettings.tuningLimits.Ki.upper - settings.pidControlSettings.tuningLimits.Ki.lower), 2) / 12.0;
+	IdealChromVariance.Kd = pow((settings.pidControlSettings.tuningLimits.Kd.upper - settings.pidControlSettings.tuningLimits.Kd.lower), 2) / 12.0;
+
 }
 
 void FCSOptimizer::evaluateModel()
@@ -587,7 +599,7 @@ void FCSOptimizer::checkConvergence()
 	/*-----------------------------------------------
 	* Break based on generation limits
 	*-----------------------------------------------*/
-	if (currentIteration >= settings.advConvergenceParam.generationLimit)
+	if (currentGeneration >= settings.advConvergenceParam.generationLimit)
 	{
 		#ifdef _DEBUG
 		if (settings.advConvergenceParam.generationLimit == 0)
@@ -603,7 +615,7 @@ void FCSOptimizer::checkConvergence()
 	/*-----------------------------------------------
 	* Break based on finding a good solution 
 	*-----------------------------------------------*/
-	if (iteration_bestFitScore > 0.95)
+	if (iteration_bestFitScore > 1.0)
 	{
 		#if (CONSOLE_LOGGING_ENABLED == 1)
 		std::cout << "\nFound a good enough solution. Done." << std::endl;
@@ -794,8 +806,8 @@ void FCSOptimizer::breedGeneration()
 		input.chromType = currentSolverParam.chromType;
 
 		//TODO: I need the user to specify these variable values in some kind of advanced initializer....
-		input.crossoverPoint = 9;
-		input.swap_both_chrom_halves = false;
+		input.crossoverPoint = 13;
+		input.swap_both_chrom_halves = true;
 		input.swap_lower_chrom_half = false;
 
 		/* Fancy iterator to copy over the relevant genetic material */
@@ -993,6 +1005,12 @@ void FCSOptimizer::gatherStatisticalData()
 {
 	double KP_Val, KI_Val, KD_Val;
 
+	double avgGlobFit = 0.0;
+	double avgPOSFit = 0.0;
+	double avgSSERFit = 0.0; 
+	double avgTSFit = 0.0;
+	double avgTRFit = 0.0;
+
 	for (int member = 0; member < settings.advConvergenceParam.populationSize; member++)
 	{
 		KP_Val = population[member].dChrom.Kp;
@@ -1009,9 +1027,9 @@ void FCSOptimizer::gatherStatisticalData()
 		/*---------------------------------------------
 		* Update the generational tally of mean/variance
 		*----------------------------------------------*/
-		GenerationalChromStats.Kp[currentIteration](KP_Val);
-		GenerationalChromStats.Ki[currentIteration](KI_Val);
-		GenerationalChromStats.Kd[currentIteration](KD_Val);
+		GenerationalChromStats.Kp[currentGeneration](KP_Val);
+		GenerationalChromStats.Ki[currentGeneration](KI_Val);
+		GenerationalChromStats.Kd[currentGeneration](KD_Val);
 
 		/*---------------------------------------------
 		* Increment how many times a given PID value has been used, rounded down to the nearest integer
@@ -1020,7 +1038,103 @@ void FCSOptimizer::gatherStatisticalData()
 		ChromOccurance.Ki[(int)std::floor(KI_Val)]++;
 		ChromOccurance.Kd[(int)std::floor(KD_Val)]++;
 
+
+		avgGlobFit += population[member].fitnessScores.fitness_total;
+		avgPOSFit += population[member].fitnessScores.fitness_POS;
+		avgSSERFit += population[member].fitnessScores.fitness_SSER;
+		avgTSFit += population[member].fitnessScores.fitness_TS;
+		avgTRFit += population[member].fitnessScores.fitness_TR;
 	}
 
+	avgGlobFit /= settings.advConvergenceParam.populationSize;
+	avgPOSFit /= settings.advConvergenceParam.populationSize;
+	avgSSERFit /= settings.advConvergenceParam.populationSize;
+	avgTSFit /= settings.advConvergenceParam.populationSize;
+	avgTRFit /= settings.advConvergenceParam.populationSize;
+
+	avgFitness += avgGlobFit;
+	avgPOSFit += avgGlobFit;
+	avgSSERFit += avgGlobFit;
+	avgTSFit += avgGlobFit;
+	avgTRFit += avgGlobFit;
+
+	avgFitness /= 2.0;
+	avgPOSFit /= 2.0;
+	avgSSERFit /= 2.0;
+	avgTSFit /= 2.0;
+	avgTRFit /= 2.0;
 	
+
+	averageFitness.push_back(avgFitness);
+	averagePOS.push_back(avgPOSFit);
+	averageSSER.push_back(avgSSERFit);
+	averageTS.push_back(avgTSFit);
+	averageTR.push_back(avgTRFit);
+
+	
+	//std::cout
+	//	<< "Kp Variance: " << boost::accumulators::variance(GenerationalChromStats.Kp[currentGeneration]) << ", " << IdealChromVariance.Kp << "\n"
+	//	<< "Ki Variance: " << boost::accumulators::variance(GenerationalChromStats.Ki[currentGeneration]) << ", " << IdealChromVariance.Ki << "\n"
+	//	<< "Kd Variance: " << boost::accumulators::variance(GenerationalChromStats.Kd[currentGeneration]) << ", " << IdealChromVariance.Kd
+	//	<< std::endl;
+
+	//std::cout
+	//	<< "Kp Variance: " << boost::accumulators::variance(GlobalChromStats.Kp) << ", " << IdealChromVariance.Kp << "\n"
+	//	<< "Ki Variance: " << boost::accumulators::variance(GlobalChromStats.Ki) << ", " << IdealChromVariance.Ki << "\n"
+	//	<< "Kd Variance: " << boost::accumulators::variance(GlobalChromStats.Kd) << ", " << IdealChromVariance.Kd
+	//	<< std::endl;
+}
+
+void FCSOptimizer::logData()
+{
+	std::ofstream file;
+
+	std::string filename = LOG_PATH_CONVERGENCE_DATA + "avgFit.csv";
+	file.open(filename);
+
+	for (int i = 0; i < averageFitness.size()-1; i++)
+		file << std::to_string(averageFitness[i]) << ",";
+
+	file << std::to_string(averageFitness[averageFitness.size() - 1]) << "\n";
+	file.close();
+
+
+	filename = LOG_PATH_CONVERGENCE_DATA + "avgPOSFit.csv";
+	file.open(filename);
+
+	for (int i = 0; i < averagePOS.size()-1; i++)
+		file << std::to_string(averagePOS[i]) << ",";
+
+	file << std::to_string(averagePOS[averagePOS.size() - 1]) << "\n";
+	file.close();
+
+
+	filename = LOG_PATH_CONVERGENCE_DATA + "avgSSERFit.csv";
+	file.open(filename);
+
+	for (int i = 0; i < averageSSER.size()-1; i++)
+		file << std::to_string(averageSSER[i]) << ",";
+
+	file << std::to_string(averageSSER[averageSSER.size() - 1]) << "\n";
+	file.close();
+
+
+	filename = LOG_PATH_CONVERGENCE_DATA + "avgTSFit.csv";
+	file.open(filename);
+
+	for (int i = 0; i < averageTS.size()-1; i++)
+		file << std::to_string(averageTS[i]) << ",";
+
+	file << std::to_string(averageTS[averageTS.size() - 1]) << "\n";
+	file.close();
+
+
+	filename = LOG_PATH_CONVERGENCE_DATA + "avgTRFit.csv";
+	file.open(filename);
+
+	for (int i = 0; i < averageTR.size()-1; i++)
+		file << std::to_string(averageTR[i]) << ",";
+
+	file << std::to_string(averageTR[averageTR.size() - 1]) << "\n";
+	file.close();
 }

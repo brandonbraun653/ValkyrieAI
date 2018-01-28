@@ -26,9 +26,9 @@ int main()
 	*----------------------------*/
 	initStruct.solverParam.rngEngine				= GA_MERSENNE_TWISTER;
 	initStruct.solverParam.rngDistribution			= GA_DISTRIBUTION_UNIFORM_REAL;
-	initStruct.solverParam.breedType				= GA_BREED_FIXED_POINT_CROSSOVER;
+	initStruct.solverParam.breedType				= GA_BREED_SIMPLE_CROSSOVER;
 	initStruct.solverParam.fitnessType				= GA_FITNESS_WEIGHTED_SUM;
-	initStruct.solverParam.selectType				= GA_SELECT_TOURNAMENT;
+	initStruct.solverParam.selectType				= GA_SELECT_RANDOM;
 	initStruct.solverParam.filterType				= GA_POPULATION_STATIC_FILTER;
 	initStruct.solverParam.resolutionType			= GA_RESOLUTION_2DP;
 	initStruct.solverParam.mutateType				= GA_MUTATE_BIT_FLIP;
@@ -52,7 +52,7 @@ int main()
 	*----------------------------*/
 	initStruct.pidControlSettings.tuningLimits.Kp = { 0.0, 100.0 };
 	initStruct.pidControlSettings.tuningLimits.Ki = { 0.0, 100.0 };
-	initStruct.pidControlSettings.tuningLimits.Kd = { 0.0, 10.0 };
+	initStruct.pidControlSettings.tuningLimits.Kd = { 0.0, 1.0 };
 
 	initStruct.pidControlSettings.performanceGoals.percentOvershoot_goal = 0.10;
 	initStruct.pidControlSettings.performanceGoals.riseTime_goal = 0.50;
@@ -67,8 +67,8 @@ int main()
 	/*-----------------------------
 	* ADVANCED PARAMETER SETTINGS
 	*----------------------------*/
-	initStruct.advConvergenceParam.populationSize = 20;
-	initStruct.advConvergenceParam.generationLimit = 10;
+	initStruct.advConvergenceParam.populationSize = 10;
+	initStruct.advConvergenceParam.generationLimit = 250;
 	initStruct.advConvergenceParam.limitingBehavior = FCS_LIMITER_REGENERATE_CHROMOSOME;
 
 	/*-----------------------------

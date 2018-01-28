@@ -174,7 +174,7 @@ private:
 	/*-----------------------------
 	* Runtime Flags
 	*----------------------------*/
-	int currentIteration;
+	int currentGeneration;
 	GA_Status currentStatus;
 
 	/*-----------------------------
@@ -270,7 +270,7 @@ private:
 	* Data Collection and Reporting
 	*----------------------------*/
 	void gatherStatisticalData();
-
+	void logData();
 	
 
 	struct GlobalStatistics
@@ -293,6 +293,20 @@ private:
 		boost::container::vector<int> Ki;
 		boost::container::vector<int> Kd;
 	} ChromOccurance;
+
+	struct IdealStats
+	{
+		double Kp;
+		double Ki;
+		double Kd;
+	} IdealChromVariance;
+
+	double avgFitness = 0.0;
+	boost::container::vector<double> averageFitness;	/* Creates snapshots of the average fitness at each generation */
+	boost::container::vector<double> averagePOS;
+	boost::container::vector<double> averageSSER;
+	boost::container::vector<double> averageTS;
+	boost::container::vector<double> averageTR;
 };
 
 

@@ -8,17 +8,6 @@
 /* CLASS:  SimpleCrossover */
 ///////////////////////////////////////////////////
 /*-----------------------------------------------
-* Constructors/Destructor
-*-----------------------------------------------*/
-SimpleCrossover::SimpleCrossover()
-{
-}
-
-SimpleCrossover::~SimpleCrossover()
-{
-}
-
-/*-----------------------------------------------
 * Public Functions
 *-----------------------------------------------*/
 void SimpleCrossover::breed(GA_BreedingDataInput input, GA_BreedingDataOutput& output)
@@ -146,23 +135,6 @@ void SimpleCrossover::breed(GA_BreedingDataInput input, GA_BreedingDataOutput& o
 	}
 }
 
-/*-----------------------------------------------
-* Private Functions
-*-----------------------------------------------*/
-void SimpleCrossover::breedKp()
-{
-
-}
-
-void SimpleCrossover::breedKi()
-{
-
-}
-
-void SimpleCrossover::breedKd()
-{
-
-}
 
 
 ///////////////////////////////////////////////////

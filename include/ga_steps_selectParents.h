@@ -23,8 +23,6 @@ struct GA_SelectParentDataInput
 {
 	size_t populationSize = 0;
 	boost::container::vector<double> popGlobalFitScores;	/* Latest fitness scores for all population members */
-	//Do I need a mutex?
-	//Add more as needed 
 };
 
 struct GA_SelectParentDataOutput
@@ -90,8 +88,8 @@ class RouletteSelection : public GA_SelectParentBase
 public:
 	void selectParent(const GA_SelectParentDataInput input, GA_SelectParentDataOutput& output) override;
 
-	RouletteSelection();
-	~RouletteSelection();
+	RouletteSelection() = default;
+	~RouletteSelection() = default;
 private:
 	void selectParentKp() override;
 	void selectParentKi() override;
@@ -123,11 +121,11 @@ public:
 	void selectParent(const GA_SelectParentDataInput input, GA_SelectParentDataOutput& output) override;
 
 	TournamentSelection(const int populationSize);
-	~TournamentSelection();
+	~TournamentSelection() = default;
 private:
-	void selectParentKp() override;
-	void selectParentKi() override;
-	void selectParentKd() override;
+	void selectParentKp() override {};
+	void selectParentKi() override {};
+	void selectParentKd() override {};
 
 	RNGManager_sPtr tourneySizeSelectorRNG;
 	RNGManager_sPtr tourneyCompetitorSelectorRNG;

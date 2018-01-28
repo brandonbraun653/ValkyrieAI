@@ -1,6 +1,7 @@
 #pragma once
 #ifndef CONFIG_H_
 #define CONFIG_H_
+#include <string>
 
 /*-----------------------------------------------
 * Global Genetic Algorithm "Stuff"
@@ -60,6 +61,12 @@
 #define SS_TRACE_LOG_CSV					0
 #define SS_THREAD_TRACE_LOG_COUT			0
 #define SS_THREAD_TRACE_LOG_CSV				0
+
+
+/*-----------------------------------------------
+* Data Output Paths
+*-----------------------------------------------*/
+const std::string LOG_PATH_CONVERGENCE_DATA = "C:/git/GitHub/ValkyrieAI/testing/matlab/DataDumps/";
 
 
 #endif /* CONFIG_H_ */
