@@ -109,6 +109,13 @@ void FCSOptimizer::run()
 	int externCmd;
 
 
+	//Generate the first population
+	//evaluateModel();
+	//evaluateFitness();
+	//selectParents();
+	//breedGeneration();
+	//mutateGeneration();
+
 	for(;;)
 	{
 		/*-------------------------------------
@@ -153,6 +160,9 @@ void FCSOptimizer::run()
 
 			checkConvergence();		/* Given the new fitness scores, see if we have a "winner" that met user goals sufficiently */
 
+			//TESTING
+			//sortPopulation();
+			
 			//filterPopulation();		/* Apply random "filtering" to the population to simulate things like death/disaster/disease etc. */
 
 			selectParents();		/* Of the current population, select those who will mate */
@@ -281,6 +291,7 @@ void FCSOptimizer::initMemory()
 	runtimeStep.selectParentInstances.resize(GA_SELECT_TOTAL_OPTIONS);
 	runtimeStep.breedInstances.resize(GA_BREED_TOTAL_OPTIONS);
 	runtimeStep.mutateInstances.resize(GA_MUTATE_TOTAL_OPTIONS);
+	runtimeStep.sortingInstances.resize(GA_SORT_TOTAL_OPTIONS);
 
 	/* Statistics Containers */
 	GenerationalChromStats.Kp.resize(genLimit+1);
@@ -998,6 +1009,35 @@ void FCSOptimizer::enforceTunerLimits()
 		PID_RNG.Ki->releaseEngine();
 		PID_RNG.Kd->releaseEngine();
 	}
+}
+
+void FCSOptimizer::sortPopulation()
+{
+	const GA_METHOD_Sorting sortType = currentSolverParam.sortingType;
+
+	GA_SortingInput input;
+	GA_SortingOutput output;
+
+	/* Ensure an instance of the mutation type exists before calling the mutate function */
+	if (!runtimeStep.mutateInstances[sortType])
+	{
+		switch (sortType)
+		{
+		case GA_SORT_FAST_NONDOMINATED:
+			runtimeStep.sortingInstances[sortType] = boost::make_shared<FastNonDominatedSort>();
+			break;
+
+			//Add more as needed here
+		default:
+			std::cout << "Sorting method not configured or is unknown. You are about to crash." << std::endl;
+			break;
+		}
+	}
+
+	
+	runtimeStep.sortingInstances[sortType]->sort(input, output);
+
+
 }
 
 

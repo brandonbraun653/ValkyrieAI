@@ -8,5 +8,6 @@
 #include "ga_steps_evaluateModel.h"
 #include "ga_steps_mutation.h"
 #include "ga_steps_selectParents.h"
+#include "ga_steps_sorting.h"
 
 #endif

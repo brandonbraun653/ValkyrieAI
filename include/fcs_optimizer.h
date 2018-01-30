@@ -50,6 +50,7 @@ struct FCSOptimizer_RuntimeConfig
 	GA_METHOD_ModelEvaluation		modelType;												/* Model Evaluation step operation */
 	GA_METHOD_FitnessEvaluation		fitnessType = GA_FITNESS_DEFAULT;						/* Fitness Evaluation step operation */
 	GA_METHOD_Resolution			resolutionType = GA_RESOLUTION_DEFAULT;					/* Sets mathematical resolution for all chromosomes */
+	GA_METHOD_Sorting				sortingType = GA_SORT_DEFAULT;	
 
 	GA_RNG_Engine					rngEngine;												/* Random Number Generator Engine type */
 	GA_RNG_Distribution				rngDistribution;										/* Random Number Generator Distribution type */
@@ -207,13 +208,14 @@ private:
 		boost::container::vector<GA_SelectParentBase_sPtr> selectParentInstances;			/* Implementations of unique parent selection approaches */
 		boost::container::vector<GA_BreedBase_sPtr> breedInstances;							/* Implementations of unique breeding approaches */
 		boost::container::vector<GA_MutateBase_sPtr> mutateInstances;						/* Implementations of unique mutation approaches */
+		boost::container::vector<GA_SortBase_sPtr> sortingInstances;			
 	} runtimeStep;
 	
 	FCSOptimizer_RuntimeConfig currentSolverParam;	/* Keeps track of the current execution style implemented */
 
 	/* A highly generic description of the population members */
 	boost::container::vector<FCSOptimizer_PopulationMember> population;
-
+	//boost::container::vector<FCSOptimizer_PopulationMember> parents, children;
 
 	FCSOptimizer_Init_t settings;
 
@@ -264,6 +266,7 @@ private:
 	void boundaryCheck();
 	void enforceResolution();
 	void enforceTunerLimits();
+	void sortPopulation();
 
 
 	/*-----------------------------
