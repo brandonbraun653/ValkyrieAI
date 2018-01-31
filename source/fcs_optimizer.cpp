@@ -109,12 +109,10 @@ void FCSOptimizer::run()
 	int externCmd;
 
 
-	//Generate the first population
-	//evaluateModel();
-	//evaluateFitness();
-	//selectParents();
-	//breedGeneration();
-	//mutateGeneration();
+	/* Generate the first population */
+	evaluateModel(parents);
+	evaluateFitness(parents);
+	sortPopulation(&parents, NULL);
 
 	for(;;)
 	{
@@ -154,24 +152,24 @@ void FCSOptimizer::run()
 		*-------------------------------------*/
 		if (currentStatus == GA_OK)
 		{
-			evaluateModel();		/* With the current population members, run a test scenario on the chosen model and record output data */
+			selectParents(parents);					/* Of the current population, select those who will mate */
 
-			evaluateFitness();		/* Use recorded performance data from last step to gauge how well it meets user goals */
+			breedGeneration(parents);				/* Breed the parents and stores the output as bit-mapped chromosomes that
+													are ready for the mutation stage.*/
 
-			checkConvergence();		/* Given the new fitness scores, see if we have a "winner" that met user goals sufficiently */
+			mutateGeneration(children);				/* Mutate the chromosomes resulting from the breedGeneration step. Output the results
+													into the children population struct. */
 
-			//TESTING
-			//sortPopulation();
-			
-			//filterPopulation();		/* Apply random "filtering" to the population to simulate things like death/disaster/disease etc. */
+			boundaryCheck(children);				/* Ensure the new children chromosomes fall within the user constraints */
 
-			selectParents();		/* Of the current population, select those who will mate */
+			evaluateModel(children);				/* Evaluate the children in the system model */
 
-			breedGeneration();		/* Use the selected mating pairs from the last step to create new offspring */
+			evaluateFitness(children);				/* Use recorded performance data from last step to gauge how well it meets user goals */
 
-			mutateGeneration();		/* Mutate the new generation's chromosomes based on random chance */
+			sortPopulation(&parents, &children);	/* Given the two populations (parent and child), sort them for the best performers 
+													and select new parents from the top N solutions, where N = user defined population size. */
 
-			boundaryCheck();		/* Ensure the newly generated data falls within the user constraints */
+			checkConvergence();						/* Given the new sorted population, see if we have a "winner" that met user goals sufficiently */
 		}
 
 		/*-------------------------------------
@@ -279,7 +277,8 @@ void FCSOptimizer::initMemory()
 {
 	const size_t popSize = settings.advConvergenceParam.populationSize;
 	const size_t genLimit = settings.advConvergenceParam.generationLimit;
-	population.resize(popSize);
+	parents.resize(popSize);
+	children.resize(popSize);
 
 	/* Glue memory between the GA functions */
 	fcs_parentSelections.resize(popSize);
@@ -405,9 +404,9 @@ void FCSOptimizer::initPopulation()
 	for (size_t i = 0; i < settings.advConvergenceParam.populationSize; i++)
 	{
 		/* Get some random PID values to start off with */
-		population[i].dChrom.Kp = PID_RNG.Kp->getDouble();
-		population[i].dChrom.Ki = PID_RNG.Ki->getDouble();
-		population[i].dChrom.Kd = PID_RNG.Kd->getDouble();
+		parents[i].dChrom.Kp = PID_RNG.Kp->getDouble();
+		parents[i].dChrom.Ki = PID_RNG.Ki->getDouble();
+		parents[i].dChrom.Kd = PID_RNG.Kd->getDouble();
 	}
 
 	PID_RNG.Kp->releaseEngine();
@@ -431,7 +430,7 @@ void FCSOptimizer::initStatistics()
 
 }
 
-void FCSOptimizer::evaluateModel()
+void FCSOptimizer::evaluateModel(PopulationType& population)
 {
 	const GA_METHOD_ModelEvaluation modelType = currentSolverParam.modelType;
 
@@ -503,7 +502,7 @@ void FCSOptimizer::evaluateModel()
 	} 
 }
 
-void FCSOptimizer::evaluateFitness()
+void FCSOptimizer::evaluateFitness(PopulationType& population)
 {
 	const GA_METHOD_ModelEvaluation modelType = currentSolverParam.modelType;
 	const GA_METHOD_FitnessEvaluation fitnessType = currentSolverParam.fitnessType;
@@ -564,7 +563,7 @@ void FCSOptimizer::evaluateFitness()
 			#if (DEBUGGING_ENABLED == 1)
 			std::cout
 				<< "Fitness: "	<< output.fitness.fitness_total
-				<< "\t\tKp: "		<< population[member].dChrom.Kp
+				<< "\t\tKp: "	<< population[member].dChrom.Kp
 				<< "\tKi: "		<< population[member].dChrom.Ki
 				<< "\tKd: "		<< population[member].dChrom.Kd
 				<< std::endl;
@@ -575,7 +574,6 @@ void FCSOptimizer::evaluateFitness()
 			writeCSV_StepData(output.fitness.stepPerformanceData, filename);
 			#endif
 		}
-		
 	}
 
 	else if (fitnessType == GA_FITNESS_MEAN_SQUARE_ERROR)
@@ -594,10 +592,10 @@ void FCSOptimizer::checkConvergence()
 
 	for (unsigned int member = 0; member < settings.advConvergenceParam.populationSize; member++)
 	{
-		if (population[member].fitnessScores.fitness_total > iteration_bestFitScore)
+		if (parents[member].fitnessScores.fitness_total > iteration_bestFitScore)
 		{
-			iteration_bestFitScore = population[member].fitnessScores.fitness_total;
-			iteration_bestFit = population[member].fitnessScores;
+			iteration_bestFitScore = parents[member].fitnessScores.fitness_total;
+			iteration_bestFit = parents[member].fitnessScores;
 		}
 	}
 
@@ -633,65 +631,64 @@ void FCSOptimizer::checkConvergence()
 		#endif
 
 		currentStatus = GA_COMPLETE;
-	}
-		
+	}		
 }
 
 void FCSOptimizer::filterPopulation()
 {
-	const GA_METHOD_PopulationFilter filterType = currentSolverParam.filterType;
+	//const GA_METHOD_PopulationFilter filterType = currentSolverParam.filterType;
 
-	GA_PopulationFilterDataInput input;
-	GA_PopulationFilterDataOutput output;
+	//GA_PopulationFilterDataInput input;
+	//GA_PopulationFilterDataOutput output;
 
-	/*-----------------------------
-	* Ensure a filtering evaluation instance exists
-	*----------------------------*/
-	if (!runtimeStep.populationFilterInstances[filterType])
-	{
-		switch (filterType)
-		{
-		case GA_POPULATION_STATIC_FILTER:
-			runtimeStep.populationFilterInstances[filterType] = boost::make_shared<StaticFilter>(
-				settings.pidControlSettings.tuningLimits.Kp.upper,
-				settings.pidControlSettings.tuningLimits.Kp.lower,
-				settings.pidControlSettings.tuningLimits.Ki.upper,
-				settings.pidControlSettings.tuningLimits.Ki.lower,
-				settings.pidControlSettings.tuningLimits.Kd.upper,
-				settings.pidControlSettings.tuningLimits.Kd.lower);
-			break;
+	///*-----------------------------
+	//* Ensure a filtering evaluation instance exists
+	//*----------------------------*/
+	//if (!runtimeStep.populationFilterInstances[filterType])
+	//{
+	//	switch (filterType)
+	//	{
+	//	case GA_POPULATION_STATIC_FILTER:
+	//		runtimeStep.populationFilterInstances[filterType] = boost::make_shared<StaticFilter>(
+	//			settings.pidControlSettings.tuningLimits.Kp.upper,
+	//			settings.pidControlSettings.tuningLimits.Kp.lower,
+	//			settings.pidControlSettings.tuningLimits.Ki.upper,
+	//			settings.pidControlSettings.tuningLimits.Ki.lower,
+	//			settings.pidControlSettings.tuningLimits.Kd.upper,
+	//			settings.pidControlSettings.tuningLimits.Kd.lower);
+	//		break;
 
-		case GA_POPULATION_DYNAMIC_FILTER:
-			runtimeStep.populationFilterInstances[filterType] = boost::make_shared<DynamicFilter>();
-			break;
+	//	case GA_POPULATION_DYNAMIC_FILTER:
+	//		runtimeStep.populationFilterInstances[filterType] = boost::make_shared<DynamicFilter>();
+	//		break;
 
-			//Add more as needed here
-		default:
-			std::cout << "Filtering method not configured or is unknown. You are about to crash." << std::endl;
-			break;
-		}
-	}
+	//		//Add more as needed here
+	//	default:
+	//		std::cout << "Filtering method not configured or is unknown. You are about to crash." << std::endl;
+	//		break;
+	//	}
+	//}
 
-	/*-----------------------------
-	* Perform the filtering operation
-	*----------------------------*/
-	
-	/* Populate the input struct */
-	std::transform(population.begin(), population.end(), std::back_inserter(input.currentGlobalFitScores),
-		[](const FCSOptimizer_PopulationMember& input) { return input.fitnessScores.fitness_total; });
+	///*-----------------------------
+	//* Perform the filtering operation
+	//*----------------------------*/
+	//
+	///* Populate the input struct */
+	//std::transform(population.begin(), population.end(), std::back_inserter(input.currentGlobalFitScores),
+	//	[](const FCSOptimizer_PopulationMember& input) { return input.fitnessScores.fitness_total; });
 
-	input.static_performanceThreshold = 0.4;
+	//input.static_performanceThreshold = 0.4;
 
-	/* Filter */
-	runtimeStep.populationFilterInstances[filterType]->filter(input, output);
+	///* Filter */
+	//runtimeStep.populationFilterInstances[filterType]->filter(input, output);
 
 
-	/* Replace the indicated population members */
-	for (int member = 0; member < output.replacedMemberIndexes.size(); member++)
-		population[output.replacedMemberIndexes[member]].dChrom = output.replacementPIDValues[member];
+	///* Replace the indicated population members */
+	//for (int member = 0; member < output.replacedMemberIndexes.size(); member++)
+	//	population[output.replacedMemberIndexes[member]].dChrom = output.replacementPIDValues[member];
 }
 
-void FCSOptimizer::selectParents()
+void FCSOptimizer::selectParents(PopulationType& population)
 {
 	const GA_METHOD_ParentSelection selectType = currentSolverParam.selectType;
 
@@ -770,7 +767,7 @@ void FCSOptimizer::selectParents()
 	fcs_parentSelections = output.parentSelections;
 }
 
-void FCSOptimizer::breedGeneration()
+void FCSOptimizer::breedGeneration(PopulationType& population)
 {
 	const GA_METHOD_Breed breedType = currentSolverParam.breedType;
 
@@ -841,9 +838,10 @@ void FCSOptimizer::breedGeneration()
 	fcs_bredChromosomes = output;
 }
 
-void FCSOptimizer::mutateGeneration()
+void FCSOptimizer::mutateGeneration(PopulationType& population)
 {
 	const GA_METHOD_MutateType mutateType = currentSolverParam.mutateType;
+	const size_t popSize = settings.advConvergenceParam.populationSize;
 
 	GA_MutateDataInput input;
 	GA_MutateDataOutput output;
@@ -890,31 +888,30 @@ void FCSOptimizer::mutateGeneration()
 	runtimeStep.mutateInstances[mutateType]->mutate(input, output);
 
 
-	//Put the mutated data back into the population
+	//Put the mutated data back into the population (should be children)
 	if (currentSolverParam.chromType == MAPPING_TYPE_REAL && output.chromType == MAPPING_TYPE_REAL)
 	{
-		for (int i = 0; i < population.size(); i++)
+		for (int i = 0; i < popSize; i++)
 			population[i].dChrom = output.d_chrom[i];
 	}
 	else if (currentSolverParam.chromType == MAPPING_TYPE_BIT_FIELD && output.chromType == MAPPING_TYPE_BIT_FIELD)
 	{
-		for (int i = 0; i < population.size(); i++)
+		for (int i = 0; i < popSize; i++)
 			population[i].u16Chrom = output.u16_chrom[i];
 	}
 }
 
-void FCSOptimizer::boundaryCheck()
+void FCSOptimizer::boundaryCheck(PopulationType& population)
 {
 	/* Force decimal point resolution so we aren't searching through an ENORMOUS space */
-	enforceResolution();
+	enforceResolution(population);
 
 	/* Ensure we aren't accidentally exceeding the tuning limits */
-	enforceTunerLimits();
+	enforceTunerLimits(population);
 }
 
-void FCSOptimizer::enforceResolution()
+void FCSOptimizer::enforceResolution(PopulationType& population)
 {
-
 	double fracPart = 0.0;
 	double intPart = 0.0;
 
@@ -951,7 +948,7 @@ void FCSOptimizer::enforceResolution()
 	}
 }
 
-void FCSOptimizer::enforceTunerLimits()
+void FCSOptimizer::enforceTunerLimits(PopulationType& population)
 {
 	if (settings.advConvergenceParam.limitingBehavior == FCS_LIMITER_FORCE_TO_BOUNDARY)
 	{
@@ -1011,7 +1008,7 @@ void FCSOptimizer::enforceTunerLimits()
 	}
 }
 
-void FCSOptimizer::sortPopulation()
+void FCSOptimizer::sortPopulation(PopulationType* parents, PopulationType* children)
 {
 	const GA_METHOD_Sorting sortType = currentSolverParam.sortingType;
 
@@ -1034,82 +1031,97 @@ void FCSOptimizer::sortPopulation()
 		}
 	}
 
+	if (parents == NULL)
+		throw std::invalid_argument("You must input a parent population. Child population is optional.");
+	else
+	{
+		for (int member = 0; member < parents->size(); member++)
+			input.parentFitScores.push_back((*parents)[member].fitnessScores.fitness_total);
+	}
 	
+	/* This is an optional argument */
+	if (children != NULL)
+	{
+		for (int member = 0; member < children->size(); member++)
+			input.childFitScores.push_back((*children)[member].fitnessScores.fitness_total);
+	}
+
 	runtimeStep.sortingInstances[sortType]->sort(input, output);
 
 
+	/* Assign new parents from output */
 }
 
 
 void FCSOptimizer::gatherStatisticalData()
 {
-	double KP_Val, KI_Val, KD_Val;
+	//double KP_Val, KI_Val, KD_Val;
 
-	double avgGlobFit = 0.0;
-	double avgPOSFit = 0.0;
-	double avgSSERFit = 0.0; 
-	double avgTSFit = 0.0;
-	double avgTRFit = 0.0;
+	//double avgGlobFit = 0.0;
+	//double avgPOSFit = 0.0;
+	//double avgSSERFit = 0.0; 
+	//double avgTSFit = 0.0;
+	//double avgTRFit = 0.0;
 
-	for (int member = 0; member < settings.advConvergenceParam.populationSize; member++)
-	{
-		KP_Val = population[member].dChrom.Kp;
-		KI_Val = population[member].dChrom.Ki;
-		KD_Val = population[member].dChrom.Kd;
+	//for (int member = 0; member < settings.advConvergenceParam.populationSize; member++)
+	//{
+	//	KP_Val = population[member].dChrom.Kp;
+	//	KI_Val = population[member].dChrom.Ki;
+	//	KD_Val = population[member].dChrom.Kd;
 
-		/*---------------------------------------------
-		* Update the running tally of global solution mean/variance
-		*----------------------------------------------*/
-		GlobalChromStats.Kp(KP_Val);
-		GlobalChromStats.Ki(KI_Val);
-		GlobalChromStats.Kd(KD_Val);
+	//	/*---------------------------------------------
+	//	* Update the running tally of global solution mean/variance
+	//	*----------------------------------------------*/
+	//	GlobalChromStats.Kp(KP_Val);
+	//	GlobalChromStats.Ki(KI_Val);
+	//	GlobalChromStats.Kd(KD_Val);
 
-		/*---------------------------------------------
-		* Update the generational tally of mean/variance
-		*----------------------------------------------*/
-		GenerationalChromStats.Kp[currentGeneration](KP_Val);
-		GenerationalChromStats.Ki[currentGeneration](KI_Val);
-		GenerationalChromStats.Kd[currentGeneration](KD_Val);
+	//	/*---------------------------------------------
+	//	* Update the generational tally of mean/variance
+	//	*----------------------------------------------*/
+	//	GenerationalChromStats.Kp[currentGeneration](KP_Val);
+	//	GenerationalChromStats.Ki[currentGeneration](KI_Val);
+	//	GenerationalChromStats.Kd[currentGeneration](KD_Val);
 
-		/*---------------------------------------------
-		* Increment how many times a given PID value has been used, rounded down to the nearest integer
-		*----------------------------------------------*/
-		ChromOccurance.Kp[(int)std::floor(KP_Val)]++;
-		ChromOccurance.Ki[(int)std::floor(KI_Val)]++;
-		ChromOccurance.Kd[(int)std::floor(KD_Val)]++;
+	//	/*---------------------------------------------
+	//	* Increment how many times a given PID value has been used, rounded down to the nearest integer
+	//	*----------------------------------------------*/
+	//	ChromOccurance.Kp[(int)std::floor(KP_Val)]++;
+	//	ChromOccurance.Ki[(int)std::floor(KI_Val)]++;
+	//	ChromOccurance.Kd[(int)std::floor(KD_Val)]++;
 
 
-		avgGlobFit += population[member].fitnessScores.fitness_total;
-		avgPOSFit += population[member].fitnessScores.fitness_POS;
-		avgSSERFit += population[member].fitnessScores.fitness_SSER;
-		avgTSFit += population[member].fitnessScores.fitness_TS;
-		avgTRFit += population[member].fitnessScores.fitness_TR;
-	}
+	//	avgGlobFit += population[member].fitnessScores.fitness_total;
+	//	avgPOSFit += population[member].fitnessScores.fitness_POS;
+	//	avgSSERFit += population[member].fitnessScores.fitness_SSER;
+	//	avgTSFit += population[member].fitnessScores.fitness_TS;
+	//	avgTRFit += population[member].fitnessScores.fitness_TR;
+	//}
 
-	avgGlobFit /= settings.advConvergenceParam.populationSize;
-	avgPOSFit /= settings.advConvergenceParam.populationSize;
-	avgSSERFit /= settings.advConvergenceParam.populationSize;
-	avgTSFit /= settings.advConvergenceParam.populationSize;
-	avgTRFit /= settings.advConvergenceParam.populationSize;
+	//avgGlobFit /= settings.advConvergenceParam.populationSize;
+	//avgPOSFit /= settings.advConvergenceParam.populationSize;
+	//avgSSERFit /= settings.advConvergenceParam.populationSize;
+	//avgTSFit /= settings.advConvergenceParam.populationSize;
+	//avgTRFit /= settings.advConvergenceParam.populationSize;
 
-	avgFitness += avgGlobFit;
-	avgPOSFit += avgGlobFit;
-	avgSSERFit += avgGlobFit;
-	avgTSFit += avgGlobFit;
-	avgTRFit += avgGlobFit;
+	//avgFitness += avgGlobFit;
+	//avgPOSFit += avgGlobFit;
+	//avgSSERFit += avgGlobFit;
+	//avgTSFit += avgGlobFit;
+	//avgTRFit += avgGlobFit;
 
-	avgFitness /= 2.0;
-	avgPOSFit /= 2.0;
-	avgSSERFit /= 2.0;
-	avgTSFit /= 2.0;
-	avgTRFit /= 2.0;
-	
+	//avgFitness /= 2.0;
+	//avgPOSFit /= 2.0;
+	//avgSSERFit /= 2.0;
+	//avgTSFit /= 2.0;
+	//avgTRFit /= 2.0;
+	//
 
-	averageFitness.push_back(avgFitness);
-	averagePOS.push_back(avgPOSFit);
-	averageSSER.push_back(avgSSERFit);
-	averageTS.push_back(avgTSFit);
-	averageTR.push_back(avgTRFit);
+	//averageFitness.push_back(avgFitness);
+	//averagePOS.push_back(avgPOSFit);
+	//averageSSER.push_back(avgSSERFit);
+	//averageTS.push_back(avgTSFit);
+	//averageTR.push_back(avgTRFit);
 
 	
 	//std::cout

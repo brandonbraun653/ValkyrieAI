@@ -145,6 +145,8 @@ typedef boost::accumulators::accumulator_set<
 	boost::accumulators::tag::mean,
 	boost::accumulators::tag::variance>> StatisticsType;
 
+typedef boost::container::vector<FCSOptimizer_PopulationMember> PopulationType;
+
 //////////////////////////////////////////////////////////////////
 /* CLASS: FCSOptimizer */
 //////////////////////////////////////////////////////////////////
@@ -214,8 +216,7 @@ private:
 	FCSOptimizer_RuntimeConfig currentSolverParam;	/* Keeps track of the current execution style implemented */
 
 	/* A highly generic description of the population members */
-	boost::container::vector<FCSOptimizer_PopulationMember> population;
-	//boost::container::vector<FCSOptimizer_PopulationMember> parents, children;
+	boost::container::vector<FCSOptimizer_PopulationMember> parents, children;
 
 	FCSOptimizer_Init_t settings;
 
@@ -257,16 +258,17 @@ private:
 	* Primary Algorithm Functions
 	*----------------------------*/
 	void checkConvergence();
-	void evaluateModel();
-	void evaluateFitness();
+	void evaluateModel(PopulationType& population);
+	void evaluateFitness(PopulationType& population);
 	void filterPopulation();
-	void selectParents();
-	void breedGeneration();
-	void mutateGeneration();
-	void boundaryCheck();
-	void enforceResolution();
-	void enforceTunerLimits();
-	void sortPopulation();
+	void selectParents(PopulationType& population);
+	void breedGeneration(PopulationType& population);
+	void mutateGeneration(PopulationType& population);
+	void boundaryCheck(PopulationType& population);
+	void enforceResolution(PopulationType& population);
+	void enforceTunerLimits(PopulationType& population);
+
+	void sortPopulation(PopulationType* parents, PopulationType* children);
 
 
 	/*-----------------------------

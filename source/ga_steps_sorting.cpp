@@ -11,13 +11,24 @@ struct DominationData
 ///////////////////////////////////////////////////
 void FastNonDominatedSort::sort(const GA_SortingInput input, GA_SortingOutput& output)
 {
-	/* Combine the two populations into one */
+	/* Combine the two populations into one. The parent input is forced to exist, so
+	there only needs to be a check for the child input. */
 	boost::container::vector<double> R;
-	for (int i = 0; i < input.parentFitScores.size(); i++)
+
+	if (input.childFitScores.empty())
 	{
-		R.push_back(input.childFitScores[i]);
-		R.push_back(input.parentFitScores[i]);
+		for (int i = 0; i < input.parentFitScores.size(); i++)
+			R.push_back(input.parentFitScores[i]);
 	}
+	else
+	{
+		for (int i = 0; i < input.parentFitScores.size(); i++)
+		{
+			R.push_back(input.parentFitScores[i]);
+			R.push_back(input.childFitScores[i]);
+		}
+	}
+	
 
 
 	boost::container::vector<boost::container::vector<int>> F;
