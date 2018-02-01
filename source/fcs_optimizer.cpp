@@ -112,7 +112,7 @@ void FCSOptimizer::run()
 	/* Generate the first population */
 	evaluateModel(parents);
 	evaluateFitness(parents);
-	sortPopulation(&parents, NULL);
+	parents = sortPopulation(&parents, NULL);
 
 	for(;;)
 	{
@@ -152,24 +152,24 @@ void FCSOptimizer::run()
 		*-------------------------------------*/
 		if (currentStatus == GA_OK)
 		{
-			selectParents(parents);					/* Of the current population, select those who will mate */
+			selectParents(parents);								/* Of the current population, select those who will mate */
 
-			breedGeneration(parents);				/* Breed the parents and stores the output as bit-mapped chromosomes that
-													are ready for the mutation stage.*/
+			breedGeneration(parents);							/* Breed the parents and stores the output as bit-mapped chromosomes that
+																are ready for the mutation stage.*/
 
-			mutateGeneration(children);				/* Mutate the chromosomes resulting from the breedGeneration step. Output the results
-													into the children population struct. */
+			mutateGeneration(children);							/* Mutate the chromosomes resulting from the breedGeneration step. Output the results
+																into the children population struct. */
 
-			boundaryCheck(children);				/* Ensure the new children chromosomes fall within the user constraints */
+			boundaryCheck(children);							/* Ensure the new children chromosomes fall within the user constraints */
 
-			evaluateModel(children);				/* Evaluate the children in the system model */
+			evaluateModel(children);							/* Evaluate the children in the system model */
 
-			evaluateFitness(children);				/* Use recorded performance data from last step to gauge how well it meets user goals */
+			evaluateFitness(children);							/* Use recorded performance data from last step to gauge how well it meets user goals */
 
-			sortPopulation(&parents, &children);	/* Given the two populations (parent and child), sort them for the best performers 
-													and select new parents from the top N solutions, where N = user defined population size. */
+			parents = sortPopulation(&parents, &children);		/* Given the two populations (parent and child), sort them for the best performers 
+																and select new parents from the top N solutions, where N = user defined population size. */
 
-			checkConvergence();						/* Given the new sorted population, see if we have a "winner" that met user goals sufficiently */
+			checkConvergence();									/* Given the new sorted population, see if we have a "winner" that met user goals sufficiently */
 		}
 
 		/*-------------------------------------
@@ -1008,9 +1008,10 @@ void FCSOptimizer::enforceTunerLimits(PopulationType& population)
 	}
 }
 
-void FCSOptimizer::sortPopulation(PopulationType* parents, PopulationType* children)
+PopulationType FCSOptimizer::sortPopulation(PopulationType* parents, PopulationType* children)
 {
 	const GA_METHOD_Sorting sortType = currentSolverParam.sortingType;
+	const int popSize = settings.advConvergenceParam.populationSize;
 
 	GA_SortingInput input;
 	GA_SortingOutput output;
@@ -1036,20 +1037,33 @@ void FCSOptimizer::sortPopulation(PopulationType* parents, PopulationType* child
 	else
 	{
 		for (int member = 0; member < parents->size(); member++)
-			input.parentFitScores.push_back((*parents)[member].fitnessScores.fitness_total);
+			input.parentChildFitScores.push_back((*parents)[member].fitnessScores.fitness_total);
 	}
 	
 	/* This is an optional argument */
 	if (children != NULL)
 	{
 		for (int member = 0; member < children->size(); member++)
-			input.childFitScores.push_back((*children)[member].fitnessScores.fitness_total);
+			input.parentChildFitScores.push_back((*children)[member].fitnessScores.fitness_total);
 	}
 
+	/* Execute the sorting algorithm */
 	runtimeStep.sortingInstances[sortType]->sort(input, output);
 
 
 	/* Assign new parents from output */
+	PopulationType newParents;
+	for (int i = 0; i < popSize; i++)
+	{
+		int index = output.sortedPopulation[i];
+
+		if (index < popSize)
+			newParents.push_back((*parents)[index]);
+		else
+			newParents.push_back((*children)[index - popSize]);
+	}
+
+	return newParents;
 }
 
 
@@ -1139,7 +1153,7 @@ void FCSOptimizer::gatherStatisticalData()
 
 void FCSOptimizer::logData()
 {
-	std::ofstream file;
+	/*std::ofstream file;
 
 	std::string filename = LOG_PATH_CONVERGENCE_DATA + "avgFit.csv";
 	file.open(filename);
@@ -1188,5 +1202,5 @@ void FCSOptimizer::logData()
 		file << std::to_string(averageTR[i]) << ",";
 
 	file << std::to_string(averageTR[averageTR.size() - 1]) << "\n";
-	file.close();
+	file.close();*/
 }

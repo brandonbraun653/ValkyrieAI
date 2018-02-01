@@ -20,12 +20,14 @@
 
 struct GA_SortingInput
 {
-	boost::container::vector<double> parentFitScores, childFitScores;
+	boost::container::vector<double> parentChildFitScores;
+
+
 };
 
 struct GA_SortingOutput
 {
-
+	boost::container::vector<int> sortedPopulation;
 };
 
 class GA_SortBase

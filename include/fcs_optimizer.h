@@ -268,7 +268,7 @@ private:
 	void enforceResolution(PopulationType& population);
 	void enforceTunerLimits(PopulationType& population);
 
-	void sortPopulation(PopulationType* parents, PopulationType* children);
+	PopulationType sortPopulation(PopulationType* parents, PopulationType* children);
 
 
 	/*-----------------------------

@@ -13,26 +13,10 @@ void FastNonDominatedSort::sort(const GA_SortingInput input, GA_SortingOutput& o
 {
 	/* Combine the two populations into one. The parent input is forced to exist, so
 	there only needs to be a check for the child input. */
-	boost::container::vector<double> R;
-
-	if (input.childFitScores.empty())
-	{
-		for (int i = 0; i < input.parentFitScores.size(); i++)
-			R.push_back(input.parentFitScores[i]);
-	}
-	else
-	{
-		for (int i = 0; i < input.parentFitScores.size(); i++)
-		{
-			R.push_back(input.parentFitScores[i]);
-			R.push_back(input.childFitScores[i]);
-		}
-	}
-	
-
-
+	boost::container::vector<double> R = input.parentChildFitScores;
 	boost::container::vector<boost::container::vector<int>> F;
-	F.resize(R.size());
+	
+	F.resize(R.size() + 1);
 	int frontNum = 0;
 
 
@@ -85,10 +69,12 @@ void FastNonDominatedSort::sort(const GA_SortingInput input, GA_SortingOutput& o
 
 		for (int p = 0; p < F[frontNum].size(); p++)
 		{
-			for (int q = 0; q < memberDominationSet[p].size(); q++)
+			int member = F[frontNum][p];
+
+			for (int q = 0; q < memberDominationSet[member].size(); q++)
 			{
 				//Grab the dominated population member
-				int memberIdx = memberDominationSet[p][q];
+				int memberIdx = memberDominationSet[member][q];
 
 				//Decrement its domination count 
 				memberDominationCount[memberIdx]--;
@@ -101,6 +87,16 @@ void FastNonDominatedSort::sort(const GA_SortingInput input, GA_SortingOutput& o
 
 		frontNum++;
 		F[frontNum] = Q;
+	}
+
+
+	
+	for (int i = 0; i < F.size(); i++)
+	{
+		for (int j = 0; j < F[i].size(); j++)
+		{
+			output.sortedPopulation.push_back(F[i][j]);
+		}
 	}
 }
 
