@@ -1037,14 +1037,14 @@ PopulationType FCSOptimizer::sortPopulation(PopulationType* parents, PopulationT
 	else
 	{
 		for (int member = 0; member < parents->size(); member++)
-			input.parentChildFitScores.push_back((*parents)[member].fitnessScores.fitness_total);
+			input.parentChildFitScores.push_back((*parents)[member].fitnessScores);
 	}
 	
 	/* This is an optional argument */
 	if (children != NULL)
 	{
 		for (int member = 0; member < children->size(); member++)
-			input.parentChildFitScores.push_back((*children)[member].fitnessScores.fitness_total);
+			input.parentChildFitScores.push_back((*children)[member].fitnessScores);
 	}
 
 	/* Execute the sorting algorithm */
@@ -1053,15 +1053,15 @@ PopulationType FCSOptimizer::sortPopulation(PopulationType* parents, PopulationT
 
 	/* Assign new parents from output */
 	PopulationType newParents;
-	for (int i = 0; i < popSize; i++)
-	{
-		int index = output.sortedPopulation[i];
+	//for (int i = 0; i < popSize; i++)
+	//{
+	//	int index = output.sortedPopulation[i];
 
-		if (index < popSize)
-			newParents.push_back((*parents)[index]);
-		else
-			newParents.push_back((*children)[index - popSize]);
-	}
+	//	if (index < popSize)
+	//		newParents.push_back((*parents)[index]);
+	//	else
+	//		newParents.push_back((*children)[index - popSize]);
+	//}
 
 	return newParents;
 }

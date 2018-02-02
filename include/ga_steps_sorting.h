@@ -20,9 +20,9 @@
 
 struct GA_SortingInput
 {
-	boost::container::vector<double> parentChildFitScores;
+	//boost::container::vector<double> parentChildFitScores;
 
-
+	boost::container::vector<PID_FitnessScores> parentChildFitScores;
 };
 
 struct GA_SortingOutput
@@ -52,6 +52,8 @@ public:
 	~FastNonDominatedSort() = default;
 private:
 
+	boost::container::vector<int> sortObjectiveFunc(boost::container::vector<int> memberSet,
+		boost::container::vector<double> objFuncScores);
 };
 
 
