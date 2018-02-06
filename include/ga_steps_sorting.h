@@ -54,6 +54,9 @@ private:
 
 	boost::container::vector<int> sortObjectiveFunc(boost::container::vector<int> memberSet,
 		boost::container::vector<double> objFuncScores);
+
+	boost::container::vector<int> sortCrowdingDistance(boost::container::vector<int> memberSet,
+		boost::container::vector<double> crowdingDistances);
 };
 
 

@@ -144,26 +144,45 @@ void FastNonDominatedSort::sort(const GA_SortingInput input, GA_SortingOutput& o
 	{
 		int frontMemberLength = F[front].size();
 
-		//TODO: Need to specify this somehow in a global config file
-		int numObjectives = 4;
-		boost::container::vector<int> I;
+		//No need to process because there is nothing to sort!
+		if (frontMemberLength == 1)
+			continue;
+
+		
+		int numObjectives = 4; //TODO: Need to specify this somehow in a global config file
+		
+		//Intermediary container for holding the sorted 
+		boost::container::vector<int> sortedIdxs; 
 		for (int objective = 0; objective < numObjectives; objective++)
 		{
 			if (F[front].size() == 0)
 				break;
 
-			//re-sort the front based on objective function fitness 
-			I = sortObjectiveFunc(F[front], memberObjFuncFit[objective]);
+			/* Re-sorts the population members in a given front in ascending order
+			according to how well they performed for an objective function. */ 
+			sortedIdxs = sortObjectiveFunc(F[front], memberObjFuncFit[objective]);
 
-			//Ensure boundary points are selected
-			memberDistance[I[0]] = DBL_MAX;
-			memberDistance[I[I.size()-1]] = DBL_MAX;
+			/* Ensure boundary points are selected so there is a relative reference
+			to compare crowding against. Because the indexes are already sorted, it
+			is only a matter of selecting the first and last indices. */
+			int first = *sortedIdxs.begin();
+			int last = *(sortedIdxs.end()-1);
 
-			//Calculate the distance for all other points 
+			memberDistance[first] = DBL_MAX;	//Technically should be infinity, but ya know...
+			memberDistance[last] = DBL_MAX;
+
+			/* Calculate the distance between all other points in the front, using 
+			the first and last points chosen above as a reference. The official 
+			algorithm is also normalized, but the max/min values are 1.0 and 0.0, so the 
+			division by 1.0 is pointless to perform.*/
 			for (int i = 1; i < frontMemberLength - 1; i++)
 			{
-				memberDistance[I[i]] = memberDistance[I[i]] +
-					(memberObjFuncFit[objective][I[i + 1]] - memberObjFuncFit[objective][I[i - 1]]);
+				int previous = sortedIdxs[i - 1];
+				int current = sortedIdxs[i];
+				int next = sortedIdxs[i + 1];
+
+				memberDistance[current] = memberDistance[current] + 
+					(memberObjFuncFit[objective][next] - memberObjFuncFit[objective][previous]); //  / (fmax - fmin);
 			}
 		}
 	}
@@ -172,33 +191,29 @@ void FastNonDominatedSort::sort(const GA_SortingInput input, GA_SortingOutput& o
 	/*-------------------------------------
 	* New Order by Crowding Distance
 	*------------------------------------*/
-	for (int i = 0; i < R.size(); i++)
+	for (int front = 0; front < F.size(); front++)
 	{
-		if (memberRank[i] == 0)
-		{
-			output.sortedPopulation.push_back(i);
-			memberRank[i] = -1; //To say we already selected it
-		}
-		else
-		{
-			int lowestRankIndex = 0;
-			for (int j = 0; j < R.size(); j++)
-			{
-				if (memberRank[i] < memberRank[j])
-					lowestRankIndex = i;
+		int frontMemberLength = F[front].size();
 
-				else if ((memberRank[i] == memberRank[j]) && (memberDistance[i] > memberDistance[j]))
-					lowestRankIndex = i;
-			}
-
-			output.sortedPopulation.push_back(lowestRankIndex);
-			memberRank[lowestRankIndex] = -1;
+		//Nothing to compete against. Add directly to the output
+		if (frontMemberLength == 1)
+		{
+			output.sortedPopulation.push_back(F[front][0]);
+			continue;
 		}
+
+		/* Sorts all the population members in this front in descending order
+		according their crowding distance. The idea is that to maintain diversity, solutions
+		that are farther apart from each other are better than those closer together. */
+		auto sortedIdxs = sortCrowdingDistance(F[front], memberDistance);
+		
+		/* Add the sorted data to the end of the output buffer*/
+		output.sortedPopulation.insert(output.sortedPopulation.end(), sortedIdxs.begin(), sortedIdxs.end());
 	}
-
 	
 }
 
+//TODO: build a custom sorter functor that gets the index along with the score
 boost::container::vector<int> FastNonDominatedSort::sortObjectiveFunc(
 	boost::container::vector<int> memberSet,
 	boost::container::vector<double> objFuncScores)
@@ -210,8 +225,7 @@ boost::container::vector<int> FastNonDominatedSort::sortObjectiveFunc(
 	for (int i = 0; i < memberSet.size(); i++)
 		scores.push_back(objFuncScores[memberSet[i]]);
 
-
-	//Now sort those scores in ascending order
+	//Sort the scores in ASCENDING order
 	std::sort(scores.begin(), scores.end());
 
 	//Rebuild the output vector by matching sorted scores to input indexes
@@ -222,8 +236,7 @@ boost::container::vector<int> FastNonDominatedSort::sortObjectiveFunc(
 			if (objFuncScores[memberSet[i]] == scores[j])
 			{
 				output.push_back(memberSet[i]);
-
-				break; //should only push out of the inner loop?
+				break; //should only push out of the inner loop
 			}
 		}
 	}
@@ -231,3 +244,38 @@ boost::container::vector<int> FastNonDominatedSort::sortObjectiveFunc(
 	return output;
 }
 
+
+//TODO: build a custom sorter functor that gets the index along with the score
+boost::container::vector<int> FastNonDominatedSort::sortCrowdingDistance(
+	boost::container::vector<int> memberSet,
+	boost::container::vector<double> crowdingDistances)
+{
+	boost::container::vector<int> output;
+
+	//First, build the vector containing all the relevant scores
+	boost::container::vector<double> distances;
+	for (int i = 0; i < memberSet.size(); i++)
+		distances.push_back(crowdingDistances[memberSet[i]]);
+
+	//Sort the scores in DESCENDING order
+	std::sort(distances.rbegin(), distances.rend());
+
+	//Rebuild the output vector by matching sorted scores to input indexes
+	for (int j = 0; j < distances.size(); j++)
+	{
+		for (int i = 0; i < memberSet.size(); i++)
+		{
+			if (crowdingDistances[memberSet[i]] == distances[j])
+			{
+				output.push_back(memberSet[i]);
+
+				/* Prevents accidental inclusion of the same population member when 
+				several members share the same crowding distance. This occurs if 
+				a set of PID values really don't work and meet none of the user's goals.*/
+				memberSet.erase(memberSet.begin() + i);
+			}
+		}
+	}
+
+	return output;
+}

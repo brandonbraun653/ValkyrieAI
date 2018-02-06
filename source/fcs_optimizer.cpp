@@ -1051,17 +1051,32 @@ PopulationType FCSOptimizer::sortPopulation(PopulationType* parents, PopulationT
 	runtimeStep.sortingInstances[sortType]->sort(input, output);
 
 
-	/* Assign new parents from output */
+	/* Assign new parents from output. Only the top 'popSize' results will be selected. */
 	PopulationType newParents;
-	//for (int i = 0; i < popSize; i++)
-	//{
-	//	int index = output.sortedPopulation[i];
+	if (children == NULL)
+	{
+		//New parents ONLY come from the function's 'parent' input. Don't bother checking 
+		//if there is a size mismatch as the output is guaranteed to be of size 'popSize'
+		for (int i = 0; i < popSize; i++)
+		{
+			int memberIdx = output.sortedPopulation[i];
+			
+			newParents.push_back((*parents)[memberIdx]);
+		}
+	}
+	else
+	{
+		//New parents come from BOTH 'parent' and 'children' inputs 
+		for (int i = 0; i < popSize; i++)
+		{
+			int memberIdx = output.sortedPopulation[i];
 
-	//	if (index < popSize)
-	//		newParents.push_back((*parents)[index]);
-	//	else
-	//		newParents.push_back((*children)[index - popSize]);
-	//}
+			if (memberIdx > parents->size() - 1)
+				newParents.push_back((*children)[memberIdx - parents->size()]);
+			else
+				newParents.push_back((*parents)[memberIdx]);
+		}
+	}
 
 	return newParents;
 }
