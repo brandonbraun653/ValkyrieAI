@@ -88,10 +88,6 @@ FCSOptimizer::FCSOptimizer()
 	currentGeneration = 0;
 }
 
-FCSOptimizer::~FCSOptimizer()
-{
-}
-
 /*-----------------------------------------------
 * Public Functions
 *-----------------------------------------------*/
@@ -107,6 +103,8 @@ void FCSOptimizer::run()
 	unsigned int commandPriority;
 	message_queue::size_type received_size;
 	int externCmd;
+
+	refreshCounter = settings.advConvergenceParam.iterations_before_refresh;
 
 
 	/* Generate the first population */
@@ -170,16 +168,27 @@ void FCSOptimizer::run()
 																and select new parents from the top N solutions, where N = user defined population size. */
 
 			checkConvergence();									/* Given the new sorted population, see if we have a "winner" that met user goals sufficiently */
-		}
+			
+
+			/* Once the refresh counter reaches zero, the current state of the algorithm will be 
+			analyzed to determine if the solution is converging decently well. Assuming progress
+			has slowed down, a different combination of GA operators (mutation/breeding/etc) will
+			be selected at random and the algorithm will proceed as normal until then next refresh.*/
+			if (--refreshCounter == 0)
+			{
+				if (algorithmNeedsNewSteps())
+					updateAlgorithmSteps();
+				 
+				refreshCounter = settings.advConvergenceParam.iterations_before_refresh;
+				std::cout << "I hit the refresh target!" << std::endl;
+			}
+		} else {
 
 		/*-------------------------------------
 		* Handle errors or external commands
 		*-------------------------------------*/
-		else
-		{
 			if (currentStatus == GA_HALT)
 			{
-				//Do any logging that might report why a halt was called. 
 				#if (CONSOLE_LOGGING_ENABLED == 1)
 				std::cout << "GA Solver was halted. Who knows why." << std::endl;
 				#endif
@@ -188,7 +197,6 @@ void FCSOptimizer::run()
 
 			if (currentStatus == GA_COMPLETE)
 			{
-				//Do other things?
 				#if (CONSOLE_LOGGING_ENABLED == 1)
 				std::cout << "GA Solver Complete. Exiting Optimizer." << std::endl;
 				#endif
@@ -624,7 +632,7 @@ void FCSOptimizer::checkConvergence()
 	/*-----------------------------------------------
 	* Break based on finding a good solution 
 	*-----------------------------------------------*/
-	if (iteration_bestFitScore > 1.0)
+	if (iteration_bestFitScore > 0.95) //TODO: Make this a user parameter
 	{
 		#if (CONSOLE_LOGGING_ENABLED == 1)
 		std::cout << "\nFound a good enough solution. Done." << std::endl;
@@ -1082,75 +1090,87 @@ PopulationType FCSOptimizer::sortPopulation(PopulationType* parents, PopulationT
 }
 
 
+bool FCSOptimizer::algorithmNeedsNewSteps()
+{
+	//Calculate average slope of global fitness and sub scores??
+	return false;
+}
+
+void FCSOptimizer::updateAlgorithmSteps()
+{
+	
+}
+
+
 void FCSOptimizer::gatherStatisticalData()
 {
-	//double KP_Val, KI_Val, KD_Val;
+	double KP_Val, KI_Val, KD_Val;
 
-	//double avgGlobFit = 0.0;
-	//double avgPOSFit = 0.0;
-	//double avgSSERFit = 0.0; 
-	//double avgTSFit = 0.0;
-	//double avgTRFit = 0.0;
+	double avgGlobFit = 0.0;
+	double avgPOSFit = 0.0;
+	double avgSSERFit = 0.0; 
+	double avgTSFit = 0.0;
+	double avgTRFit = 0.0;
 
-	//for (int member = 0; member < settings.advConvergenceParam.populationSize; member++)
-	//{
-	//	KP_Val = population[member].dChrom.Kp;
-	//	KI_Val = population[member].dChrom.Ki;
-	//	KD_Val = population[member].dChrom.Kd;
+	for (int member = 0; member < settings.advConvergenceParam.populationSize; member++)
+	{
+		KP_Val = parents[member].dChrom.Kp;
+		KI_Val = parents[member].dChrom.Ki;
+		KD_Val = parents[member].dChrom.Kd;
 
-	//	/*---------------------------------------------
-	//	* Update the running tally of global solution mean/variance
-	//	*----------------------------------------------*/
-	//	GlobalChromStats.Kp(KP_Val);
-	//	GlobalChromStats.Ki(KI_Val);
-	//	GlobalChromStats.Kd(KD_Val);
+		/*---------------------------------------------
+		* Update the running tally of global solution mean/variance
+		*----------------------------------------------*/
+		GlobalChromStats.Kp(KP_Val);
+		GlobalChromStats.Ki(KI_Val);
+		GlobalChromStats.Kd(KD_Val);
 
-	//	/*---------------------------------------------
-	//	* Update the generational tally of mean/variance
-	//	*----------------------------------------------*/
-	//	GenerationalChromStats.Kp[currentGeneration](KP_Val);
-	//	GenerationalChromStats.Ki[currentGeneration](KI_Val);
-	//	GenerationalChromStats.Kd[currentGeneration](KD_Val);
+		/*---------------------------------------------
+		* Update the generational tally of mean/variance
+		*----------------------------------------------*/
+		GenerationalChromStats.Kp[currentGeneration](KP_Val);
+		GenerationalChromStats.Ki[currentGeneration](KI_Val);
+		GenerationalChromStats.Kd[currentGeneration](KD_Val);
 
-	//	/*---------------------------------------------
-	//	* Increment how many times a given PID value has been used, rounded down to the nearest integer
-	//	*----------------------------------------------*/
-	//	ChromOccurance.Kp[(int)std::floor(KP_Val)]++;
-	//	ChromOccurance.Ki[(int)std::floor(KI_Val)]++;
-	//	ChromOccurance.Kd[(int)std::floor(KD_Val)]++;
+		/*---------------------------------------------
+		* Increment how many times a given PID value has been used, rounded down to the nearest integer
+		*----------------------------------------------*/
+		ChromOccurance.Kp[(int)std::floor(KP_Val)]++;
+		ChromOccurance.Ki[(int)std::floor(KI_Val)]++;
+		ChromOccurance.Kd[(int)std::floor(KD_Val)]++;
 
 
-	//	avgGlobFit += population[member].fitnessScores.fitness_total;
-	//	avgPOSFit += population[member].fitnessScores.fitness_POS;
-	//	avgSSERFit += population[member].fitnessScores.fitness_SSER;
-	//	avgTSFit += population[member].fitnessScores.fitness_TS;
-	//	avgTRFit += population[member].fitnessScores.fitness_TR;
-	//}
+		avgGlobFit	+= parents[member].fitnessScores.fitness_total;
+		avgPOSFit	+= parents[member].fitnessScores.fitness_POS;
+		avgSSERFit	+= parents[member].fitnessScores.fitness_SSER;
+		avgTSFit	+= parents[member].fitnessScores.fitness_TS;
+		avgTRFit	+= parents[member].fitnessScores.fitness_TR;
+	}
 
-	//avgGlobFit /= settings.advConvergenceParam.populationSize;
-	//avgPOSFit /= settings.advConvergenceParam.populationSize;
-	//avgSSERFit /= settings.advConvergenceParam.populationSize;
-	//avgTSFit /= settings.advConvergenceParam.populationSize;
-	//avgTRFit /= settings.advConvergenceParam.populationSize;
+	avgGlobFit /= settings.advConvergenceParam.populationSize;
+	avgPOSFit /= settings.advConvergenceParam.populationSize;
+	avgSSERFit /= settings.advConvergenceParam.populationSize;
+	avgTSFit /= settings.advConvergenceParam.populationSize;
+	avgTRFit /= settings.advConvergenceParam.populationSize;
 
-	//avgFitness += avgGlobFit;
-	//avgPOSFit += avgGlobFit;
-	//avgSSERFit += avgGlobFit;
-	//avgTSFit += avgGlobFit;
-	//avgTRFit += avgGlobFit;
+	avgFitness += avgGlobFit;
+	avgPOSFit += avgGlobFit;
+	avgSSERFit += avgGlobFit;
+	avgTSFit += avgGlobFit;
+	avgTRFit += avgGlobFit;
 
-	//avgFitness /= 2.0;
-	//avgPOSFit /= 2.0;
-	//avgSSERFit /= 2.0;
-	//avgTSFit /= 2.0;
-	//avgTRFit /= 2.0;
-	//
+	avgFitness /= 2.0;
+	avgPOSFit /= 2.0;
+	avgSSERFit /= 2.0;
+	avgTSFit /= 2.0;
+	avgTRFit /= 2.0;
+	
 
-	//averageFitness.push_back(avgFitness);
-	//averagePOS.push_back(avgPOSFit);
-	//averageSSER.push_back(avgSSERFit);
-	//averageTS.push_back(avgTSFit);
-	//averageTR.push_back(avgTRFit);
+	averageFitness.push_back(avgFitness);
+	averagePOS.push_back(avgPOSFit);
+	averageSSER.push_back(avgSSERFit);
+	averageTS.push_back(avgTSFit);
+	averageTR.push_back(avgTRFit);
 
 	
 	//std::cout
@@ -1159,16 +1179,16 @@ void FCSOptimizer::gatherStatisticalData()
 	//	<< "Kd Variance: " << boost::accumulators::variance(GenerationalChromStats.Kd[currentGeneration]) << ", " << IdealChromVariance.Kd
 	//	<< std::endl;
 
-	//std::cout
-	//	<< "Kp Variance: " << boost::accumulators::variance(GlobalChromStats.Kp) << ", " << IdealChromVariance.Kp << "\n"
-	//	<< "Ki Variance: " << boost::accumulators::variance(GlobalChromStats.Ki) << ", " << IdealChromVariance.Ki << "\n"
-	//	<< "Kd Variance: " << boost::accumulators::variance(GlobalChromStats.Kd) << ", " << IdealChromVariance.Kd
-	//	<< std::endl;
+	std::cout
+		<< "Kp Variance: " << boost::accumulators::variance(GlobalChromStats.Kp) << ", " << IdealChromVariance.Kp << "\n"
+		<< "Ki Variance: " << boost::accumulators::variance(GlobalChromStats.Ki) << ", " << IdealChromVariance.Ki << "\n"
+		<< "Kd Variance: " << boost::accumulators::variance(GlobalChromStats.Kd) << ", " << IdealChromVariance.Kd
+		<< std::endl;
 }
 
 void FCSOptimizer::logData()
 {
-	/*std::ofstream file;
+	std::ofstream file;
 
 	std::string filename = LOG_PATH_CONVERGENCE_DATA + "avgFit.csv";
 	file.open(filename);
@@ -1217,5 +1237,5 @@ void FCSOptimizer::logData()
 		file << std::to_string(averageTR[i]) << ",";
 
 	file << std::to_string(averageTR[averageTR.size() - 1]) << "\n";
-	file.close();*/
+	file.close();
 }

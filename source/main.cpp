@@ -52,7 +52,7 @@ int main()
 	*----------------------------*/
 	initStruct.pidControlSettings.tuningLimits.Kp = { 0.0, 100.0 };
 	initStruct.pidControlSettings.tuningLimits.Ki = { 0.0, 100.0 };
-	initStruct.pidControlSettings.tuningLimits.Kd = { 0.0, 1.0 };
+	initStruct.pidControlSettings.tuningLimits.Kd = { 0.0, 100.0 };
 
 	initStruct.pidControlSettings.performanceGoals.percentOvershoot_goal = 0.10;
 	initStruct.pidControlSettings.performanceGoals.riseTime_goal = 0.50;
@@ -67,8 +67,9 @@ int main()
 	/*-----------------------------
 	* ADVANCED PARAMETER SETTINGS
 	*----------------------------*/
-	initStruct.advConvergenceParam.populationSize = 10;
-	initStruct.advConvergenceParam.generationLimit = 50;
+	initStruct.advConvergenceParam.iterations_before_refresh = 5;
+	initStruct.advConvergenceParam.populationSize = 50;
+	initStruct.advConvergenceParam.generationLimit = 500;
 	initStruct.advConvergenceParam.limitingBehavior = FCS_LIMITER_REGENERATE_CHROMOSOME;
 
 	/*-----------------------------
