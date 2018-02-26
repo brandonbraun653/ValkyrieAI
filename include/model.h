@@ -33,39 +33,4 @@ void model_error_exit(std::string error_msg, int line = __LINE__, std::string fi
 bool dim_assert(size_t row_act, size_t row_exp, size_t col_act, size_t col_exp);
 
 
-
-
-
-// 
-// class StateSpaceModel
-// {
-// public:
-// 	
-// 	
-// 
-// 	StepPerformance stepResponseSingleThreaded(int member_num, SS_NLTIVModel &model, double Kp, double Ki, double Kd);
-// 
-// 
-// 	void stepResponseMultiThreaded(int member_num, SS_NLTIVModel model, StepPerformance_Vec& output_data, boost::mutex& output_data_mutex,
-// 		double Kp, double Ki, double Kd);
-// 
-// 	StepPerformance step_performance;
-// 
-// 	//Simulation specific data here
-// 	int total_time_steps;
-// 
-// 	StateSpaceModel();
-// 	~StateSpaceModel();
-// 
-// private:
-// 	boost::mutex csv_mutex;
-// 	boost::mutex cout_mutex;
-// 	boost::mutex test_mutex;
-// 
-// 	Eigen::MatrixXd raw_data;
-// 	StateSpaceSimulator step_simulator;
-// 	StepResponseAnalyzer step_analyzer;
-// };
-
-
 #endif /* !MODEL_H_ */

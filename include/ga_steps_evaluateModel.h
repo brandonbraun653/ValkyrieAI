@@ -35,25 +35,35 @@ struct StateSpaceModelInput
 	GA_PIDChromosome<double> pid;			/* Specific PID values to use in the simulation */
 
 	SS_ModelBase_sPtr model;				/* Generic State Space Model */
-	StateSpaceSimulation simulationType;	/* Instructs the simulator what kind of simulation to execute */
+	ModelSimulationType simulationType;	/* Instructs the simulator what kind of simulation to execute */
 };
 
 struct StateSpaceModelOutput
 {
 	int errorCode;									/* Any possible error codes from the simulation */
 	boost::chrono::microseconds executionTime;		/* Physical time spent solving for results */
-	StateSpaceSimulation simulationType;			/* Kind of simulation that was run */
+	ModelSimulationType simulationType;			/* Kind of simulation that was run */
 	StepPerformance_sPtr stepPerformance;			/* Calculated performance metrics given a step input */
 };
 
 struct NeuralNetworkModelInput
 {
+	double dt;								/* Simulation dt step for each iteration of the solver (s) */
+	double startTime;						/* Simulation start time (s) */
+	double endTime;							/* Simulation end time (s) */
+
+	GA_PIDChromosome<double> pid;			/* Specific PID values to use in the simulation */
+
+	NN_ModelBase_sPtr model;
 
 };
 
 struct NeuralNetworkModelOutput
 {
-
+	int errorCode;									/* Any possible error codes from the simulation */
+	boost::chrono::microseconds executionTime;		/* Physical time spent solving for results */
+	ModelSimulationType simulationType;			/* Kind of simulation that was run */
+	StepPerformance_sPtr stepPerformance;			/* Calculated performance metrics given a step input */
 };
 
 

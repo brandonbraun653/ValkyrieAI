@@ -2,9 +2,27 @@
 #ifndef TYPES_H_
 #define TYPES_H_
 
+/* Winsock2 Includes */
+#ifdef WIN32
+#include <WS2tcpip.h>	//Needed for InetPton
+#include <Windows.h>
+
+#include <sys/types.h>
+//#include <Winsock2.h>
+
+#include <tchar.h>		//Needed for _T
+#include <string>
+#include <iostream>
+#pragma comment(lib, "Ws2_32.lib")
+
+#define    WINSOCKVERSION    MAKEWORD( 2,2 ) 
+#endif
+
 /* C/C++ Includes */
 #include <stdlib.h>
 #include <stdint.h>
+#include <string>
+#include <iostream>
 
 /* Boost Includes */
 #include <boost/shared_ptr.hpp>
@@ -12,6 +30,7 @@
 
 /* Eigen Includes */
 #include <eigen/Eigen>
+
 
 
 /*-----------------------------------------------
@@ -288,7 +307,7 @@ enum GA_METHOD_Resolution
 * Model Data Types
 *-----------------------------------------------*/
 
-enum StateSpaceSimulation
+enum ModelSimulationType
 {
 	IMPULSE,
 	STEP,
@@ -339,11 +358,6 @@ public:
 		D = base->getD();
 		X0 = base->getX0();
 
-		//A.resize(states, states); A.setZero(states, states);
-		//B.resize(states, inputs); B.setZero(states, inputs);
-		//C.resize(outputs, states); C.setZero(outputs, states);
-		//D.resize(outputs, inputs); D.setZero(outputs, inputs);
-		//X0.resize(states, 1); X0.setZero(states, 1);
 		U.resize(inputs, 1); U.setZero(inputs, 1);
 	}
 
@@ -379,6 +393,48 @@ private:
 };
 typedef boost::shared_ptr<SS_NLTIVModel> SS_NLTIVModel_sPtr;
 
+
+class NN_ModelBase
+{
+public:
+	virtual void setup() = 0;
+
+	virtual ~NN_ModelBase() = default;
+};
+typedef boost::shared_ptr<NN_ModelBase> NN_ModelBase_sPtr;
+
+
+class NN_TCPModel : public NN_ModelBase
+{
+public:
+	/* Copy Constructor */
+	NN_TCPModel(const NN_ModelBase_sPtr& base)
+	{
+
+	}
+
+	NN_TCPModel(std::string host_ip, uint32_t port, uint32_t bufferSize)
+	{
+
+	}
+
+
+	void setup() override;
+	void openConnection();
+	void closeConnection();
+
+
+	
+	
+private:
+	std::string host;
+	uint32_t port;
+
+	struct sockaddr_in servAddr;
+	struct sockaddr_in localAddr;
+
+};
+typedef boost::shared_ptr<NN_TCPModel> NN_TCPModel_sPtr;
 
 
 /*-----------------------------------------------
