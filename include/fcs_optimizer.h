@@ -171,13 +171,14 @@ public:
 	void requestOutput(FCSOptimizer_Output_t& output);
 
 	FCSOptimizer();
-	~FCSOptimizer();
+	~FCSOptimizer() = default;
 
 private:
 	/*-----------------------------
 	* Runtime Flags
 	*----------------------------*/
 	int currentGeneration;
+	int refreshCounter;
 	GA_Status currentStatus;
 
 	/*-----------------------------
@@ -270,6 +271,8 @@ private:
 
 	PopulationType sortPopulation(PopulationType* parents, PopulationType* children);
 
+	bool algorithmNeedsNewSteps(/*statistical_data*/);
+	void updateAlgorithmSteps(/*options, currentAlgSteps*/);
 
 	/*-----------------------------
 	* Data Collection and Reporting
