@@ -25,6 +25,9 @@
 #include "model_simulation.h"
 #include "signal_analysis.h"
 
+//Probably should include this here?...
+//#include "model.h"
+
 
 struct StateSpaceModelInput
 {
@@ -62,7 +65,7 @@ struct NeuralNetworkModelOutput
 {
 	int errorCode;									/* Any possible error codes from the simulation */
 	boost::chrono::microseconds executionTime;		/* Physical time spent solving for results */
-	ModelSimulationType simulationType;			/* Kind of simulation that was run */
+	ModelSimulationType simulationType;				/* Kind of simulation that was run */
 	StepPerformance_sPtr stepPerformance;			/* Calculated performance metrics given a step input */
 };
 

@@ -1,6 +1,5 @@
 #include "ga_steps_evaluateModel.h"
 
-
 //////////////////////////////////////////////////////////////////
 /* CLASS:  StateSpaceModel */
 //////////////////////////////////////////////////////////////////
@@ -70,5 +69,9 @@ void StateSpaceEvaluator::evaluate(const StateSpaceModelInput input, StateSpaceM
 *-----------------------------------------------*/
 void NeuralNetworkEvaluator::evaluate(const NeuralNetworkModelInput input, NeuralNetworkModelOutput& output)
 {
+	//This should just pass in the relevant data to the referenced model
+	//and then call the model's simulation function......so this thing is pretty much just a wrapper.
 
+	//Going to need to get the type so we can cast correctly back to the child...make sure this is
+	//an input parameter 
 }

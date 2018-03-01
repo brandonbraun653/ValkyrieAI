@@ -1,6 +1,24 @@
 #pragma once
 #ifndef MODEL_H_
 #define MODEL_H_
+/* Winsock2 Includes */
+#ifdef WIN32
+#include <WS2tcpip.h>	//Needed for InetPton
+#include <Windows.h>
+
+#include <sys/types.h>
+#include <Winsock2.h>
+#include <tchar.h>		//Needed for _T
+#include <string>
+#include <iostream>
+
+#pragma comment(lib, "Ws2_32.lib")
+#define WINSOCKVERSION MAKEWORD(2,2 ) 
+#endif
+
+struct sockaddr_in servAddr;
+struct sockaddr_in localAddr;
+
 
 /* C/C++ Includes */
 #include <stdlib.h>
@@ -25,12 +43,35 @@
 #include "config.h"
 #include "debugger.h"
 #include "types.h"
-#include "model_simulation.h"
-#include "signal_analysis.h"
 
-namespace odeint = boost::numeric::odeint;
-void model_error_exit(std::string error_msg, int line = __LINE__, std::string file = __FILE__);
-bool dim_assert(size_t row_act, size_t row_exp, size_t col_act, size_t col_exp);
 
+class NN_TCPModel : public NN_ModelBase
+{
+public:
+	/* Copy Constructor */
+	NN_TCPModel(const NN_ModelBase_sPtr& base)
+	{
+
+	}
+
+	NN_TCPModel(std::string host_ip, uint32_t port, uint32_t bufferSize)
+	{
+
+	}
+
+
+	void setup() override;
+	void openConnection();
+	void closeConnection();
+
+
+
+
+private:
+	std::string host;
+	uint32_t port;
+
+};
+typedef boost::shared_ptr<NN_TCPModel> NN_TCPModel_sPtr;
 
 #endif /* !MODEL_H_ */
