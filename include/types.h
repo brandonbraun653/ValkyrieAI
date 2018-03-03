@@ -379,7 +379,7 @@ typedef boost::shared_ptr<SS_NLTIVModel> SS_NLTIVModel_sPtr;
 class NN_ModelBase
 {
 public:
-	virtual void setup() = 0;
+	virtual int initialize() = 0;
 
 	virtual ~NN_ModelBase() = default;
 };

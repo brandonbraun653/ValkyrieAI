@@ -65,6 +65,13 @@ void ValkyrieEngine::initialize(const FCSOptimizer_Handle& optimizer)
 
 void ValkyrieEngine::start(const FCSOptimizer_Handle& optimizer)
 {
+	/* Start up the TCP connection before continuing */
+	if (optimizer->Init.solverParam.modelType == GA_MODEL_NEURAL_NETWORK)
+	{
+		NN_TCPModel_sPtr nn_model = boost::dynamic_pointer_cast<NN_TCPModel, NN_ModelBase>(optimizer->Init.neuralNetModel);
+		nn_model->openConnection();
+	}
+
 	int command = START;
 	optimizer->CommandQueue->try_send(&command, sizeof(command), 0);
 }

@@ -69,9 +69,64 @@ void StateSpaceEvaluator::evaluate(const StateSpaceModelInput input, StateSpaceM
 *-----------------------------------------------*/
 void NeuralNetworkEvaluator::evaluate(const NeuralNetworkModelInput input, NeuralNetworkModelOutput& output)
 {
-	//This should just pass in the relevant data to the referenced model
-	//and then call the model's simulation function......so this thing is pretty much just a wrapper.
+	/* For now assume that we are only using the TCP model type */
+	//TODO: Version3, change this to an actual input parameter
+	NN_TCPModel_sPtr nn_model = boost::dynamic_pointer_cast<NN_TCPModel, NN_ModelBase>(input.model);
+	
 
-	//Going to need to get the type so we can cast correctly back to the child...make sure this is
-	//an input parameter 
+	/* Fill in the input data */
+	SimCommand cmd;
+
+	switch (input.simulationType)
+	{
+	case IMPULSE:
+		cmd.simType = "impulse";
+	case STEP:
+		cmd.simType = "step";
+		break;
+	case RAMP:
+		cmd.simType = "ramp";
+		break;
+	case QUADRATIC:
+		cmd.simType = "quadratic";
+		break;
+	case CUSTOM:
+		cmd.simType = "custom";
+		break;
+	default:
+		throw std::runtime_error("No known simulation input type. Gonna crash now.");
+	}
+
+	cmd.axis = "pitch"; //TODO: Need to create as a parameter in init_struct perhaps 
+	cmd.numTimeSteps = (int)floor((input.endTime - input.startTime) / input.dt);
+	cmd.dt = (float)input.dt;
+	cmd.start_time = (float)input.startTime;
+	cmd.end_time = (float)input.endTime;
+	cmd.stepMagnitude = (float)input.step_magnitude;
+	cmd.angle_kp = (float)input.pid.Kp;
+	cmd.angle_ki = (float)input.pid.Ki;
+	cmd.angle_kd = (float)input.pid.Kd;
+
+	std::string cmd_str = parseStruct(cmd);
+
+	/* Send it off to the python code via TCP */
+	nn_model->send_data(cmd_str);
+
+	/* Block until we get some results back */
+	SimResults results = parseResults(nn_model->recv_data());
+
+	/* Fill in the output struct with the gathered data */
+	StepPerformance_sPtr stepData = boost::make_shared<StepPerformance>();
+
+	stepData->pidValues = input.pid;
+	stepData->percentOvershoot_performance	= (isnan(results.overshoot) ? -1.0f : results.overshoot);
+	stepData->riseTime_performance			= (isnan(results.riseTime) ? -1.0f : results.riseTime);
+	stepData->settlingTime_performance		= (isnan(results.settlingTime) ? -1.0f : results.settlingTime);
+	
+	//Return the full data output and look at the last value?
+	//stepData->steadyStateError_performance = results.
+
+	//TODO: I need the full data!!!! both time and magnitude!! yikes that is a lot.
+
+	output.stepPerformance = stepData;
 }

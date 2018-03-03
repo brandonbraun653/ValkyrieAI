@@ -22,12 +22,9 @@
 /* ValkyrieAI Includes */
 #include "config.h"
 #include "types.h"
+#include "model.h"
 #include "model_simulation.h"
 #include "signal_analysis.h"
-
-//Probably should include this here?...
-//#include "model.h"
-
 
 struct StateSpaceModelInput
 {
@@ -58,7 +55,9 @@ struct NeuralNetworkModelInput
 	GA_PIDChromosome<double> pid;			/* Specific PID values to use in the simulation */
 
 	NN_ModelBase_sPtr model;
+	ModelSimulationType simulationType;
 
+	float step_magnitude = 0.0;
 };
 
 struct NeuralNetworkModelOutput

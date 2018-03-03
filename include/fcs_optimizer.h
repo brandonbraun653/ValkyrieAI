@@ -90,7 +90,7 @@ struct FCSOptimizer_Init_t
 
 	SS_ModelBase_sPtr stateSpaceModel;						/* Possible reference to a State Space Model implementation. Leave empty if unused. */
 
-	//NNModel_sPtr neuralNetModel;							/* Possible reference to a TensorFlow Neural Network Graph. Leave empty if unused.  */
+	NN_ModelBase_sPtr neuralNetModel;						/* Possible reference to a TensorFlow Neural Network Graph. Leave empty if unused.  */
 
 	ControlResponseJargon responseFeel;						/* A non-engineering way of describing how the tuner should optimize */
 

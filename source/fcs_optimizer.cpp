@@ -96,16 +96,26 @@ void FCSOptimizer::run()
 	#if (FCS_TRACE_EXECUTION_TIME == 1)
 	auto start = boost::chrono::high_resolution_clock::now();
 	#endif
-
-	std::cout << "Hello from thread " << boost::this_thread::get_id() << "!" << std::endl;
-	
 	//Do some initialization here 
+	refreshCounter = settings.advConvergenceParam.iterations_before_refresh;
 	unsigned int commandPriority;
 	message_queue::size_type received_size;
 	int externCmd;
+	bool beginExecution = false;
 
-	refreshCounter = settings.advConvergenceParam.iterations_before_refresh;
-
+	while (!beginExecution) {
+		if (commandQueue->try_receive(&externCmd, sizeof(externCmd), received_size, commandPriority))
+		{
+			if (externCmd == START)
+			{
+				std::cout << "STARTING TUNER" << std::endl;
+				beginExecution = true;
+				break;
+			}
+		}
+		Sleep(1000);
+	}
+	std::cout << "Hello from thread " << boost::this_thread::get_id() << "!" << std::endl;
 
 	/* Generate the first population */
 	evaluateModel(parents);
@@ -233,13 +243,14 @@ void FCSOptimizer::init(FCSOptimizer_Init_t initializationSettings)
 	/*-----------------------------
 	* Order specific initialization sequence 
 	*----------------------------*/
-	initMemory();			/* Allocate container sizes before algorithm begins */
-	initRNG();				/* Make sure the RNG is setup and well warmed up before use */
-	initModel();			/* Call the specific model initializer */
-	initPopulation();		/* Set up the initial population */
+	initMemory();			/* 1. Allocate container sizes before algorithm begins */
+	initRNG();				/* 2. Makes sure the RNG is well warmed up before use */
+	initModel();			/* 3. Call the specific model initializer */
+	initPopulation();		/* 4. Set up the initial population */
 	initStatistics();
 
 	//TODO: Set up the intelligent strategy selection engine here
+	std::cout << "You still haven't set up the intelligent selection strategy engine yet." << std::endl;
 	currentSolverParam = settings.solverParam;
 
 
@@ -380,9 +391,17 @@ void FCSOptimizer::initRNG()
 void FCSOptimizer::initModel()
 {
 	/* State Space Model */
-	
+	if (settings.solverParam.modelType == GA_MODEL_STATE_SPACE)
+	{
+		//Currently doesn't have an init function to call...probably should change that.
+	}
 
 	/* Neural Network Model */
+	if (settings.solverParam.modelType == GA_MODEL_NEURAL_NETWORK)
+	{
+		if (settings.neuralNetModel->initialize() != 1)
+			throw std::runtime_error("TCP Initialization Failed");
+	}
 }
 
 void FCSOptimizer::initPopulation()
@@ -448,8 +467,6 @@ void FCSOptimizer::evaluateModel(PopulationType& population)
 		switch (modelType)
 		{
 		case GA_MODEL_STATE_SPACE:
-			//TODO: refactor this ridiculous "runtimeStep"...I forgot what it meant and
-			// didn't understand at a glance
 			runtimeStep.evaluateModelInstances[modelType] = boost::make_shared<StateSpaceEvaluator>();
 			break;
 
@@ -507,6 +524,32 @@ void FCSOptimizer::evaluateModel(PopulationType& population)
 	
 	else if (modelType == GA_MODEL_NEURAL_NETWORK)
 	{
+		NeuralNetworkModelInput input;
+		NeuralNetworkModelOutput output;
+
+		/* Simulation time constraints */
+		input.dt = 0.01;			//TODO: Replace with un-hardcoded version
+		input.startTime = 0.0;
+		input.endTime = 1.5;
+
+		/* Simulation Model */
+		//TODO: for version 3 of the software, add actual step struct with various parameters and conversion methods
+		//ie convert to string, matrix, etc.
+		input.simulationType = STEP;
+		input.step_magnitude = 10.0;
+		input.model = settings.neuralNetModel;
+
+		//TODO: This is extremely similar to the above loop. Probably could combine it easily.
+		for (int member = 0; member < settings.advConvergenceParam.populationSize; member++)
+		{
+			/* Swap out the PID values and simulate */
+			input.pid = population[member].dChrom;
+			runtimeStep.evaluateModelInstances[modelType]->evaluate(input, output);
+
+			/* Pass on the resulting data to the optimizer's record of everything */
+			population[member].modelType = modelType;
+			population[member].evaluationPerformance.stepPerformanceData = output.stepPerformance;
+		}
 	} 
 }
 

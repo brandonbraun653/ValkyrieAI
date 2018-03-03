@@ -1,5 +1,5 @@
-#pragma comment(linker, "/STACK:5000000")
-#pragma comment(linker, "/HEAP:5000000")
+// #pragma comment(linker, "/STACK:5000000")
+// #pragma comment(linker, "/HEAP:5000000")
 
 #include <stdlib.h>
 #include <iostream>
@@ -86,12 +86,21 @@ int main()
 	initStruct.stateSpaceModel = boost::dynamic_pointer_cast<SS_ModelBase, SS_NLTIVModel>(model);
 	initStruct.solverParam.modelType = GA_MODEL_STATE_SPACE;
 
+
+	std::string ip_addr = "127.0.0.1";
+	int port = 50007;
+	NN_TCPModel_sPtr nn_model = boost::make_shared<NN_TCPModel>(ip_addr, port);
+	initStruct.neuralNetModel = boost::dynamic_pointer_cast<NN_ModelBase, NN_TCPModel>(nn_model);
+	initStruct.solverParam.modelType = GA_MODEL_NEURAL_NETWORK;
+
+
 	/*-----------------------------
 	* RUN
 	*----------------------------*/
 	FCSOptimizer_Handle hRollTuner = DroneTuner.newOptimizer(initStruct);
 
 	DroneTuner.initialize(hRollTuner);
+
 	DroneTuner.start(hRollTuner);
 
 	DroneTuner.waitForCompletion();
