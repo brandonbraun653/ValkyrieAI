@@ -33,7 +33,7 @@ SimResults parseResults(std::string& results)
 	/* Finds the end of the return data using '\n' as the delimiter*/
 	std::string data = results.substr(0, results.find("\n"));
 
-	std::vector<std::string> values = splitString(data, ',');
+	std::vector<std::string> values = splitString2String(data, ',');
 
 	output.riseTime = stof(values[0]);
 	output.settlingTime = stof(values[1]);
@@ -47,7 +47,10 @@ SimResults parseResults(std::string& results)
 	return output;
 }
 
-std::vector<std::string> splitString(const std::string& s, char delimiter)
+// Eventually, build a template version like this:
+// https://gist.github.com/mark-d-holmberg/862733 
+
+std::vector<std::string> splitString2String(const std::string& s, char delimiter)
 {
 	std::stringstream ss(s);
 	std::string item;
@@ -55,6 +58,26 @@ std::vector<std::string> splitString(const std::string& s, char delimiter)
 
 	while (std::getline(ss, item, delimiter))
 		tokens.push_back(item);
+
+	return tokens;
+}
+
+boost::container::vector<double> splitString2Double(const std::string& str, char delimiter)
+{
+	std::stringstream ss(str);
+	std::string item;
+	double value;
+	boost::container::vector<double> tokens;
+	tokens.resize(str.size());
+
+	int index = 0;
+	while (std::getline(ss, item, delimiter))
+	{
+		value = std::stod(item);
+		tokens[index] = value;
+		++index;
+	}
+		
 
 	return tokens;
 }
@@ -70,22 +93,32 @@ int NN_TCPModel::initialize()
 	servAddr.sin_family = AF_INET;
 	servAddr.sin_port = htons(PORT);
 
-	/* Conversion of the HOST ip into the weird LPCWSTR type:
-	https://stackoverflow.com/questions/27220/how-to-convert-stdstring-to-lpcwstr-in-c-unicode */
-	std::wstring stemp = std::wstring(HOST.begin(), HOST.end());
-	LPCWSTR sw = stemp.c_str();
-
-	InetPton(AF_INET, sw, &servAddr.sin_addr.s_addr);
+	
+	InetPton(AF_INET, HOST.data(), &servAddr.sin_addr.s_addr);
 
 	// Create socket
 	connectionFd = socket(AF_INET, SOCK_STREAM, 0);
 
-	/* bind any port number */
+	/* Bind any port number */
 	localAddr.sin_family = AF_INET;
 	localAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	localAddr.sin_port = htons(0);
 
 	bind(connectionFd, (struct sockaddr *)&localAddr, sizeof(localAddr));
+
+	/*-----------------------------
+	* Setup the memory mapped file 
+	*-----------------------------*/
+	simFile_Pitch = new SharedMemory;
+
+	simFile_Pitch->Size = 256 * 1024 * sizeof(char);
+	sprintf_s(simFile_Pitch->MapName, "Local\\PitchData");
+
+	if (CreateMemoryMap(simFile_Pitch))
+	{
+		simFile_Pitch->valid = true;
+		memset(simFile_Pitch->pData, 0, simFile_Pitch->Size);
+	}
 
 	return 1;
 }
@@ -134,4 +167,32 @@ std::string NN_TCPModel::recv_data(int length)
 	std::string recv_buffer = buffer;
 
 	return recv_buffer;
+}
+
+bool NN_TCPModel::CreateMemoryMap(SharedMemory* shm)
+{
+	if ((shm->hFileMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, shm->Size, shm->MapName)) == NULL)
+		return false;
+
+	if ((shm->pData = MapViewOfFile(shm->hFileMap, FILE_MAP_ALL_ACCESS, 0, 0, shm->Size)) == NULL)
+	{
+		CloseHandle(shm->hFileMap);
+		return false;
+	}
+	return true;
+}
+
+bool NN_TCPModel::FreeMemoryMap(SharedMemory* shm)
+{
+	if (shm && shm->hFileMap)
+	{
+		if (shm->pData)
+			UnmapViewOfFile(shm->pData);
+
+		if (shm->hFileMap)
+			CloseHandle(shm->hFileMap);
+
+		return true;
+	}
+	return false;
 }

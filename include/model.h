@@ -10,11 +10,11 @@ properties page. */
 #error Please define "WIN32_LEAN_AND_MEAN" in the project preprocessor settings
 #endif
 
+#include <Winsock2.h>
 #include <WS2tcpip.h>	//Needed for InetPton
 #include <Windows.h>
 
 #include <sys/types.h>
-#include <Winsock2.h>
 #include <tchar.h>		//Needed for _T
 #include <string>
 
@@ -37,7 +37,6 @@ properties page. */
 #include "config.h"
 #include "debugger.h"
 #include "types.h"
-
 
 struct SimCommand
 {
@@ -75,16 +74,20 @@ struct SimResults
 
 extern std::string parseStruct(SimCommand& input);
 extern SimResults parseResults(std::string& results);
-extern std::vector<std::string> splitString(const std::string& s, char delimiter);
+extern std::vector<std::string> splitString2String(const std::string& s, char delimiter);
+extern boost::container::vector<double> splitString2Double(const std::string& str, char delimiter);
 
 class NN_TCPModel : public NN_ModelBase
 {
 public:
-	/* Copy Constructor */
-	NN_TCPModel(const NN_ModelBase_sPtr& base)
+	typedef struct
 	{
-
-	}
+		void* hFileMap;
+		void* pData;
+		char MapName[256];
+		size_t Size;
+		bool valid = false;
+	} SharedMemory;
 
 	NN_TCPModel(std::string host_ip, uint32_t port)
 	{
@@ -95,6 +98,9 @@ public:
 	~NN_TCPModel()
 	{
 		closeConnection();
+
+		if (simFile_Pitch)
+			FreeMemoryMap(simFile_Pitch);
 	}
 
 	int initialize() override;
@@ -105,17 +111,21 @@ public:
 
 	static const int MAX_BUFFER = 4096;
 
+	SharedMemory* simFile_Pitch = nullptr;
+
 private:
 	bool connectionOpen = false;
 	char buffer[MAX_BUFFER + 1];
-
 	std::string HOST;
 	uint32_t PORT;
-
 	int connectionFd;
 
 	struct sockaddr_in servAddr;
 	struct sockaddr_in localAddr;
+
+	
+	bool CreateMemoryMap(SharedMemory* shm);
+	bool FreeMemoryMap(SharedMemory* shm);
 };
 typedef boost::shared_ptr<NN_TCPModel> NN_TCPModel_sPtr;
 

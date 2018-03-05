@@ -9,7 +9,6 @@
 #include "valkyrie_engine.h"
 
 
-
 int main()
 {
 	ValkyrieEngine DroneTuner;

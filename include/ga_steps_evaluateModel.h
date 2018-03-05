@@ -13,6 +13,7 @@
 #include <boost/chrono.hpp>
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/container/vector.hpp>
 
 /* Local Includes */
 
