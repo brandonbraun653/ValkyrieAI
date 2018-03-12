@@ -406,8 +406,11 @@ void FCSOptimizer::initModel()
 	/* Matlab Model */
 	if (settings.solverParam.modelType == GA_MODEL_MATLAB)
 	{
+		std::cout << "Initializing Matlab Model...";
 		if (settings.matlabModel->initialize() != 1)
 			throw std::runtime_error("Matlab model failed to start/initialize correctly");
+
+		std::cout << "Done" << std::endl;
 	}
 }
 
@@ -584,10 +587,12 @@ void FCSOptimizer::evaluateModel(PopulationType& population)
 		input[0]["endTime"] = model->factory.createScalar<double>(10.0);
 		input[0]["axis"] = model->factory.createCharArray("pitch");
 		input[0]["stepMagnitude"] = model->factory.createScalar<double>(10.0);
-		input[0]["stepEnable"] = model->factory.createScalar<double>(2.0);
+		input[0]["stepEnable"] = model->factory.createScalar<double>(0.1);
 
 		for (int member = 0; member < settings.advConvergenceParam.populationSize; member++)
 		{
+			std::cout << "Starting simulation of member " << member << " of " << settings.advConvergenceParam.populationSize << "...";
+
 			input[0]["Kp"] = model->factory.createScalar<double>(population[member].dChrom.Kp);
 			input[0]["Ki"] = model->factory.createScalar<double>(population[member].dChrom.Ki);
 			input[0]["Kd"] = model->factory.createScalar<double>(population[member].dChrom.Kd);
@@ -615,6 +620,8 @@ void FCSOptimizer::evaluateModel(PopulationType& population)
 			/* Pass the results on to the population logs */
 			population[member].modelType = modelType;
 			population[member].evaluationPerformance.stepPerformanceData = results;
+			
+			std::cout << "Done" << std::endl;
 		}
 	}
 	else

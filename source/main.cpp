@@ -67,8 +67,8 @@ int main()
 	* ADVANCED PARAMETER SETTINGS
 	*----------------------------*/
 	initStruct.advConvergenceParam.iterations_before_refresh = 5;
-	initStruct.advConvergenceParam.populationSize = 50;
-	initStruct.advConvergenceParam.generationLimit = 500;
+	initStruct.advConvergenceParam.populationSize = 10;
+	initStruct.advConvergenceParam.generationLimit = 15;
 	initStruct.advConvergenceParam.limitingBehavior = FCS_LIMITER_REGENERATE_CHROMOSOME;
 
 	/*-----------------------------

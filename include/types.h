@@ -436,12 +436,12 @@ struct StepPerformance
 	GA_PIDChromosome<double> pidValues = { -1.0, -1.0, -1.0 };	/* PID Values that gave below performance metrics */
 	Eigen::MatrixXd data;										/* Raw data that gave below performance metrics */
 
-	double percentOvershoot_performance = -1.0;					/* Units: none, percentage */
-	double steadyStateError_performance = -1.0;					/* Units: none, absolute */
-	double delta_overshoot_performance = -1.0;					/* Units: none, absolute */
-	double settlingTime_performance = -1.0;						/* Units: seconds */
-	double riseTime_performance = -1.0;							/* Units: seconds */
-	double steadyStateValue_performance = -1.0;					/* Units: user defined by problem */
+	double percentOvershoot_performance = -1.0;					/* Describes percent overshoot of signal in 0-100 range, for example: 10.324%, NOT 0.10324*/
+	double steadyStateError_performance = -1.0;					/* Error of the settled signal - the expected value*/
+	double delta_overshoot_performance = -1.0;					/* Not used, ignore */
+	double settlingTime_performance = -1.0;						/* Time in seconds to for the signal to settle to 2% of final value */
+	double riseTime_performance = -1.0;							/* Time in seconds for signal to traverse 10%-90% of final value */
+	double steadyStateValue_performance = -1.0;					/* Final value settled to by the signal */
 			
 			
 	double settlingPcntRange = 0.0;								/* Percent range around final value that determines if a signal has settled */

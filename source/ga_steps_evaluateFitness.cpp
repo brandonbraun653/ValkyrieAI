@@ -8,6 +8,9 @@
 *-----------------------------------------------*/
 void WeightedSum::evaluateFitness(const GA_EvaluateFitnessDataInput input, GA_EvaluateFitnessDataOutput& output)
 {
+	//Note: If getting nan errors from this function, make sure -ffast-math isn't enabled
+	//https://stackoverflow.com/questions/3596622/negative-nan-is-not-a-nan 
+
 	PID_FitnessScores localFit;
 
 	/* Copy in the performance metrics for easier reading */
@@ -41,9 +44,13 @@ void WeightedSum::evaluateFitness(const GA_EvaluateFitnessDataInput input, GA_Ev
 		if (POS == 0.0)
 		{
 			/* Give partial credit for achieving this. It means that the simulation is more
-			or less an overdamped system that may or may not have properly converged. This value
+			or less an over damped system that may or may not have properly converged. This value
 			is arbitrarily chosen.*/
-			localFit.fitness_POS = 0.25;
+			localFit.fitness_POS = 0.1;
+		}
+		else if (isnan(POS))
+		{
+			localFit.fitness_POS = 0.0;
 		}
 		else
 		{
@@ -87,7 +94,11 @@ void WeightedSum::evaluateFitness(const GA_EvaluateFitnessDataInput input, GA_Ev
 		if (TS == 0.0)
 		{
 			/* Same reasoning as POS is used here. */
-			localFit.fitness_TS = 0.25;
+			localFit.fitness_TS = 0.1;
+		}
+		else if (isnan(TS))
+		{
+			localFit.fitness_TS = 0.0;
 		}
 		else
 		{
@@ -120,17 +131,25 @@ void WeightedSum::evaluateFitness(const GA_EvaluateFitnessDataInput input, GA_Ev
 			std::cout << "You forgot to define a rise time goal tolerance." << std::endl;
 		#endif
 
-		error = TR - input.goals.riseTime_goal;
-		abs_pct_error = abs(error) / input.goals.riseTime_goal;
-
-		if (error <= 0.0 || abs_pct_error < input.tolerance.riseTime_pcntTol)
-			localFit.fitness_TR = perfect_fit_val;
-
+		if (isnan(TR))
+		{
+			localFit.fitness_TR = 0.0;
+		}	
 		else
 		{
-			abs_error = abs_pct_error*input.goals.riseTime_goal;
-			localFit.fitness_TR = perfect_fit_val*exp(-1.0*abs_error);
+			error = TR - input.goals.riseTime_goal;
+			abs_pct_error = abs(error) / input.goals.riseTime_goal;
+
+			if (error <= 0.0 || abs_pct_error < input.tolerance.riseTime_pcntTol)
+				localFit.fitness_TR = perfect_fit_val;
+
+			else
+			{
+				abs_error = abs_pct_error * input.goals.riseTime_goal;
+				localFit.fitness_TR = perfect_fit_val * exp(-1.0*abs_error);
+			}
 		}
+		
 		localFit.fitness_total += localFit.fitness_TR;
 	}
 
@@ -144,25 +163,33 @@ void WeightedSum::evaluateFitness(const GA_EvaluateFitnessDataInput input, GA_Ev
 			std::cout << "You forgot to define a steady state error goal." << std::endl;
 
 		if (input.tolerance.steadyStateError_pcntTol == 0.0)
-			std::cout << "You forgot to define a stready stater error goal tolerance." << std::endl;
+			std::cout << "You forgot to define a steady stater error goal tolerance." << std::endl;
 		#endif 
 
-		error = abs(SSERR) - input.goals.steadyStateError_goal;
-		abs_pct_error = abs(error) / input.goals.steadyStateError_goal;
-
-		if (error <= 0.0 || abs_pct_error < input.tolerance.steadyStateError_pcntTol)
-			localFit.fitness_SSER = perfect_fit_val;
-
+		if (isnan(SSERR))
+		{
+			localFit.fitness_SSER = 0.0;
+		}
 		else
 		{
-			abs_error = abs_pct_error*input.goals.steadyStateError_goal;
+			error = abs(SSERR) - input.goals.steadyStateError_goal;
+			abs_pct_error = abs(error) / input.goals.steadyStateError_goal;
 
-			/* The value is shifted here to enforce a harsher penalty on a solution that
-			does not quite hit the steady state error goal & tolerance. It was found
-			that without shifting, the converged solution would routinely exhibit too
-			large of an error. */
-			localFit.fitness_SSER = perfect_fit_val*exp(-1.0*(abs_error + 0.65));
+			if (error <= 0.0 || abs_pct_error < input.tolerance.steadyStateError_pcntTol)
+				localFit.fitness_SSER = perfect_fit_val;
+
+			else
+			{
+				abs_error = abs_pct_error * input.goals.steadyStateError_goal;
+
+				/* The value is shifted here to enforce a harsher penalty on a solution that
+				does not quite hit the steady state error goal & tolerance. It was found
+				that without shifting, the converged solution would routinely exhibit too
+				large of an error. */
+				localFit.fitness_SSER = perfect_fit_val * exp(-1.0*(abs_error + 0.65));
+			}
 		}
+
 		localFit.fitness_total += localFit.fitness_SSER;
 	}
 
