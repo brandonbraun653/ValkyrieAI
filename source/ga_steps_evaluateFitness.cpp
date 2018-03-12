@@ -48,7 +48,7 @@ void WeightedSum::evaluateFitness(const GA_EvaluateFitnessDataInput input, GA_Ev
 		else
 		{
 			#ifdef DEBUGGING_ENABLED
-			double maxVal = input.simulationData.maxCoeff();
+			//double maxVal = input.simulationData.maxCoeff();
 			#endif
 
 			// I guess this can represent percent undershoot as well...

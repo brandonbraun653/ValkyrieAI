@@ -1,5 +1,8 @@
 #include "model.h"
  
+
+
+#if defined(_WIN32) && !defined(_WIN64)
 const int CONNECT_RETRY_MAX = 100;
 
 std::string parseStruct(SimCommand& input)
@@ -77,11 +80,10 @@ boost::container::vector<double> splitString2Double(const std::string& str, char
 		tokens[index] = value;
 		++index;
 	}
-		
+
 
 	return tokens;
 }
-
 
 int NN_TCPModel::initialize()
 {
@@ -195,4 +197,41 @@ bool NN_TCPModel::FreeMemoryMap(SharedMemory* shm)
 		return true;
 	}
 	return false;
+}
+#endif
+
+int MatlabModel::initialize()
+{
+	if (!this->start())
+		return 0;
+
+	if (!root_path.empty())
+		this->addPath(root_path);
+
+	if (!init_path.empty())
+	{
+		/* I don't need a configuration option, but the Matlab API doesn't let you call
+		functions with zero arguments. */
+		auto configOption = factory.createScalar<int>(0);
+		auto result = matlabPtr->feval(matlab::engine::convertUTF8StringToUTF16String(init_path), configOption);
+
+		return (int)result[0];
+	}
+	else
+		return 0;
+}
+
+void MatlabModel::setModelRoot(const std::string path)
+{
+	root_path = path;
+}
+
+void MatlabModel::setModelFunction(const std::string path)
+{
+	model_path = path;
+}
+
+void MatlabModel::setInitFunction(const std::string path)
+{
+	init_path = path;
 }

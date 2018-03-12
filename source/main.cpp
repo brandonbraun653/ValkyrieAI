@@ -74,23 +74,32 @@ int main()
 	/*-----------------------------
 	* SIMULATION MODEL
 	*----------------------------*/
-	SS_NLTIVModel_sPtr model = boost::make_shared<SS_NLTIVModel>(1, 1, 2);
-	model->A << -8.202, -2.029, -0.149, -3.25;
-	model->B << 1.14, -1.23;
-	model->C << 1.0, 0.0;
-	model->D << 0.0;
-	model->X0 << 0.0, 0.0;
+// 	SS_NLTIVModel_sPtr model = boost::make_shared<SS_NLTIVModel>(1, 1, 2);
+// 	model->A << -8.202, -2.029, -0.149, -3.25;
+// 	model->B << 1.14, -1.23;
+// 	model->C << 1.0, 0.0;
+// 	model->D << 0.0;
+// 	model->X0 << 0.0, 0.0;
+// 
+// 	//Testing: Purposefully cast back to the base class for abstraction into the model simulation method
+// 	initStruct.stateSpaceModel = boost::dynamic_pointer_cast<SS_ModelBase, SS_NLTIVModel>(model);
+// 	initStruct.solverParam.modelType = GA_MODEL_STATE_SPACE;
 
-	//Testing: Purposefully cast back to the base class for abstraction into the model simulation method
-	initStruct.stateSpaceModel = boost::dynamic_pointer_cast<SS_ModelBase, SS_NLTIVModel>(model);
-	initStruct.solverParam.modelType = GA_MODEL_STATE_SPACE;
 
+// 	std::string ip_addr = "127.0.0.1";
+// 	int port = 50007;
+// 	NN_TCPModel_sPtr nn_model = boost::make_shared<NN_TCPModel>(ip_addr, port);
+// 	initStruct.neuralNetModel = boost::dynamic_pointer_cast<NN_ModelBase, NN_TCPModel>(nn_model);
+// 	initStruct.solverParam.modelType = GA_MODEL_NEURAL_NETWORK;
 
-	std::string ip_addr = "127.0.0.1";
-	int port = 50007;
-	NN_TCPModel_sPtr nn_model = boost::make_shared<NN_TCPModel>(ip_addr, port);
-	initStruct.neuralNetModel = boost::dynamic_pointer_cast<NN_ModelBase, NN_TCPModel>(nn_model);
-	initStruct.solverParam.modelType = GA_MODEL_NEURAL_NETWORK;
+	MatlabModel_sPtr model = boost::make_shared<MatlabModel>();
+	model->setModelRoot("C:\\git\\GitHub\\ValkyrieAI\\Matlab");
+	model->setInitFunction("quad_initialization");
+	model->setModelFunction("quad_simulation");
+	
+
+	initStruct.matlabModel = boost::dynamic_pointer_cast<ML_ModelBase, MatlabModel>(model);
+	initStruct.solverParam.modelType = GA_MODEL_MATLAB;
 
 
 	/*-----------------------------

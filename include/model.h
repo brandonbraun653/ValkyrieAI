@@ -5,7 +5,7 @@
 /* If there are build errors about winsock redefinitions, make sure
 to in include the WIN32_LEAN_AND_MEAN macro in the project preprocessor
 properties page. */
-#ifdef WIN32
+#if defined(_WIN32) && !defined(_WIN64)
 #ifndef WIN32_LEAN_AND_MEAN
 #error Please define "WIN32_LEAN_AND_MEAN" in the project preprocessor settings
 #endif
@@ -37,6 +37,7 @@ properties page. */
 #include "config.h"
 #include "debugger.h"
 #include "types.h"
+#include "matlab.h"
 
 struct SimCommand
 {
@@ -71,11 +72,12 @@ struct SimResults
 	float peakTime = 0.0;
 };
 
-
+#if defined(_WIN32) && !defined(_WIN64)
 extern std::string parseStruct(SimCommand& input);
 extern SimResults parseResults(std::string& results);
 extern std::vector<std::string> splitString2String(const std::string& s, char delimiter);
 extern boost::container::vector<double> splitString2Double(const std::string& str, char delimiter);
+
 
 class NN_TCPModel : public NN_ModelBase
 {
@@ -128,5 +130,37 @@ private:
 	bool FreeMemoryMap(SharedMemory* shm);
 };
 typedef boost::shared_ptr<NN_TCPModel> NN_TCPModel_sPtr;
+#endif
+
+class MatlabModel : public MatlabSession, public ML_ModelBase
+{
+public:
+	int initialize() override;
+
+	void setModelRoot(const std::string path);
+	void setModelFunction(const std::string path);
+	void setInitFunction(const std::string path);
+
+// 	template<typename argOut, typename argIn>
+// 	argOut eval(argIn input, size_t numArgsReturned=1)
+// 	{
+// 		return matlabPtr->feval(matlab::engine::convertUTF8StringToUTF16String(model_path), numArgsReturned, input);
+// 	}
+
+	MatlabModel() = default;
+	~MatlabModel() = default;
+
+	/* Used to create data types for model I/O */
+	matlab::data::ArrayFactory factory;
+	std::string model_path = "";
+
+private:
+	std::string root_path = "";
+	
+	std::string init_path = "";
+
+	
+};
+typedef boost::shared_ptr<MatlabModel> MatlabModel_sPtr;
 
 #endif /* !MODEL_H_ */

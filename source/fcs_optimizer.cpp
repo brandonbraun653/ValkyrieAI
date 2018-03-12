@@ -329,7 +329,7 @@ void FCSOptimizer::initRNG()
 	found in the available time frame.
 	*/
 
-	std::cout << "Initializing the RNG Engines with time based seed..." << std::endl;
+	std::cout << "Initializing the RNG Engines with time based seed...";
 
 	if (settings.solverParam.rngDistribution == GA_DISTRIBUTION_UNIFORM_REAL)
 	{
@@ -401,6 +401,13 @@ void FCSOptimizer::initModel()
 	{
 		if (settings.neuralNetModel->initialize() != 1)
 			throw std::runtime_error("TCP Initialization Failed");
+	}
+
+	/* Matlab Model */
+	if (settings.solverParam.modelType == GA_MODEL_MATLAB)
+	{
+		if (settings.matlabModel->initialize() != 1)
+			throw std::runtime_error("Matlab model failed to start/initialize correctly");
 	}
 }
 
@@ -474,6 +481,10 @@ void FCSOptimizer::evaluateModel(PopulationType& population)
 			runtimeStep.evaluateModelInstances[modelType] = boost::make_shared<NeuralNetworkEvaluator>();
 			break;
 
+		case GA_MODEL_MATLAB:
+			//Do nothing because no evaluator atm.
+			break;
+
 		//Add more as needed here
 		default:
 			std::cout << "Evaluation model not configured or is unknown. You are about to crash." << std::endl;
@@ -495,17 +506,17 @@ void FCSOptimizer::evaluateModel(PopulationType& population)
 		input.simulationType = STEP;
 		input.model = settings.stateSpaceModel;
 
-		
+
 		//TODO: Enforce machine specific multi threading based on number of logical cores 
 		for (int member = 0; member < settings.advConvergenceParam.populationSize; member++)
 		{
 			/* FUTURE NOTE:
-			When doing the multi threaded version, it probably would be extremely helpful to build 
-			up all the data needed to run the simulation and pass it into a thread that is waiting 
+			When doing the multi threaded version, it probably would be extremely helpful to build
+			up all the data needed to run the simulation and pass it into a thread that is waiting
 			to consume some data and spit out results before sleeping again.
-			
+
 			Create these threads during initialization so that thread allocation and destruction does
-			not consume any runtime resources. There will be as many threads as the number of logical 
+			not consume any runtime resources. There will be as many threads as the number of logical
 			processor cores. */
 
 			/* Swap out the PID values and simulate */
@@ -521,7 +532,6 @@ void FCSOptimizer::evaluateModel(PopulationType& population)
 			population[member].evaluationPerformance.stepPerformanceData = output.stepPerformance;
 		}
 	}
-	
 	else if (modelType == GA_MODEL_NEURAL_NETWORK)
 	{
 		NeuralNetworkModelInput input;
@@ -550,7 +560,65 @@ void FCSOptimizer::evaluateModel(PopulationType& population)
 			population[member].modelType = modelType;
 			population[member].evaluationPerformance.stepPerformanceData = output.stepPerformance;
 		}
-	} 
+	}
+	else if (modelType == GA_MODEL_MATLAB)
+	{
+		using Array = matlab::data::Array;
+
+		MatlabModel_sPtr model = boost::dynamic_pointer_cast<MatlabModel, ML_ModelBase>(settings.matlabModel);
+
+		/* Create the basic format structure to input*/
+		matlab::data::StructArray input = model->factory.createStructArray({ 1, 1 }, {
+			"Kp",
+			"Ki",
+			"Kd",
+			"startTime",
+			"endTime",
+			"axis",
+			"stepMagnitude",
+			"stepEnable"
+			});
+
+		//Fill in the constants that don't change from simulation to simulation
+		input[0]["startTime"] = model->factory.createScalar<double>(0.0);
+		input[0]["endTime"] = model->factory.createScalar<double>(10.0);
+		input[0]["axis"] = model->factory.createCharArray("pitch");
+		input[0]["stepMagnitude"] = model->factory.createScalar<double>(10.0);
+		input[0]["stepEnable"] = model->factory.createScalar<double>(2.0);
+
+		for (int member = 0; member < settings.advConvergenceParam.populationSize; member++)
+		{
+			input[0]["Kp"] = model->factory.createScalar<double>(population[member].dChrom.Kp);
+			input[0]["Ki"] = model->factory.createScalar<double>(population[member].dChrom.Ki);
+			input[0]["Kd"] = model->factory.createScalar<double>(population[member].dChrom.Kd);
+
+
+			/* Simulate with the given parameters */
+			matlab::data::StructArray output = model->matlabPtr->feval(matlab::engine::convertUTF8StringToUTF16String(model->model_path), input);
+
+			//Forced to convert types before usage
+			matlab::data::Array percentOvershoot	= output[0]["percentOvershoot"];
+			matlab::data::Array riseTime			= output[0]["riseTime"];
+			matlab::data::Array settlingTime		= output[0]["settlingTime"];
+			matlab::data::Array steadyStateError	= output[0]["steadyStateError"];
+
+			/* Create a new reference to hold the results */
+			StepPerformance_sPtr results = boost::make_shared<StepPerformance>();
+
+			/* Fill with data */
+			results->pidValues = population[member].dChrom;
+			results->percentOvershoot_performance	= percentOvershoot[0];
+			results->riseTime_performance			= riseTime[0];
+			results->settlingTime_performance		= settlingTime[0];
+			results->steadyStateError_performance	= steadyStateError[0];
+
+			/* Pass the results on to the population logs */
+			population[member].modelType = modelType;
+			population[member].evaluationPerformance.stepPerformanceData = results;
+		}
+	}
+	else
+		throw std::runtime_error("Invalid model type");
 }
 
 void FCSOptimizer::evaluateFitness(PopulationType& population)

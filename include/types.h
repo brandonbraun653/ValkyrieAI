@@ -262,6 +262,7 @@ enum GA_METHOD_ModelEvaluation
 {
 	GA_MODEL_STATE_SPACE,
 	GA_MODEL_NEURAL_NETWORK,
+	GA_MODEL_MATLAB,
 	GA_MODEL_TOTAL_OPTIONS,
 
 	GA_MODEL_STATE_SPACE_MSK = (1u << GA_MODEL_STATE_SPACE),
@@ -384,6 +385,15 @@ public:
 	virtual ~NN_ModelBase() = default;
 };
 typedef boost::shared_ptr<NN_ModelBase> NN_ModelBase_sPtr;
+
+class ML_ModelBase
+{
+public:
+	virtual int initialize() = 0;
+
+	virtual ~ML_ModelBase() = default;
+};
+typedef boost::shared_ptr<ML_ModelBase> ML_ModelBase_sPtr;
 
 /*-----------------------------------------------
 * OUTPUT DATA
