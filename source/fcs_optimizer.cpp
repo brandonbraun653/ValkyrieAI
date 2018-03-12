@@ -585,7 +585,7 @@ void FCSOptimizer::evaluateModel(PopulationType& population)
 		//Fill in the constants that don't change from simulation to simulation
 		input[0]["startTime"] = model->factory.createScalar<double>(0.0);
 		input[0]["endTime"] = model->factory.createScalar<double>(10.0);
-		input[0]["axis"] = model->factory.createCharArray("pitch");
+		input[0]["axis"] = model->factory.createCharArray("roll");
 		input[0]["stepMagnitude"] = model->factory.createScalar<double>(10.0);
 		input[0]["stepEnable"] = model->factory.createScalar<double>(0.1);
 
