@@ -235,3 +235,18 @@ void MatlabModel::setInitFunction(const std::string path)
 {
 	init_path = path;
 }
+
+matlab::data::StructArray MatlabModel::blankInput()
+{
+	return factory.createStructArray({ 1, 1 }, 
+	{
+		"Kp",
+		"Ki",
+		"Kd",
+		"startTime",
+		"endTime",
+		"axis",
+		"stepMagnitude",
+		"stepEnable"
+	});
+}

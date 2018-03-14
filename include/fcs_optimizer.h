@@ -21,6 +21,15 @@
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics.hpp>
 
+/* Eigen Includes */
+#ifndef EIGEN_INITIALIZE_MATRICES_BY_ZERO
+#define EIGEN_INITIALIZE_MATRICES_BY_ZERO
+#endif
+#include "igl/mat_max.h"
+#include "igl/mat_min.h"
+#include "Eigen/Eigen"
+
+
 /* Local Includes */
 #include "config.h"
 #include "ga_steps.h"
@@ -28,6 +37,9 @@
 #include "model.h"
 #include "logger.h"
 #include "types.h"
+
+
+
 
 /* Forward Declarations */
 class FCSOptimizer;
@@ -82,20 +94,28 @@ enum FCSOptimizer_Commands
 *-----------------------------------------------*/
 struct FCSOptimizer_Init_t
 {
+	/*--------- Names ----------*/
+
 	std::string optimizerName;								/* This gives a user friendly name to the optimizer */
 
-	std::string logPath;									/* File to place all logs, regardless of severity */
+	std::string logPath;									/* File to place log dumps */
 
 	std::string resultsPath;								/* Path to directory for results reporting */
 
 	std::string messageQueueName;							/* Name used to create a message queue between the main thread and an optimizer thread */
 
+	
+	/*--------- Models ----------*/
+	
 	SS_ModelBase_sPtr stateSpaceModel;						/* Possible reference to a State Space Model implementation. Leave empty if unused. */
 
 	NN_ModelBase_sPtr neuralNetModel;						/* Possible reference to a TensorFlow Neural Network Graph. Leave empty if unused. */
 
 	ML_ModelBase_sPtr matlabModel;							/* Possible reference to a Matlab Model implementation. Leave empty if unused. */
 
+	
+	/*--------- Settings ----------*/
+	
 	ControlResponseJargon responseFeel;						/* A non-engineering way of describing how the tuner should optimize */
 
 	PID_ControlSettings pidControlSettings;					/* A full engineering description of desired PID controller performance and limitations */
@@ -238,9 +258,24 @@ private:
 
 
 
-	/* Log of best fitness performance data for each generation.
+	/* Log of performance stats for each generation
 	Do not pre-allocate memory as it is "pushed back" to add new data. */
-	boost::container::vector<PID_FitnessScores> fcs_generationalBestFitnessData;
+	struct GenerationalStats
+	{
+		int generationNumber = -1;
+
+		Eigen::MatrixXd rawPerformanceData;		/* [metric x popSize]*/
+		Eigen::MatrixXd rawPIDConstants;		/* [popSize x 3] --> (0,:) == [Kp, Ki, Kd]*/
+
+		Eigen::VectorXd minCoeff;
+		Eigen::VectorXi minIdxs;
+
+		Eigen::VectorXd maxCoeff;
+		Eigen::VectorXi maxIdxs;
+
+		double avgFitness;
+	};
+	boost::container::vector<GenerationalStats> fcs_generationalStats;
 	
 	
 	/*-----------------------------
@@ -262,10 +297,9 @@ private:
 	/*-----------------------------
 	* Primary Algorithm Functions
 	*----------------------------*/
-	void checkConvergence();
+	void checkConvergence(PopulationType& population);
 	void evaluateModel(PopulationType& population);
 	void evaluateFitness(PopulationType& population);
-	void filterPopulation();
 	void selectParents(PopulationType& population);
 	void breedGeneration(PopulationType& population);
 	void mutateGeneration(PopulationType& population);

@@ -70,6 +70,11 @@ FCSOptimizer_Init_t rollTunerVer1_Init()
 	model->setInitFunction("quad_initialization");
 	model->setModelFunction("quad_simulation");
 
+	model->simAxis = "roll";
+	model->endTime = 10.0;
+	model->stepMagnitude = 10.0;
+	model->stepTimeEnable = 0.5;
+
 
 	initStruct.matlabModel = boost::dynamic_pointer_cast<ML_ModelBase, MatlabModel>(model);
 	initStruct.solverParam.modelType = GA_MODEL_MATLAB;
@@ -147,6 +152,11 @@ FCSOptimizer_Init_t pitchTunerVer1_Init()
 	model->setInitFunction("quad_initialization");
 	model->setModelFunction("quad_simulation");
 
+	model->simAxis = "pitch";
+	model->endTime = 10.0;
+	model->stepMagnitude = 10.0;
+	model->stepTimeEnable = 0.5;
+
 
 	initStruct.matlabModel = boost::dynamic_pointer_cast<ML_ModelBase, MatlabModel>(model);
 	initStruct.solverParam.modelType = GA_MODEL_MATLAB;
@@ -223,6 +233,11 @@ FCSOptimizer_Init_t yawTunerVer1_Init()
 	model->setModelRoot("C:\\git\\GitHub\\ValkyrieAI\\Matlab");
 	model->setInitFunction("quad_initialization");
 	model->setModelFunction("quad_simulation");
+
+	model->simAxis = "yaw";
+	model->endTime = 10.0;
+	model->stepMagnitude = 10.0;
+	model->stepTimeEnable = 0.5;
 
 
 	initStruct.matlabModel = boost::dynamic_pointer_cast<ML_ModelBase, MatlabModel>(model);

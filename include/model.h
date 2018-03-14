@@ -141,11 +141,7 @@ public:
 	void setModelFunction(const std::string path);
 	void setInitFunction(const std::string path);
 
-// 	template<typename argOut, typename argIn>
-// 	argOut eval(argIn input, size_t numArgsReturned=1)
-// 	{
-// 		return matlabPtr->feval(matlab::engine::convertUTF8StringToUTF16String(model_path), numArgsReturned, input);
-// 	}
+	matlab::data::StructArray blankInput();
 
 	MatlabModel() = default;
 	~MatlabModel() = default;
@@ -154,9 +150,16 @@ public:
 	matlab::data::ArrayFactory factory;
 	std::string model_path = "";
 
+	/* Simulation Parameters */
+	double startTime = 0.0;
+	double endTime = 5.0;
+	double stepMagnitude = 10.0;
+	double stepTimeEnable = 0.1;
+	std::string simAxis = "";
+
+
 private:
 	std::string root_path = "";
-	
 	std::string init_path = "";
 
 	

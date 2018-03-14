@@ -3,6 +3,21 @@
 #include <iostream>
 #include <fstream>
 
+/* Developer's Notes for Improvements:
+1.	On the next iteration of the software, try abstracting the interface for each of the steps in the 
+	algorithm even further. It's getting quite nasty to have to manually code in the setup and initialization
+	phases of each and every new algorithm approach that is added. This should be easier. Maybe perhaps try
+	adding classes instead and force common functions between them. All "fancy" behaviors should stay contained
+	in the original implementation.
+
+2.	Going off of (1), this actually might prove to be the step needed to generalize solving other kinds of problems.
+
+3.	Perhaps try using templates for the user to define critical data types that get passed around, like PopulationType,
+	ChromosomeType, etc. That could be super useful. That way the input into various classes always get what they expect.
+*/
+
+
+
 using namespace boost::interprocess;
 
 typedef boost::random::uniform_real_distribution<> urd_t;
@@ -129,7 +144,9 @@ void FCSOptimizer::run()
 		*-------------------------------------*/
 		if (commandQueue->try_receive(&externCmd, sizeof(externCmd), received_size, commandPriority))
 		{
-			std::cout << "I received command: " << externCmd << std::endl;
+			#if FILE_LOGGING_ENABLED
+			logNormal("New Command Received:" + std::to_string(externCmd));
+			#endif
 
 			/* Only set a flag here so that the error/message handing section below can take care of 
 			commands from this block as well as commands issued by the core algorithm. */
@@ -162,11 +179,9 @@ void FCSOptimizer::run()
 		{
 			selectParents(parents);								/* Of the current population, select those who will mate */
 
-			breedGeneration(parents);							/* Breed the parents and stores the output as bit-mapped chromosomes that
-																are ready for the mutation stage.*/
+			breedGeneration(parents);							/* Breed the parents and stores the output as bit-mapped chromosomes */
 
-			mutateGeneration(children);							/* Mutate the chromosomes resulting from the breedGeneration step. Output the results
-																into the children population struct. */
+			mutateGeneration(children);							/* Mutate the chromosomes resulting from the breedGeneration step  */
 
 			boundaryCheck(children);							/* Ensure the new children chromosomes fall within the user constraints */
 
@@ -174,10 +189,9 @@ void FCSOptimizer::run()
 
 			evaluateFitness(children);							/* Use recorded performance data from last step to gauge how well it meets user goals */
 
-			parents = sortPopulation(&parents, &children);		/* Given the two populations (parent and child), sort them for the best performers 
-																and select new parents from the top N solutions, where N = user defined population size. */
+			parents = sortPopulation(&parents, &children);		/* Sort for best performers and select top N solutions, where N == population size. */
 
-			checkConvergence();									/* Given the new sorted population, see if we have a "winner" that met user goals sufficiently */
+			checkConvergence(parents);							/* Given the new sorted population, see if we have a "winner" that met user goals sufficiently */
 			
 
 			/* Once the refresh counter reaches zero, the current state of the algorithm will be 
@@ -192,23 +206,32 @@ void FCSOptimizer::run()
 				refreshCounter = settings.advConvergenceParam.iterations_before_refresh;
 				std::cout << "I hit the refresh target!" << std::endl;
 			}
-		} else {
-
-		/*-------------------------------------
-		* Handle errors or external commands
-		*-------------------------------------*/
+		} 
+		else 
+		{
+			/*-------------------------------------
+			* Handle errors or external commands
+			*-------------------------------------*/
 			if (currentStatus == GA_HALT)
 			{
 				#if (CONSOLE_LOGGING_ENABLED == 1)
 				std::cout << "GA Solver was halted. Who knows why." << std::endl;
 				#endif
+
+				#if FILE_LOGGING_ENABLED
+				logNormal("----GA SOLVER HALTED----");
+				#endif
 				break;
 			}
 
-			if (currentStatus == GA_COMPLETE)
+			else if (currentStatus == GA_COMPLETE)
 			{
 				#if (CONSOLE_LOGGING_ENABLED == 1)
 				std::cout << "GA Solver Complete. Exiting Optimizer." << std::endl;
+				#endif
+
+				#if FILE_LOGGING_ENABLED
+				logNormal("----GA SOLVER COMPLETE----");
 				#endif
 				break;
 			}
@@ -243,16 +266,17 @@ void FCSOptimizer::init(FCSOptimizer_Init_t initializationSettings)
 	/*-----------------------------
 	* Order specific initialization sequence 
 	*----------------------------*/
-	initMemory();			/* 1. Allocate container sizes before algorithm begins */
-	initRNG();				/* 2. Makes sure the RNG is well warmed up before use */
-	initModel();			/* 3. Call the specific model initializer */
-	initPopulation();		/* 4. Set up the initial population */
-	initStatistics();
+	logInit(settings.logPath);		/* Set up the logging system */
+	initMemory();					/* Allocate container sizes before algorithm begins */
+	initRNG();						/* Makes sure the RNG is well warmed up before use */
+	initModel();					/* Call the specific model initializer */
+	initPopulation();				/* Set up the initial population */
+	initStatistics();				/* Keep track of performance metrics */
 
 	/*-----------------------------
 	* Non-Order Specific Initializations
 	*----------------------------*/
-	logInit(settings.logPath);	/* Set up the logging system */
+	
 
 
 	//TODO: Set up the intelligent strategy selection engine here
@@ -265,7 +289,9 @@ void FCSOptimizer::init(FCSOptimizer_Init_t initializationSettings)
 	create the main thread's interface after. */
 	try
 	{
+		#if FILE_LOGGING_ENABLED
 		logNormal("Initializing Queue...");
+		#endif
 
 		//Erase the previous message queue if it exists 
 		message_queue::remove(settings.messageQueueName.data());
@@ -277,8 +303,6 @@ void FCSOptimizer::init(FCSOptimizer_Init_t initializationSettings)
 			10,									/* Limit the queue size to 10 */
 			sizeof(int)							/* The queue will hold integers */
 			);
-
-		logNormal("Done");
 	}
 	catch (interprocess_exception &ex)
 	{
@@ -286,8 +310,11 @@ void FCSOptimizer::init(FCSOptimizer_Init_t initializationSettings)
 		std::cout << ex.what() << " in thread " << boost::this_thread::get_id() << std::endl;
 		std::cout << "Unable to properly use the queue. Ignoring all messages from main thread." << std::endl;
 
+		
+		#if FILE_LOGGING_ENABLED
 		logError("Queue Setup Exception:");
 		logError(ex.what());
+		#endif
 	}
 
 	/* After this function exits, the Genetic Algorithm should be ready to go */
@@ -307,6 +334,10 @@ void FCSOptimizer::requestOutput(FCSOptimizer_Output_t& output)
 
 void FCSOptimizer::initMemory()
 {
+	#if FILE_LOGGING_ENABLED
+	logNormal("Initializing Memory...");
+	#endif
+
 	const size_t popSize = settings.advConvergenceParam.populationSize;
 	const size_t genLimit = settings.advConvergenceParam.generationLimit;
 	parents.resize(popSize);
@@ -342,10 +373,16 @@ void FCSOptimizer::initRNG()
 	found in the available time frame.
 	*/
 
-	std::cout << "Initializing the RNG Engines with time based seed...";
+	#if FILE_LOGGING_ENABLED
+	logNormal("Initializing the RNG Engines with time based seed...");
+	#endif
 
 	if (settings.solverParam.rngDistribution == GA_DISTRIBUTION_UNIFORM_REAL)
 	{
+		#if FILE_LOGGING_ENABLED
+		logNormal("Distribution type: Uniform Real");
+		#endif
+
 		auto Kp_distribution = urd_t(
 			settings.pidControlSettings.tuningLimits.Kp.lower,
 			settings.pidControlSettings.tuningLimits.Kp.upper);
@@ -373,6 +410,10 @@ void FCSOptimizer::initRNG()
 
 	if (settings.solverParam.rngDistribution == GA_DISTRIBUTION_UNIFORM_INT)
 	{
+		#if FILE_LOGGING_ENABLED
+		logNormal("Distribution type: Uniform Int");
+		#endif
+
 		auto Kp_distribution = uid_t(
 			(int)settings.pidControlSettings.tuningLimits.Kp.lower,
 			(int)settings.pidControlSettings.tuningLimits.Kp.upper);
@@ -397,8 +438,6 @@ void FCSOptimizer::initRNG()
 		default: break;
 		}
 	}
-
-	std::cout << "Done!" << std::endl;
 }
 
 void FCSOptimizer::initModel()
@@ -412,23 +451,42 @@ void FCSOptimizer::initModel()
 	/* Neural Network Model */
 	if (settings.solverParam.modelType == GA_MODEL_NEURAL_NETWORK)
 	{
+		#if FILE_LOGGING_ENABLED
+		logNormal("Initializing Neural Network Model...");
+		#endif
+
 		if (settings.neuralNetModel->initialize() != 1)
+		{
+			#if FILE_LOGGING_ENABLED
+			logCritical("Neural Network Model Init Failed!");
+			#endif
 			throw std::runtime_error("TCP Initialization Failed");
+		}
 	}
 
 	/* Matlab Model */
 	if (settings.solverParam.modelType == GA_MODEL_MATLAB)
 	{
-		std::cout << "Initializing Matlab Model...";
-		if (settings.matlabModel->initialize() != 1)
-			throw std::runtime_error("Matlab model failed to start/initialize correctly");
+		#if FILE_LOGGING_ENABLED
+		logNormal("Initializing Matlab Environment...");
+		#endif
 
-		std::cout << "Done" << std::endl;
+		if (settings.matlabModel->initialize() != 1)
+		{
+			#if FILE_LOGGING_ENABLED
+			logCritical("Matlab failed to start properly!");
+			#endif
+			throw std::runtime_error("Matlab model failed to start/initialize correctly");
+		}
 	}
 }
 
 void FCSOptimizer::initPopulation()
 {
+	#if FILE_LOGGING_ENABLED
+	logNormal("Initializing the population to random values...");
+	#endif
+
 	/* Initialize the mapping constants to enable conversions between real
 	valued data and unsigned integers (bit manipulation) */
 	calculateMappingCoefficients(
@@ -466,6 +524,7 @@ void FCSOptimizer::initPopulation()
 
 void FCSOptimizer::initStatistics()
 {
+
 	/* Initialize the count of each possible PID term to zero */
 	std::for_each(ChromOccurance.Kp.begin(), ChromOccurance.Kp.end(), [](int& val) {val = 0; });
 	std::for_each(ChromOccurance.Ki.begin(), ChromOccurance.Ki.end(), [](int& val) {val = 0; });
@@ -482,6 +541,10 @@ void FCSOptimizer::initStatistics()
 
 void FCSOptimizer::evaluateModel(PopulationType& population)
 {
+	#if FILE_LOGGING_ENABLED
+	logNormal("Starting model evaluation...");
+	#endif
+
 	const GA_METHOD_ModelEvaluation modelType = currentSolverParam.modelType;
 
 	/* Ensure an instance of the mutation type exists before evaluation */
@@ -490,10 +553,16 @@ void FCSOptimizer::evaluateModel(PopulationType& population)
 		switch (modelType)
 		{
 		case GA_MODEL_STATE_SPACE:
+			#if FILE_LOGGING_ENABLED
+			logNormal("Creating new State Space Evaluator instance");
+			#endif
 			runtimeStep.evaluateModelInstances[modelType] = boost::make_shared<StateSpaceEvaluator>();
 			break;
 
 		case GA_MODEL_NEURAL_NETWORK:
+			#if FILE_LOGGING_ENABLED
+			logNormal("Creating new Neural Network Evaluator instance");
+			#endif
 			runtimeStep.evaluateModelInstances[modelType] = boost::make_shared<NeuralNetworkEvaluator>();
 			break;
 
@@ -503,6 +572,9 @@ void FCSOptimizer::evaluateModel(PopulationType& population)
 
 		//Add more as needed here
 		default:
+			#if FILE_LOGGING_ENABLED
+			logError("Trying to create model evaluator, but type is unknown. Crash is inevitable.");
+			#endif
 			std::cout << "Evaluation model not configured or is unknown. You are about to crash." << std::endl;
 			break;
 		}
@@ -579,70 +651,85 @@ void FCSOptimizer::evaluateModel(PopulationType& population)
 	}
 	else if (modelType == GA_MODEL_MATLAB)
 	{
+		using namespace matlab::engine;
 		using Array = matlab::data::Array;
+		using StructArray = matlab::data::StructArray;
 
+		#if FILE_LOGGING_ENABLED
+		logNormal("Starting Matlab simulation...");
+		#endif
+		
+		/* TODO: Eventually will need to distinguish between other model types? */
 		MatlabModel_sPtr model = boost::dynamic_pointer_cast<MatlabModel, ML_ModelBase>(settings.matlabModel);
+		
 
-		/* Create the basic format structure to input*/
-		matlab::data::StructArray input = model->factory.createStructArray({ 1, 1 }, {
-			"Kp",
-			"Ki",
-			"Kd",
-			"startTime",
-			"endTime",
-			"axis",
-			"stepMagnitude",
-			"stepEnable"
-			});
-
-		//Fill in the constants that don't change from simulation to simulation
-		input[0]["startTime"] = model->factory.createScalar<double>(0.0);
-		input[0]["endTime"] = model->factory.createScalar<double>(10.0);
-		input[0]["axis"] = model->factory.createCharArray("roll");
-		input[0]["stepMagnitude"] = model->factory.createScalar<double>(10.0);
-		input[0]["stepEnable"] = model->factory.createScalar<double>(0.1);
+		/** Fill in the parameters that don't change from simulation to simulation. This could change
+		* from generation to generation though */
+		StructArray input = model->blankInput();
+		input[0]["startTime"]		= model->factory.createScalar<double>(model->startTime);
+		input[0]["endTime"]			= model->factory.createScalar<double>(model->endTime);
+		input[0]["axis"]			= model->factory.createCharArray(model->simAxis);
+		input[0]["stepMagnitude"]	= model->factory.createScalar<double>(model->stepMagnitude);
+		input[0]["stepEnable"]		= model->factory.createScalar<double>(model->stepTimeEnable);
 
 		for (int member = 0; member < settings.advConvergenceParam.populationSize; member++)
 		{
-			std::cout << "Starting simulation of member " << member << " of " << settings.advConvergenceParam.populationSize << "...";
+			#if CONSOLE_LOGGING_ENABLED
+			std::cout << "Simulating member " << member << " of " << settings.advConvergenceParam.populationSize << std::endl;;
+			#endif
 
+			#if FILE_LOGGING_ENABLED
+			logNormal("Simulating member " + std::to_string(member) + " of " + std::to_string(settings.advConvergenceParam.populationSize));
+			#endif
+
+			/* Update PID parameters for next simulation*/
 			input[0]["Kp"] = model->factory.createScalar<double>(population[member].dChrom.Kp);
 			input[0]["Ki"] = model->factory.createScalar<double>(population[member].dChrom.Ki);
 			input[0]["Kd"] = model->factory.createScalar<double>(population[member].dChrom.Kd);
 
 
-			/* Simulate with the given parameters */
-			matlab::data::StructArray output = model->matlabPtr->feval(matlab::engine::convertUTF8StringToUTF16String(model->model_path), input);
+			/* Simulate with the given parameters. Explicit conversion of output is necessary. */
+			StructArray output = model->matlabPtr->feval(convertUTF8StringToUTF16String(model->model_path), input);
 
-			//Forced to convert types before usage
-			matlab::data::Array percentOvershoot	= output[0]["percentOvershoot"];
-			matlab::data::Array riseTime			= output[0]["riseTime"];
-			matlab::data::Array settlingTime		= output[0]["settlingTime"];
-			matlab::data::Array steadyStateError	= output[0]["steadyStateError"];
+			Array percentOvershoot	= output[0]["percentOvershoot"];
+			Array riseTime			= output[0]["riseTime"];
+			Array settlingTime		= output[0]["settlingTime"];
+			Array steadyStateError	= output[0]["steadyStateError"];
 
-			/* Create a new reference to hold the results */
+			/** Create a new reference to hold the results, purposefully not including the raw simulation
+			* data, even though it is returned. No further analysis is done with that information on this side.
+			*/
 			StepPerformance_sPtr results = boost::make_shared<StepPerformance>();
-
-			/* Fill with data */
-			results->pidValues = population[member].dChrom;
+			results->pidValues						= population[member].dChrom;
 			results->percentOvershoot_performance	= percentOvershoot[0];
 			results->riseTime_performance			= riseTime[0];
 			results->settlingTime_performance		= settlingTime[0];
 			results->steadyStateError_performance	= steadyStateError[0];
 
-			/* Pass the results on to the population logs */
+			/* Pass the results on to the population container */
 			population[member].modelType = modelType;
 			population[member].evaluationPerformance.stepPerformanceData = results;
-			
-			std::cout << "Done" << std::endl;
 		}
 	}
 	else
+	{
+		#if FILE_LOGGING_ENABLED
+		logError("Invalid model type to be evaluated! Type: " + std::to_string(modelType));
+		#endif
 		throw std::runtime_error("Invalid model type");
+	}
+
+	#if FILE_LOGGING_ENABLED
+	logNormal("Finished model evaluation.");
+	#endif
 }
 
 void FCSOptimizer::evaluateFitness(PopulationType& population)
 {
+	#if FILE_LOGGING_ENABLED
+	logNormal("Starting fitness evaluation...");
+	#endif
+
 	const GA_METHOD_ModelEvaluation modelType = currentSolverParam.modelType;
 	const GA_METHOD_FitnessEvaluation fitnessType = currentSolverParam.fitnessType;
 
@@ -661,15 +748,24 @@ void FCSOptimizer::evaluateFitness(PopulationType& population)
 		switch (fitnessType)
 		{
 		case GA_FITNESS_WEIGHTED_SUM:
+			#if FILE_LOGGING_ENABLED
+			logNormal("Creating weighted sum fitness evaluator");
+			#endif
 			runtimeStep.evaluateFitnessInstances[fitnessType] = boost::make_shared<WeightedSum>();
 			break;
 
 		case GA_FITNESS_MEAN_SQUARE_ERROR:
+			#if FILE_LOGGING_ENABLED
+			logNormal("Creating mean squared error fitness evaluator");
+			#endif
 			runtimeStep.evaluateFitnessInstances[fitnessType] = boost::make_shared<MeanSquareError>();
 			break;
 
 		//Add more as needed here
 		default:
+			#if FILE_LOGGING_ENABLED
+			logError("Fitness method unknown. Crash is inevitable.");
+			#endif
 			std::cout << "Fitness method not configured or is unknown. You are about to crash." << std::endl;
 			break;
 		}
@@ -719,30 +815,60 @@ void FCSOptimizer::evaluateFitness(PopulationType& population)
 	{
 
 	}
+
+	#if FILE_LOGGING_ENABLED
+	logNormal("Finished fitness evaluation.");
+	#endif
 }
 
-void FCSOptimizer::checkConvergence()
+void FCSOptimizer::checkConvergence(PopulationType& population)
 {
 	/*-----------------------------------------------
-	* Save best result from each round
+	* Save stats from each round
 	*-----------------------------------------------*/
-	double iteration_bestFitScore = 0.0;		/* Keep track of highest fitness score found */
-	PID_FitnessScores iteration_bestFit;		/* Copy of associated best fitness results */
+	using namespace Eigen;
+	GenerationalStats stats;
+	MatrixXd data(5, population.size());
+	MatrixXd pid(population.size(), 3);
 
-	for (unsigned int member = 0; member < settings.advConvergenceParam.populationSize; member++)
+	/* Use Eigen to build up the stats data. It allows for matrix operations in several computations. */
+	for (unsigned int member = 0; member < population.size(); member++)
 	{
-		if (parents[member].fitnessScores.fitness_total > iteration_bestFitScore)
-		{
-			iteration_bestFitScore = parents[member].fitnessScores.fitness_total;
-			iteration_bestFit = parents[member].fitnessScores;
-		}
+		data(0, member) = population[member].fitnessScores.fitness_total;
+		data(1, member) = population[member].fitnessScores.fitness_POS;
+		data(2, member) = population[member].fitnessScores.fitness_SSER;
+		data(3, member) = population[member].fitnessScores.fitness_TR;
+		data(4, member) = population[member].fitnessScores.fitness_TS;
+
+		pid.row(member) << population[member].dChrom.Kp, population[member].dChrom.Ki, population[member].dChrom.Kd;
 	}
 
-	fcs_generationalBestFitnessData.push_back(iteration_bestFit);
+	const int pR = 0; /* Performance Score Row */
+
+	stats.generationNumber = currentGeneration;
+	stats.rawPerformanceData = data;
+	stats.rawPIDConstants = pid;
+	stats.avgFitness = data.row(pR).mean();
+	
+	/* Pull out the max/min values and their respective index locations within each row.*/
+	igl::mat_max(data, 2, stats.maxCoeff, stats.maxIdxs);
+	igl::mat_min(data, 2, stats.minCoeff, stats.minIdxs);
+
+	fcs_generationalStats.push_back(stats);
+
+	std::string msg = std::to_string(stats.maxCoeff(pR)) + 
+		"\tKp:" + std::to_string(stats.rawPIDConstants(stats.maxIdxs(pR), 0)) +
+		"\tKi:" + std::to_string(stats.rawPIDConstants(stats.maxIdxs(pR), 1)) + 
+		"\tKd:" + std::to_string(stats.rawPIDConstants(stats.maxIdxs(pR), 2)) + "\n";
 
 	#if (CONSOLE_LOGGING_ENABLED == 1)
-	std::cout << "Iteration Best Fit: " << iteration_bestFitScore << "\n" << std::endl;
+	std::cout << "Iteration Best Fit: " << msg << std::endl;
 	#endif
+
+	#if FILE_LOGGING_ENABLED
+	logNormal("Iteration Best Fit: " + msg);
+	#endif
+
 
 	/*-----------------------------------------------
 	* Break based on generation limits
@@ -763,7 +889,7 @@ void FCSOptimizer::checkConvergence()
 	/*-----------------------------------------------
 	* Break based on finding a good solution 
 	*-----------------------------------------------*/
-	if (iteration_bestFitScore > 0.95) //TODO: Make this a user parameter
+	if (stats.maxCoeff(0) > 0.95) //TODO: Make this a user parameter
 	{
 		#if (CONSOLE_LOGGING_ENABLED == 1)
 		std::cout << "\nFound a good enough solution. Done." << std::endl;
@@ -773,62 +899,12 @@ void FCSOptimizer::checkConvergence()
 	}		
 }
 
-void FCSOptimizer::filterPopulation()
-{
-	//const GA_METHOD_PopulationFilter filterType = currentSolverParam.filterType;
-
-	//GA_PopulationFilterDataInput input;
-	//GA_PopulationFilterDataOutput output;
-
-	///*-----------------------------
-	//* Ensure a filtering evaluation instance exists
-	//*----------------------------*/
-	//if (!runtimeStep.populationFilterInstances[filterType])
-	//{
-	//	switch (filterType)
-	//	{
-	//	case GA_POPULATION_STATIC_FILTER:
-	//		runtimeStep.populationFilterInstances[filterType] = boost::make_shared<StaticFilter>(
-	//			settings.pidControlSettings.tuningLimits.Kp.upper,
-	//			settings.pidControlSettings.tuningLimits.Kp.lower,
-	//			settings.pidControlSettings.tuningLimits.Ki.upper,
-	//			settings.pidControlSettings.tuningLimits.Ki.lower,
-	//			settings.pidControlSettings.tuningLimits.Kd.upper,
-	//			settings.pidControlSettings.tuningLimits.Kd.lower);
-	//		break;
-
-	//	case GA_POPULATION_DYNAMIC_FILTER:
-	//		runtimeStep.populationFilterInstances[filterType] = boost::make_shared<DynamicFilter>();
-	//		break;
-
-	//		//Add more as needed here
-	//	default:
-	//		std::cout << "Filtering method not configured or is unknown. You are about to crash." << std::endl;
-	//		break;
-	//	}
-	//}
-
-	///*-----------------------------
-	//* Perform the filtering operation
-	//*----------------------------*/
-	//
-	///* Populate the input struct */
-	//std::transform(population.begin(), population.end(), std::back_inserter(input.currentGlobalFitScores),
-	//	[](const FCSOptimizer_PopulationMember& input) { return input.fitnessScores.fitness_total; });
-
-	//input.static_performanceThreshold = 0.4;
-
-	///* Filter */
-	//runtimeStep.populationFilterInstances[filterType]->filter(input, output);
-
-
-	///* Replace the indicated population members */
-	//for (int member = 0; member < output.replacedMemberIndexes.size(); member++)
-	//	population[output.replacedMemberIndexes[member]].dChrom = output.replacementPIDValues[member];
-}
-
 void FCSOptimizer::selectParents(PopulationType& population)
 {
+	#if FILE_LOGGING_ENABLED
+	logNormal("Starting parent selection...");
+	#endif
+
 	const GA_METHOD_ParentSelection selectType = currentSolverParam.selectType;
 
 	GA_SelectParentDataInput input; 
@@ -840,6 +916,10 @@ void FCSOptimizer::selectParents(PopulationType& population)
 	/* Ensure an instance of the selection type exists before calling the selection function */
 	if (!runtimeStep.selectParentInstances[selectType])
 	{
+		#if FILE_LOGGING_ENABLED
+		logNormal("Creating new selection instance of type: " + std::to_string(selectType));
+		#endif
+
 		switch (selectType)
 		{
 		case GA_SELECT_RANDOM:
@@ -868,12 +948,16 @@ void FCSOptimizer::selectParents(PopulationType& population)
 
 		//Add more as needed here
 		default:
+			#if FILE_LOGGING_ENABLED
+			logError("Unknown selection type. Crash imminent!");
+			#endif
+
 			std::cout << "Parent selection method not configured or is unknown. You are about to crash." << std::endl;
 			break;
 		}
 	}
 
-	/* Fill in the input data structure based on what kind of selectType is used */
+	/* Fill in the input data structure based on what kind of selectType is used. This is gross. */
 	if (selectType == GA_SELECT_RANDOM)
 	{
 	}
@@ -904,10 +988,18 @@ void FCSOptimizer::selectParents(PopulationType& population)
 
 	
 	fcs_parentSelections = output.parentSelections;
+
+	#if FILE_LOGGING_ENABLED
+	logNormal("Finished parent selection");
+	#endif
 }
 
 void FCSOptimizer::breedGeneration(PopulationType& population)
 {
+	#if FILE_LOGGING_ENABLED
+	logNormal("Starting generational breeding...");
+	#endif
+
 	const GA_METHOD_Breed breedType = currentSolverParam.breedType;
 
 	GA_BreedingDataInput input;
@@ -916,6 +1008,10 @@ void FCSOptimizer::breedGeneration(PopulationType& population)
 	/* Ensure an instance of the breeding type exists before calling the breed function */
 	if (!runtimeStep.breedInstances[breedType])
 	{
+		#if FILE_LOGGING_ENABLED
+		logNormal("Creating new breeding method instance of type: " + std::to_string(breedType));
+		#endif
+
 		switch (breedType)
 		{
 		case GA_BREED_SIMPLE_CROSSOVER:
@@ -936,6 +1032,9 @@ void FCSOptimizer::breedGeneration(PopulationType& population)
 
 		//Add more as needed here
 		default: 
+			#if FILE_LOGGING_ENABLED
+			logError("Breed type unknown. You are about to crash.");
+			#endif
 			std::cout << "Breeding method not configured or is unknown. You are about to crash." << std::endl;
 			break;
 		}
@@ -975,10 +1074,18 @@ void FCSOptimizer::breedGeneration(PopulationType& population)
 	runtimeStep.breedInstances[breedType]->breed(input, output);
 
 	fcs_bredChromosomes = output;
+
+	#if FILE_LOGGING_ENABLED
+	logNormal("Finished generational breeding.");
+	#endif
 }
 
 void FCSOptimizer::mutateGeneration(PopulationType& population)
 {
+	#if FILE_LOGGING_ENABLED
+	logNormal("Starting generational mutation...");
+	#endif
+
 	const GA_METHOD_MutateType mutateType = currentSolverParam.mutateType;
 	const size_t popSize = settings.advConvergenceParam.populationSize;
 
@@ -988,6 +1095,9 @@ void FCSOptimizer::mutateGeneration(PopulationType& population)
 	/* Ensure an instance of the mutation type exists before calling the mutate function */
 	if (!runtimeStep.mutateInstances[mutateType])
 	{
+		#if FILE_LOGGING_ENABLED
+		logNormal("Creating new mutation instance of type: " + std::to_string(mutateType));
+		#endif
 		switch (mutateType)
 		{
 		case GA_MUTATE_BIT_FLIP:
@@ -1000,6 +1110,9 @@ void FCSOptimizer::mutateGeneration(PopulationType& population)
 
 		//Add more as needed here
 		default:
+			#if FILE_LOGGING_ENABLED
+			logError("Unknown mutation type input. You are about to crash.");
+			#endif
 			std::cout << "Mutate method not configured or is unknown. You are about to crash." << std::endl;
 			break;
 		}
@@ -1038,6 +1151,10 @@ void FCSOptimizer::mutateGeneration(PopulationType& population)
 		for (int i = 0; i < popSize; i++)
 			population[i].u16Chrom = output.u16_chrom[i];
 	}
+
+	#if FILE_LOGGING_ENABLED
+	logNormal("Finished generational mutation.");
+	#endif
 }
 
 void FCSOptimizer::boundaryCheck(PopulationType& population)
@@ -1149,6 +1266,10 @@ void FCSOptimizer::enforceTunerLimits(PopulationType& population)
 
 PopulationType FCSOptimizer::sortPopulation(PopulationType* parents, PopulationType* children)
 {
+	#if FILE_LOGGING_ENABLED
+	logNormal("Starting population sorting...");
+	#endif
+
 	const GA_METHOD_Sorting sortType = currentSolverParam.sortingType;
 	const int popSize = settings.advConvergenceParam.populationSize;
 
@@ -1158,6 +1279,9 @@ PopulationType FCSOptimizer::sortPopulation(PopulationType* parents, PopulationT
 	/* Ensure an instance of the mutation type exists before calling the mutate function */
 	if (!runtimeStep.mutateInstances[sortType])
 	{
+		#if FILE_LOGGING_ENABLED
+		logNormal("Creating new sorting instance of type: " + std::to_string(sortType));
+		#endif
 		switch (sortType)
 		{
 		case GA_SORT_FAST_NONDOMINATED:
@@ -1166,13 +1290,21 @@ PopulationType FCSOptimizer::sortPopulation(PopulationType* parents, PopulationT
 
 			//Add more as needed here
 		default:
+			#if FILE_LOGGING_ENABLED
+			logError("Unknown sorting method. You are about to crash.");
+			#endif
 			std::cout << "Sorting method not configured or is unknown. You are about to crash." << std::endl;
 			break;
 		}
 	}
 
 	if (parents == NULL)
+	{
+		#if FILE_LOGGING_ENABLED
+		logError("Failure to input a parent population!");
+		#endif
 		throw std::invalid_argument("You must input a parent population. Child population is optional.");
+	}
 	else
 	{
 		for (int member = 0; member < parents->size(); member++)
@@ -1216,6 +1348,10 @@ PopulationType FCSOptimizer::sortPopulation(PopulationType* parents, PopulationT
 				newParents.push_back((*parents)[memberIdx]);
 		}
 	}
+
+	#if FILE_LOGGING_ENABLED
+	logNormal("Finished population sorting.");
+	#endif
 
 	return newParents;
 }
