@@ -73,7 +73,7 @@ function result = quad_initialization(config_param)
     quadModel.minThr = 5;
     quadModel.cr = 80.5840;
     quadModel.b = 976.20;
-    quadModel.plusConfig = 1;
+    quadModel.plusConfig = 0;
     assignin('base', 'quadModel', quadModel);
     
     

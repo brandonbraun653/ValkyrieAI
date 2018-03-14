@@ -84,6 +84,8 @@ struct FCSOptimizer_Init_t
 {
 	std::string optimizerName;								/* This gives a user friendly name to the optimizer */
 
+	std::string logPath;									/* File to place all logs, regardless of severity */
+
 	std::string resultsPath;								/* Path to directory for results reporting */
 
 	std::string messageQueueName;							/* Name used to create a message queue between the main thread and an optimizer thread */
@@ -152,7 +154,7 @@ typedef boost::container::vector<FCSOptimizer_PopulationMember> PopulationType;
 //////////////////////////////////////////////////////////////////
 /* CLASS: FCSOptimizer */
 //////////////////////////////////////////////////////////////////
-class FCSOptimizer
+class FCSOptimizer : public SimpleLogger
 {
 public:
 	/** 

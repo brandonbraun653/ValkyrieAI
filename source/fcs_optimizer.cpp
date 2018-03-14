@@ -249,6 +249,12 @@ void FCSOptimizer::init(FCSOptimizer_Init_t initializationSettings)
 	initPopulation();		/* 4. Set up the initial population */
 	initStatistics();
 
+	/*-----------------------------
+	* Non-Order Specific Initializations
+	*----------------------------*/
+	logInit(settings.logPath);	/* Set up the logging system */
+
+
 	//TODO: Set up the intelligent strategy selection engine here
 	std::cout << "You still haven't set up the intelligent selection strategy engine yet." << std::endl;
 	currentSolverParam = settings.solverParam;
@@ -259,6 +265,8 @@ void FCSOptimizer::init(FCSOptimizer_Init_t initializationSettings)
 	create the main thread's interface after. */
 	try
 	{
+		logNormal("Initializing Queue...");
+
 		//Erase the previous message queue if it exists 
 		message_queue::remove(settings.messageQueueName.data());
 
@@ -269,12 +277,17 @@ void FCSOptimizer::init(FCSOptimizer_Init_t initializationSettings)
 			10,									/* Limit the queue size to 10 */
 			sizeof(int)							/* The queue will hold integers */
 			);
+
+		logNormal("Done");
 	}
 	catch (interprocess_exception &ex)
 	{
 		//TODO: Use the console mutex here to make sure the output is readable 
 		std::cout << ex.what() << " in thread " << boost::this_thread::get_id() << std::endl;
 		std::cout << "Unable to properly use the queue. Ignoring all messages from main thread." << std::endl;
+
+		logError("Queue Setup Exception:");
+		logError(ex.what());
 	}
 
 	/* After this function exits, the Genetic Algorithm should be ready to go */
