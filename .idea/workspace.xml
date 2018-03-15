@@ -2,7 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="572e4ea9-03f8-41f6-ae17-794e44b7a2b6" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/source/fcs_optimizer.cpp" afterPath="$PROJECT_DIR$/source/fcs_optimizer.cpp" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change beforePath="$PROJECT_DIR$/../ValkyrieRNN/DroneRNN_Training.py" afterPath="$PROJECT_DIR$/../ValkyrieRNN/DroneRNN_Training.py" />
+      <change beforePath="$PROJECT_DIR$/../ValkyrieRNN/eulerSingleOutputNonInverted.csv" afterPath="$PROJECT_DIR$/../ValkyrieRNN/eulerSingleOutputNonInverted.csv" />
+      <change beforePath="$PROJECT_DIR$/../ValkyrieRNN/src/TensorFlowModels.py" afterPath="$PROJECT_DIR$/../ValkyrieRNN/src/TensorFlowModels.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -12,19 +15,26 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="CoverageDataManager">
+    <SUITE FILE_PATH="coverage/ValkyrieAI$RNN_MNIST_PPN.coverage" NAME="RNN_MNIST_PPN Coverage Results" MODIFIED="1521074747089" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../ValkyrieRNN/RNNTutorials" />
+    <SUITE FILE_PATH="coverage/ValkyrieAI$RNN_MNIST_TFL.coverage" NAME="RNN_MNIST_TFL Coverage Results" MODIFIED="1521074572435" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../ValkyrieRNN/RNNTutorials" />
+    <SUITE FILE_PATH="coverage/ValkyrieAI$DroneRNN_Training.coverage" NAME="DroneRNN_Training Coverage Results" MODIFIED="1521154148474" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../ValkyrieRNN" />
+    <SUITE FILE_PATH="coverage/ValkyrieAI$LEGACY_DroneRNN_Training.coverage" NAME="LEGACY_DroneRNN_Training Coverage Results" MODIFIED="1521055441858" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../ValkyrieRNN" />
+    <SUITE FILE_PATH="coverage/ValkyrieAI$SineWaveGenerator.coverage" NAME="SineWaveGenerator Coverage Results" MODIFIED="1521071666686" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../ValkyrieRNN/RNNTutorials" />
     <SUITE FILE_PATH="coverage/ValkyrieAI$QuadcopterModel.coverage" NAME="QuadcopterModel Coverage Results" MODIFIED="1520472764877" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Python" />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.5">
+    <splitter split-orientation="horizontal" split-proportion="0.42802697">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="450">
-          <file leaf-file-name="QuadcopterModel.py" pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/Python/QuadcopterModel.py">
+          <file leaf-file-name="DroneRNN_Training.py" pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/../ValkyrieRNN/DroneRNN_Training.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="175">
-                  <caret line="7" column="0" lean-forward="false" selection-start-line="7" selection-start-column="0" selection-end-line="7" selection-end-column="0" />
+                <state relative-caret-position="480">
+                  <caret line="69" column="30" lean-forward="false" selection-start-line="69" selection-start-column="30" selection-end-line="69" selection-end-column="30" />
                   <folding>
-                    <element signature="e#1#10#0" expanded="true" />
+                    <element signature="e#0#64#0" expanded="true" />
+                    <element signature="e#458#943#0" expanded="false" />
+                    <element signature="e#1001#1477#0" expanded="false" />
                   </folding>
                 </state>
               </provider>
@@ -34,15 +44,74 @@
       </split-first>
       <split-second>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="450">
-          <file leaf-file-name="RawData2CSV.py" pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/../ValkyrieRNN/Scripts/RawData2CSV.py">
+          <file leaf-file-name="Training.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/../ValkyrieRNN/src/Training.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="0">
-                  <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+                <state relative-caret-position="1625">
+                  <caret line="222" column="39" lean-forward="false" selection-start-line="222" selection-start-column="39" selection-end-line="222" selection-end-column="39" />
                   <folding>
-                    <element signature="e#0#34#0" expanded="true" />
-                    <element signature="e#2011#8887#0" expanded="false" />
-                    <element signature="e#8966#23154#0" expanded="false" />
+                    <element signature="e#0#64#0" expanded="true" />
+                    <element signature="e#651#2574#0" expanded="false" />
+                    <element signature="e#651#691#0" expanded="false" />
+                    <element signature="e#836#876#0" expanded="false" />
+                    <element signature="e#2104#2144#0" expanded="false" />
+                    <element signature="e#2336#2376#0" expanded="false" />
+                    <element signature="e#2610#2809#0" expanded="false" />
+                    <element signature="e#4043#4084#0" expanded="false" />
+                    <element signature="e#4330#8363#0" expanded="false" />
+                    <element signature="e#4789#4868#0" expanded="false" />
+                    <element signature="e#5721#5762#0" expanded="false" />
+                    <element signature="e#5969#8141#0" expanded="false" />
+                    <element signature="e#7506#7783#0" expanded="false" />
+                    <element signature="e#7876#8141#0" expanded="false" />
+                    <element signature="e#8163#8204#0" expanded="false" />
+                    <element signature="e#8381#8422#0" expanded="false" />
+                    <element signature="e#8953#9859#0" expanded="false" />
+                    <element signature="e#8953#9081#1" expanded="false" />
+                    <element signature="e#9134#9380#0" expanded="false" />
+                    <element signature="e#9237#9380#0" expanded="false" />
+                    <element signature="e#9319#9380#0" expanded="false" />
+                    <element signature="e#9901#10885#0" expanded="false" />
+                    <element signature="e#10935#12865#0" expanded="false" />
+                    <element signature="e#12964#14289#0" expanded="false" />
+                    <element signature="e#13142#14254#0" expanded="false" />
+                    <element signature="e#13285#13600#0" expanded="false" />
+                    <element signature="e#13685#14017#0" expanded="false" />
+                    <element signature="e#14350#15015#0" expanded="false" />
+                    <element signature="e#14367#14661#0" expanded="false" />
+                    <element signature="e#14690#14793#0" expanded="false" />
+                    <element signature="e#15093#16570#0" expanded="false" />
+                    <element signature="e#15093#15133#0" expanded="false" />
+                    <element signature="e#15433#15591#0" expanded="false" />
+                    <element signature="e#15494#15550#0" expanded="false" />
+                    <element signature="e#15733#15893#0" expanded="false" />
+                    <element signature="e#15795#15851#0" expanded="false" />
+                    <element signature="e#16012#16052#0" expanded="false" />
+                    <element signature="e#16382#16517#0" expanded="false" />
+                    <element signature="e#16626#17184#0" expanded="false" />
+                    <element signature="e#16626#16782#1" expanded="false" />
+                    <element signature="e#16832#16978#0" expanded="false" />
+                    <element signature="e#17006#17152#0" expanded="false" />
+                    <element signature="e#17265#17561#1" expanded="false" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="TensorFlowModels.py" pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/../ValkyrieRNN/src/TensorFlowModels.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="424">
+                  <caret line="309" column="21" lean-forward="true" selection-start-line="309" selection-start-column="21" selection-end-line="309" selection-end-column="21" />
+                  <folding>
+                    <element signature="e#0#64#0" expanded="true" />
+                    <element signature="e#126#7877#0" expanded="false" />
+                    <element signature="e#154#1368#0" expanded="false" />
+                    <element signature="e#8115#9557#0" expanded="false" />
+                    <element signature="e#12108#13584#0" expanded="false" />
+                    <element signature="e#13858#15045#0" expanded="false" />
+                    <element signature="e#15295#16683#0" expanded="false" />
+                    <element signature="e#16930#17092#0" expanded="false" />
                   </folding>
                 </state>
               </provider>
@@ -60,12 +129,19 @@
     </option>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../ValkyrieRNN" />
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/Python/QuadcopterModel.py" />
+        <option value="$PROJECT_DIR$/../ValkyrieRNN/LEGACY_DroneRNN_Training.py" />
+        <option value="$PROJECT_DIR$/../ValkyrieRNN/RNNTutorials/SineWaveGenerator.py" />
+        <option value="$PROJECT_DIR$/../ValkyrieRNN/RNNTutorials/RNN_MNIST_PPN.py" />
+        <option value="$PROJECT_DIR$/../ValkyrieRNN/RNNTutorials/RNN_MNIST_TFL.py" />
+        <option value="$PROJECT_DIR$/../ValkyrieRNN/src/Training.py" />
+        <option value="$PROJECT_DIR$/../ValkyrieRNN/src/TensorFlowModels.py" />
+        <option value="$PROJECT_DIR$/../ValkyrieRNN/DroneRNN_Training.py" />
       </list>
     </option>
   </component>
@@ -76,10 +152,10 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="-2835" />
-    <option name="y" value="276" />
-    <option name="width" value="1938" />
-    <option name="height" value="1048" />
+    <option name="x" value="-8" />
+    <option name="y" value="52" />
+    <option name="width" value="1040" />
+    <option name="height" value="784" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -115,30 +191,24 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scratches" />
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
             <path>
               <item name="ValkyrieAI" type="b2602c69:ProjectViewProjectNode" />
-              <item name="ValkyrieAI" type="462c0819:PsiDirectoryNode" />
+              <item name="ValkyrieRNN" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="ValkyrieAI" type="b2602c69:ProjectViewProjectNode" />
-              <item name="ValkyrieAI" type="462c0819:PsiDirectoryNode" />
-              <item name="Python" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="ValkyrieAI" type="b2602c69:ProjectViewProjectNode" />
-              <item name="ValkyrieAI" type="462c0819:PsiDirectoryNode" />
-              <item name="Python" type="462c0819:PsiDirectoryNode" />
-              <item name="Matlab" type="462c0819:PsiDirectoryNode" />
+              <item name="ValkyrieRNN" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
         </subPane>
       </pane>
-      <pane id="Scratches" />
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -146,6 +216,12 @@
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="WebServerToolWindowFactoryState" value="false" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\git\GitHub\ValkyrieRNN\RNNTutorials" />
+      <recent name="C:\git\GitHub\ValkyrieRNN" />
+    </key>
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -159,29 +235,116 @@
       </list>
     </option>
   </component>
-  <component name="RunManager">
-    <configuration name="QuadcopterModel" type="PythonConfigurationType" factoryName="Python" temporary="true">
+  <component name="RunManager" selected="Python.DroneRNN_Training">
+    <configuration name="DroneRNN_Training" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
-      <option name="SDK_HOME" value="C:\Program Files\Python35\python.exe" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Python" />
-      <option name="IS_MODULE_SDK" value="false" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../ValkyrieRNN" />
+      <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="ValkyrieAI" />
+      <module name="ValkyrieRNN" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Python/QuadcopterModel.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../ValkyrieRNN/DroneRNN_Training.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
     </configuration>
+    <configuration name="LEGACY_DroneRNN_Training" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../ValkyrieRNN" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="ValkyrieRNN" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../ValkyrieRNN/LEGACY_DroneRNN_Training.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+    </configuration>
+    <configuration name="RNN_MNIST_PPN" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../ValkyrieRNN/RNNTutorials" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="ValkyrieRNN" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../ValkyrieRNN/RNNTutorials/RNN_MNIST_PPN.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+    </configuration>
+    <configuration name="RNN_MNIST_TFL" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../ValkyrieRNN/RNNTutorials" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="ValkyrieRNN" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../ValkyrieRNN/RNNTutorials/RNN_MNIST_TFL.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+    </configuration>
+    <configuration name="SineWaveGenerator" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../ValkyrieRNN/RNNTutorials" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="ValkyrieRNN" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../ValkyrieRNN/RNNTutorials/SineWaveGenerator.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+    </configuration>
+    <list size="5">
+      <item index="0" class="java.lang.String" itemvalue="Python.LEGACY_DroneRNN_Training" />
+      <item index="1" class="java.lang.String" itemvalue="Python.DroneRNN_Training" />
+      <item index="2" class="java.lang.String" itemvalue="Python.SineWaveGenerator" />
+      <item index="3" class="java.lang.String" itemvalue="Python.RNN_MNIST_PPN" />
+      <item index="4" class="java.lang.String" itemvalue="Python.RNN_MNIST_TFL" />
+    </list>
     <recent_temporary>
-      <list size="1">
-        <item index="0" class="java.lang.String" itemvalue="Python.QuadcopterModel" />
+      <list size="5">
+        <item index="0" class="java.lang.String" itemvalue="Python.DroneRNN_Training" />
+        <item index="1" class="java.lang.String" itemvalue="Python.RNN_MNIST_PPN" />
+        <item index="2" class="java.lang.String" itemvalue="Python.RNN_MNIST_TFL" />
+        <item index="3" class="java.lang.String" itemvalue="Python.SineWaveGenerator" />
+        <item index="4" class="java.lang.String" itemvalue="Python.LEGACY_DroneRNN_Training" />
       </list>
     </recent_temporary>
   </component>
@@ -202,16 +365,16 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-3851" y="49" width="3862" height="2122" extended-state="6" />
+    <frame x="-11" y="49" width="3862" height="2122" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32991803" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.29764345" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.12473958" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.11171875" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Docker" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="SciView" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -234,17 +397,111 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="XDebuggerManager">
-    <breakpoint-manager />
+    <breakpoint-manager>
+      <option name="time" value="5" />
+    </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/../ValkyrieRNN/DroneRNN_Training.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1400">
+          <caret line="65" column="25" lean-forward="false" selection-start-line="65" selection-start-column="25" selection-end-line="65" selection-end-column="25" />
+          <folding>
+            <element signature="e#0#64#0" expanded="true" />
+            <element signature="e#458#943#0" expanded="false" />
+            <element signature="e#1001#1477#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../ValkyrieRNN/src/Training.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1625">
+          <caret line="222" column="39" lean-forward="false" selection-start-line="222" selection-start-column="39" selection-end-line="222" selection-end-column="39" />
+          <folding>
+            <element signature="e#0#64#0" expanded="true" />
+            <element signature="e#651#2574#0" expanded="false" />
+            <element signature="e#651#691#0" expanded="false" />
+            <element signature="e#836#876#0" expanded="false" />
+            <element signature="e#2104#2144#0" expanded="false" />
+            <element signature="e#2336#2376#0" expanded="false" />
+            <element signature="e#2610#2809#0" expanded="false" />
+            <element signature="e#4043#4084#0" expanded="false" />
+            <element signature="e#4330#8363#0" expanded="false" />
+            <element signature="e#4789#4868#0" expanded="false" />
+            <element signature="e#5721#5762#0" expanded="false" />
+            <element signature="e#5969#8141#0" expanded="false" />
+            <element signature="e#7506#7783#0" expanded="false" />
+            <element signature="e#7876#8141#0" expanded="false" />
+            <element signature="e#8163#8204#0" expanded="false" />
+            <element signature="e#8381#8422#0" expanded="false" />
+            <element signature="e#8953#9859#0" expanded="false" />
+            <element signature="e#8953#9081#1" expanded="false" />
+            <element signature="e#9134#9380#0" expanded="false" />
+            <element signature="e#9237#9380#0" expanded="false" />
+            <element signature="e#9319#9380#0" expanded="false" />
+            <element signature="e#9901#10885#0" expanded="false" />
+            <element signature="e#10935#12865#0" expanded="false" />
+            <element signature="e#12964#14289#0" expanded="false" />
+            <element signature="e#13142#14254#0" expanded="false" />
+            <element signature="e#13285#13600#0" expanded="false" />
+            <element signature="e#13685#14017#0" expanded="false" />
+            <element signature="e#14350#15015#0" expanded="false" />
+            <element signature="e#14367#14661#0" expanded="false" />
+            <element signature="e#14690#14793#0" expanded="false" />
+            <element signature="e#15093#16570#0" expanded="false" />
+            <element signature="e#15093#15133#0" expanded="false" />
+            <element signature="e#15433#15591#0" expanded="false" />
+            <element signature="e#15494#15550#0" expanded="false" />
+            <element signature="e#15733#15893#0" expanded="false" />
+            <element signature="e#15795#15851#0" expanded="false" />
+            <element signature="e#16012#16052#0" expanded="false" />
+            <element signature="e#16382#16517#0" expanded="false" />
+            <element signature="e#16626#17184#0" expanded="false" />
+            <element signature="e#16626#16782#1" expanded="false" />
+            <element signature="e#16832#16978#0" expanded="false" />
+            <element signature="e#17006#17152#0" expanded="false" />
+            <element signature="e#17265#17561#1" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../ValkyrieRNN/src/TensorFlowModels.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="950">
+          <caret line="312" column="65" lean-forward="false" selection-start-line="312" selection-start-column="65" selection-end-line="312" selection-end-column="65" />
+          <folding>
+            <element signature="e#0#64#0" expanded="true" />
+            <element signature="e#126#7877#0" expanded="false" />
+            <element signature="e#154#1368#0" expanded="false" />
+            <element signature="e#8115#9557#0" expanded="false" />
+            <element signature="e#12108#13584#0" expanded="false" />
+            <element signature="e#13858#15045#0" expanded="false" />
+            <element signature="e#15295#16683#0" expanded="false" />
+            <element signature="e#16930#17092#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Python/QuadcopterModel.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="100">
+          <caret line="7" column="0" lean-forward="false" selection-start-line="7" selection-start-column="0" selection-end-line="7" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../ValkyrieRNN/Scripts/RawData2CSV.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/Python/QuadcopterModel.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="e#1#10#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -252,9 +509,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="275">
           <caret line="14" column="27" lean-forward="true" selection-start-line="14" selection-start-column="27" selection-end-line="14" selection-end-column="27" />
-          <folding>
-            <element signature="e#1#10#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -262,11 +516,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#34#0" expanded="true" />
-            <element signature="e#2011#8887#0" expanded="false" />
-            <element signature="e#8966#23154#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -274,11 +523,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#34#0" expanded="true" />
-            <element signature="e#2011#8887#0" expanded="false" />
-            <element signature="e#8966#23154#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -286,8 +530,113 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="175">
           <caret line="7" column="0" lean-forward="false" selection-start-line="7" selection-start-column="0" selection-end-line="7" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../ValkyrieRNN/LEGACY_DroneRNN_Training.py" />
+    <entry file="file://$PROJECT_DIR$/../ValkyrieRNN/RNNTutorials/sine.png">
+      <provider selected="true" editor-type-id="images">
+        <state />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../ValkyrieRNN/RNNTutorials/RNN_MNIST_TFL.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1050">
+          <caret line="42" column="0" lean-forward="true" selection-start-line="42" selection-start-column="0" selection-end-line="42" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../ValkyrieRNN/RNNTutorials/RNN_MNIST_PPN.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="522">
+          <caret line="38" column="44" lean-forward="true" selection-start-line="38" selection-start-column="44" selection-end-line="38" selection-end-column="44" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../ValkyrieRNN/RNNTutorials/SineWaveGenerator.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1011">
+          <caret line="50" column="0" lean-forward="true" selection-start-line="50" selection-start-column="0" selection-end-line="50" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../ValkyrieRNN/src/Training.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1625">
+          <caret line="222" column="39" lean-forward="false" selection-start-line="222" selection-start-column="39" selection-end-line="222" selection-end-column="39" />
           <folding>
-            <element signature="e#1#10#0" expanded="true" />
+            <element signature="e#0#64#0" expanded="true" />
+            <element signature="e#651#2574#0" expanded="false" />
+            <element signature="e#651#691#0" expanded="false" />
+            <element signature="e#836#876#0" expanded="false" />
+            <element signature="e#2104#2144#0" expanded="false" />
+            <element signature="e#2336#2376#0" expanded="false" />
+            <element signature="e#2610#2809#0" expanded="false" />
+            <element signature="e#4043#4084#0" expanded="false" />
+            <element signature="e#4330#8363#0" expanded="false" />
+            <element signature="e#4789#4868#0" expanded="false" />
+            <element signature="e#5721#5762#0" expanded="false" />
+            <element signature="e#5969#8141#0" expanded="false" />
+            <element signature="e#7506#7783#0" expanded="false" />
+            <element signature="e#7876#8141#0" expanded="false" />
+            <element signature="e#8163#8204#0" expanded="false" />
+            <element signature="e#8381#8422#0" expanded="false" />
+            <element signature="e#8953#9859#0" expanded="false" />
+            <element signature="e#8953#9081#1" expanded="false" />
+            <element signature="e#9134#9380#0" expanded="false" />
+            <element signature="e#9237#9380#0" expanded="false" />
+            <element signature="e#9319#9380#0" expanded="false" />
+            <element signature="e#9901#10885#0" expanded="false" />
+            <element signature="e#10935#12865#0" expanded="false" />
+            <element signature="e#12964#14289#0" expanded="false" />
+            <element signature="e#13142#14254#0" expanded="false" />
+            <element signature="e#13285#13600#0" expanded="false" />
+            <element signature="e#13685#14017#0" expanded="false" />
+            <element signature="e#14350#15015#0" expanded="false" />
+            <element signature="e#14367#14661#0" expanded="false" />
+            <element signature="e#14690#14793#0" expanded="false" />
+            <element signature="e#15093#16570#0" expanded="false" />
+            <element signature="e#15093#15133#0" expanded="false" />
+            <element signature="e#15433#15591#0" expanded="false" />
+            <element signature="e#15494#15550#0" expanded="false" />
+            <element signature="e#15733#15893#0" expanded="false" />
+            <element signature="e#15795#15851#0" expanded="false" />
+            <element signature="e#16012#16052#0" expanded="false" />
+            <element signature="e#16382#16517#0" expanded="false" />
+            <element signature="e#16626#17184#0" expanded="false" />
+            <element signature="e#16626#16782#1" expanded="false" />
+            <element signature="e#16832#16978#0" expanded="false" />
+            <element signature="e#17006#17152#0" expanded="false" />
+            <element signature="e#17265#17561#1" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../ValkyrieRNN/src/TensorFlowModels.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="424">
+          <caret line="309" column="21" lean-forward="true" selection-start-line="309" selection-start-column="21" selection-end-line="309" selection-end-column="21" />
+          <folding>
+            <element signature="e#0#64#0" expanded="true" />
+            <element signature="e#126#7877#0" expanded="false" />
+            <element signature="e#154#1368#0" expanded="false" />
+            <element signature="e#8115#9557#0" expanded="false" />
+            <element signature="e#12108#13584#0" expanded="false" />
+            <element signature="e#13858#15045#0" expanded="false" />
+            <element signature="e#15295#16683#0" expanded="false" />
+            <element signature="e#16930#17092#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../ValkyrieRNN/DroneRNN_Training.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="480">
+          <caret line="69" column="30" lean-forward="false" selection-start-line="69" selection-start-column="30" selection-end-line="69" selection-end-column="30" />
+          <folding>
+            <element signature="e#0#64#0" expanded="true" />
+            <element signature="e#458#943#0" expanded="false" />
+            <element signature="e#1001#1477#0" expanded="false" />
           </folding>
         </state>
       </provider>
