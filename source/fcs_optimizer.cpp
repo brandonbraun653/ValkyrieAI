@@ -133,10 +133,12 @@ void FCSOptimizer::run()
 	std::cout << "Hello from thread " << boost::this_thread::get_id() << "!" << std::endl;
 
 	/* Generate the first population */
+	std::cout << "Evaluating initial population..." << std::endl;
 	evaluateModel(parents);
 	evaluateFitness(parents);
 	parents = sortPopulation(&parents, NULL);
 
+	std::cout << "Starting tuning algorithm." << std::endl;
 	for(;;)
 	{
 		/*-------------------------------------
@@ -177,6 +179,8 @@ void FCSOptimizer::run()
 		*-------------------------------------*/
 		if (currentStatus == GA_OK)
 		{
+			std::cout << "Simulating generation " << currentGeneration << " of " << settings.advConvergenceParam.generationLimit << std::endl;
+
 			selectParents(parents);								/* Of the current population, select those who will mate */
 
 			breedGeneration(parents);							/* Breed the parents and stores the output as bit-mapped chromosomes */
@@ -204,7 +208,7 @@ void FCSOptimizer::run()
 					updateAlgorithmSteps();
 				 
 				refreshCounter = settings.advConvergenceParam.iterations_before_refresh;
-				std::cout << "I hit the refresh target!" << std::endl;
+				//std::cout << "I hit the refresh target!" << std::endl;
 			}
 		} 
 		else 
@@ -240,14 +244,14 @@ void FCSOptimizer::run()
 		/*-------------------------------------
 		* Do post-processing for reporting status to user
 		*-------------------------------------*/
-		gatherStatisticalData();
+		//gatherStatisticalData();
 
 		/* Allow other waiting threads to run */
 		currentGeneration += 1;
 		boost::this_thread::yield();
 	}
 
-	logData();
+	//logData();
 
 	#if (FCS_TRACE_EXECUTION_TIME == 1)
 	auto stop = boost::chrono::high_resolution_clock::now();
@@ -622,32 +626,72 @@ void FCSOptimizer::evaluateModel(PopulationType& population)
 	}
 	else if (modelType == GA_MODEL_NEURAL_NETWORK)
 	{
-		NeuralNetworkModelInput input;
-		NeuralNetworkModelOutput output;
+// 		NeuralNetworkModelInput input;
+// 		NeuralNetworkModelOutput output;
+// 
+// 		/* Simulation time constraints */
+// 		input.dt = 0.01;			//TODO: Replace with un-hardcoded version
+// 		input.startTime = 0.0;
+// 		input.endTime = 1.5;
+// 
+// 		/* Simulation Model */
+// 		//TODO: for version 3 of the software, add actual step struct with various parameters and conversion methods
+// 		//ie convert to string, matrix, etc.
+// 		input.simulationType = STEP;
+// 		input.step_magnitude = 10.0;
+// 		input.model = settings.neuralNetModel;
+// 
+// 		//TODO: This is extremely similar to the above loop. Probably could combine it easily.
+// 		for (int member = 0; member < settings.advConvergenceParam.populationSize; member++)
+// 		{
+// 			/* Swap out the PID values and simulate */
+// 			input.pid = population[member].dChrom;
+// 			runtimeStep.evaluateModelInstances[modelType]->evaluate(input, output);
+// 
+// 			/* Pass on the resulting data to the optimizer's record of everything */
+// 			population[member].modelType = modelType;
+// 			population[member].evaluationPerformance.stepPerformanceData = output.stepPerformance;
+// 		}
 
-		/* Simulation time constraints */
-		input.dt = 0.01;			//TODO: Replace with un-hardcoded version
-		input.startTime = 0.0;
-		input.endTime = 1.5;
+		NN_JSONModel_sPtr model = boost::dynamic_pointer_cast<NN_JSONModel, NN_ModelBase>(settings.neuralNetModel);
 
-		/* Simulation Model */
-		//TODO: for version 3 of the software, add actual step struct with various parameters and conversion methods
-		//ie convert to string, matrix, etc.
-		input.simulationType = STEP;
-		input.step_magnitude = 10.0;
-		input.model = settings.neuralNetModel;
+		json sim;
 
-		//TODO: This is extremely similar to the above loop. Probably could combine it easily.
+		sim["axis"] = "pitch";
+		sim["stepMagnitude"] = 10.0;
+		sim["startTime"] = 0.0;
+		sim["endTime"] = 4.0;
+		sim["numTimeSteps"] = 2000;
+
 		for (int member = 0; member < settings.advConvergenceParam.populationSize; member++)
 		{
-			/* Swap out the PID values and simulate */
-			input.pid = population[member].dChrom;
-			runtimeStep.evaluateModelInstances[modelType]->evaluate(input, output);
+			#if CONSOLE_LOGGING_ENABLED
+			std::cout << "Simulating member " << member << " of " << settings.advConvergenceParam.populationSize << std::endl;;
+			#endif
 
-			/* Pass on the resulting data to the optimizer's record of everything */
+			#if FILE_LOGGING_ENABLED
+			logNormal("Simulating member " + std::to_string(member) + " of " + std::to_string(settings.advConvergenceParam.populationSize));
+			#endif
+
+			auto pid = population[member].dChrom;
+
+			sim["pid"] = { {"kp", pid.Kp}, {"ki", pid.Ki}, {"kd", pid.Kd} };
+
+			auto data = model->executeModel(sim);
+
+			StepPerformance_sPtr results = boost::make_shared<StepPerformance>();
+			results->pidValues						= population[member].dChrom;
+			results->percentOvershoot_performance	= data["overshoot"];
+			results->riseTime_performance			= data["riseTime"];
+			results->settlingTime_performance		= data["settlingTime"];
+			results->steadyStateError_performance	= data["steadyStateError"];
+
+			/* Pass the results on to the population container */
 			population[member].modelType = modelType;
-			population[member].evaluationPerformance.stepPerformanceData = output.stepPerformance;
+			population[member].evaluationPerformance.stepPerformanceData = results;
 		}
+
+
 	}
 	else if (modelType == GA_MODEL_MATLAB)
 	{

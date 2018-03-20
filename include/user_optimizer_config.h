@@ -12,5 +12,5 @@ extern FCSOptimizer_Init_t rollTunerVer1_Init();
 extern FCSOptimizer_Init_t pitchTunerVer1_Init();
 extern FCSOptimizer_Init_t yawTunerVer1_Init();
 
-
+extern FCSOptimizer_Init_t rollTunerVer2_Init();
 #endif

@@ -7,7 +7,7 @@ function [CT] = calculate_CT(Seconds, Throttle, RPM, b, h, gramsMeas, varargin)
 % Argument definitions:
 %   b = length of test rig from pin joint to scale contact (same units as h)
 %   h = length of test rig from pin joint to center motor axis (same units as b)
-%   gramsMeas = user measured values direct from scale, MUST BE IN GRAMS!
+%   gramsMeas = user measured values controller_direction from scale, MUST BE IN GRAMS!
 %   These values must correspond to ALL unique throttle values, even those
 %   outside of "LowCutoff" and "HighCutoff."
 % (Note: values of gramsMeas corresponding to throttle setting outside 

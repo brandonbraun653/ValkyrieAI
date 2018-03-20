@@ -32,6 +32,13 @@ properties page. */
 /* Boost Includes */
 #include <boost/shared_ptr.hpp>
 #include <boost/container/vector.hpp>
+#include <boost/chrono.hpp>
+#include <boost/thread.hpp>
+#include <boost/filesystem.hpp>
+
+/* JSON */
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
 
 /* Local Includes */
 #include "config.h"
@@ -125,12 +132,39 @@ private:
 	struct sockaddr_in servAddr;
 	struct sockaddr_in localAddr;
 
-	
+
 	bool CreateMemoryMap(SharedMemory* shm);
 	bool FreeMemoryMap(SharedMemory* shm);
 };
 typedef boost::shared_ptr<NN_TCPModel> NN_TCPModel_sPtr;
 #endif
+
+class NN_JSONModel : public NN_ModelBase
+{
+public:
+
+	int initialize() override;
+
+	json executeModel(json cmd);
+
+
+	NN_JSONModel(std::string working_directory)
+	{
+		root_dir = working_directory;
+	}
+
+	~NN_JSONModel() = default;
+
+private:
+	std::string root_dir = "";
+	std::string cmd_file = "sim_cmd.json";
+	std::string rcv_file = "sim_result.json";
+
+	std::time_t last_write_time = 0;
+};
+typedef boost::shared_ptr<NN_JSONModel> NN_JSONModel_sPtr;
+
+
 
 class MatlabModel : public MatlabSession, public ML_ModelBase
 {

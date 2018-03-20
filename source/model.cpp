@@ -200,6 +200,60 @@ bool NN_TCPModel::FreeMemoryMap(SharedMemory* shm)
 }
 #endif
 
+int NN_JSONModel::initialize()
+{
+
+	if (boost::filesystem::exists(root_dir + rcv_file))
+	{
+		this->last_write_time = boost::filesystem::last_write_time(root_dir + rcv_file);
+	}
+
+	return 1;
+}
+
+json NN_JSONModel::executeModel(json cmd)
+{
+	json results;
+
+	/* Write the command to file. Needs to be scoped as such so that 
+	the python side can delete the file after use. */
+	{
+		std::ofstream fileStream(root_dir + cmd_file);
+		fileStream << cmd << std::endl;
+	}
+
+	/* Wait until we receive a response */
+	bool no_response = true;
+	while (no_response)
+	{
+		if (boost::filesystem::exists(root_dir + rcv_file))
+		{
+			//std::cout << "GO!" << std::endl;
+
+			if (boost::filesystem::last_write_time(root_dir + rcv_file) != this->last_write_time)
+			{
+				this->last_write_time = boost::filesystem::last_write_time(root_dir + rcv_file);
+
+				// Setup the file stream and parse the data into a JSON object
+				std::ifstream t(root_dir + rcv_file);
+				results = json::parse(t);
+				no_response = false;
+				break;
+			}
+
+			
+		}
+		boost::this_thread::sleep_for(boost::chrono::seconds(1));
+		//std::cout << "Waiting..." << std::endl;
+	}
+
+	/* Delete the file and return results*/
+	//boost::filesystem::remove(root_dir + rcv_file);
+	return results;
+}
+
+
+
 int MatlabModel::initialize()
 {
 	if (!this->start())

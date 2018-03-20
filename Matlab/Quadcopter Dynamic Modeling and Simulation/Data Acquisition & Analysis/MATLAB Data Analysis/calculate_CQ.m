@@ -7,7 +7,7 @@ function [CQ] = calculate_CQ(Seconds, Throttle, RPM, L, gramsMeas, varargin)
 % Argument definitions:
 %   L = length of torque rig arm from center of motor to scale contact
 %   point (MUST BE IN INCHES)
-%   gramsMeas = user measured values direct from scale, MUST BE IN GRAMS!
+%   gramsMeas = user measured values controller_direction from scale, MUST BE IN GRAMS!
 %   These values must correspond to ALL unique throttle values, even those
 %   outside of "LowCutoff" and "HighCutoff."
 % (Note: values of gramsMeas corresponding to throttle setting outside 

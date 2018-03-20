@@ -22,9 +22,9 @@ int main()
 	/*-----------------------------
 	* CREATE OPTIMIZERS
 	*----------------------------*/
-	FCSOptimizer_Handle hRollTuner = DroneTuner.newOptimizer(rollTunerVer1_Init());
-	FCSOptimizer_Handle hPitchTuner = DroneTuner.newOptimizer(pitchTunerVer1_Init());
-	FCSOptimizer_Handle hYawTuner = DroneTuner.newOptimizer(yawTunerVer1_Init());
+	FCSOptimizer_Handle hRollTuner = DroneTuner.newOptimizer(rollTunerVer2_Init());
+// 	FCSOptimizer_Handle hPitchTuner = DroneTuner.newOptimizer(pitchTunerVer1_Init());
+// 	FCSOptimizer_Handle hYawTuner = DroneTuner.newOptimizer(yawTunerVer1_Init());
 
 
 	/*-----------------------------
