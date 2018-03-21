@@ -228,8 +228,6 @@ json NN_JSONModel::executeModel(json cmd)
 	{
 		if (boost::filesystem::exists(root_dir + rcv_file))
 		{
-			//std::cout << "GO!" << std::endl;
-
 			if (boost::filesystem::last_write_time(root_dir + rcv_file) != this->last_write_time)
 			{
 				this->last_write_time = boost::filesystem::last_write_time(root_dir + rcv_file);
@@ -240,15 +238,9 @@ json NN_JSONModel::executeModel(json cmd)
 				no_response = false;
 				break;
 			}
-
-			
 		}
 		boost::this_thread::sleep_for(boost::chrono::seconds(1));
-		//std::cout << "Waiting..." << std::endl;
 	}
-
-	/* Delete the file and return results*/
-	//boost::filesystem::remove(root_dir + rcv_file);
 	return results;
 }
 

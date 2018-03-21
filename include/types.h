@@ -166,107 +166,74 @@ enum GA_RNG_Distribution
 
 enum GA_METHOD_Sorting
 {
-	GA_SORT_FAST_NONDOMINATED,
-
-	GA_SORT_TOTAL_OPTIONS,
-	GA_SORT_DEFAULT = GA_SORT_FAST_NONDOMINATED,
-
-	GA_SORT_FAST_NONDOMINATED_MSK = (1u << GA_SORT_FAST_NONDOMINATED)
+	GA_SORT_FAST_NONDOMINATED	= (1u << 0),
+	GA_SORT_TOTAL_OPTIONS		= 1,
+	GA_SORT_DEFAULT				= GA_SORT_FAST_NONDOMINATED
 };
 
 enum GA_METHOD_Breed
 {
-	GA_BREED_SIMPLE_CROSSOVER,
-	GA_BREED_DYNAMIC_CROSSOVER,
-	GA_BREED_FIXED_POINT_CROSSOVER,
-	GA_BREED_SIMULATED_BINARY_CROSSOVER,
-	GA_BREED_TOTAL_OPTIONS,
-	GA_BREED_DEFAULT = GA_BREED_SIMPLE_CROSSOVER,
-
-	GA_BREED_SIMPLE_CROSSOVER_MSK = (1u << GA_BREED_SIMPLE_CROSSOVER),
-	GA_BREED_DYNAMIC_CROSSOVER_MSK = (1u << GA_BREED_DYNAMIC_CROSSOVER),
-	GA_BREED_FIXED_RATIO_CROSSOVER_MSK = (1u << GA_BREED_FIXED_POINT_CROSSOVER),
-	GA_BREED_SIMULATED_BINARY_CROSSOVER_MSK = (1u << GA_BREED_SIMULATED_BINARY_CROSSOVER)
+	GA_BREED_SIMPLE_CROSSOVER				= (1u << 0),
+	GA_BREED_DYNAMIC_CROSSOVER				= (1u << 1),
+	GA_BREED_FIXED_POINT_CROSSOVER			= (1u << 2),
+	GA_BREED_SIMULATED_BINARY_CROSSOVER		= (1u << 3),
+	GA_BREED_TOTAL_OPTIONS					= 4,
+	GA_BREED_DEFAULT						= GA_BREED_SIMPLE_CROSSOVER
 };
 
 enum GA_METHOD_PopulationFilter
 {
-	GA_POPULATION_STATIC_FILTER,
-	GA_POPULATION_DYNAMIC_FILTER,
-	GA_POPULATION_TOTAL_OPTIONS,
-	GA_POPULATION_FILTER_DEFAULT = GA_POPULATION_STATIC_FILTER,
-
-	GA_POPULATION_STATIC_FILTER_MSK = (1u << GA_POPULATION_STATIC_FILTER),
-	GA_POPULATION_DYNAMIC_FILTER_MSK = (1u << GA_POPULATION_DYNAMIC_FILTER)
+	GA_POPULATION_STATIC_FILTER		= (1u << 0),
+	GA_POPULATION_DYNAMIC_FILTER	= (1u << 1),
+	GA_POPULATION_TOTAL_OPTIONS		= 2,
+	GA_POPULATION_FILTER_DEFAULT	= GA_POPULATION_STATIC_FILTER
 };
 
 enum GA_METHOD_ParentSelection
 {
-	GA_SELECT_RANDOM,
-	GA_SELECT_RANKED,
-	GA_SELECT_ROULETTE,
-	GA_SELECT_STOCHASTIC_SAMPLING,
-	GA_SELECT_TOURNAMENT,
-	GA_SELECT_ELITIST,
-	GA_SELECT_TOTAL_OPTIONS,
-	GA_SELECT_DEFAULT = GA_SELECT_RANDOM,
-
-	GA_SELECT_RANDOM_MSK = (1u << GA_SELECT_RANDOM),
-	GA_SELECT_RANKED_MSK = (1u << GA_SELECT_RANKED),
-	GA_SELECT_ROULETTE_MSK = (1u << GA_SELECT_ROULETTE),
-	GA_SELECT_STOCHASTIC_SAMPLING_MSK = (1u << GA_SELECT_STOCHASTIC_SAMPLING),
-	GA_SELECT_TOURNAMENT_MSK = (1u << GA_SELECT_TOURNAMENT),
-	GA_SELECT_ELITIST_MSK = (1u << GA_SELECT_ELITIST)
+	GA_SELECT_RANDOM				= (1u << 0),
+	GA_SELECT_RANKED				= (1u << 1),
+	GA_SELECT_ROULETTE				= (1u << 2),
+	GA_SELECT_STOCHASTIC_SAMPLING	= (1u << 3),
+	GA_SELECT_TOURNAMENT			= (1u << 4),
+	GA_SELECT_ELITIST				= (1u << 5),
+	GA_SELECT_TOTAL_OPTIONS			= 6,
+	GA_SELECT_DEFAULT				= GA_SELECT_RANDOM
 };
 
 enum GA_METHOD_MutateProbability
 {
-	GA_MUTATE_PROBABILITY_POISSON,
-	GA_MUTATE_PROBABILITY_EXPONENTIAL,
-	GA_MUTATE_PROBABILITY_GAMMA,
-	GA_MUTATE_PROBABILITY_WEIBULL,
-	GA_MUTATE_PROBABILITY_CHI_SQUARED,
-	GA_MUTATE_PROBABILITY_TOTAL_OPTIONS,
-	GA_MUTATE_PROBABILITY_DEFAULT = GA_MUTATE_PROBABILITY_EXPONENTIAL,
-
-	GA_MUTATE_PROBABILITY_POISSON_MSK = (1u << GA_MUTATE_PROBABILITY_POISSON),
-	GA_MUTATE_PROBABILITY_EXPONENTIAL_MSK = (1u << GA_MUTATE_PROBABILITY_EXPONENTIAL),
-	GA_MUTATE_PROBABILITY_GAMMA_MSK = (1u << GA_MUTATE_PROBABILITY_GAMMA),
-	GA_MUTATE_PROBABILITY_WEIBULL_MSK = (1u << GA_MUTATE_PROBABILITY_WEIBULL),
-	GA_MUTATE_PROBABILITY_CHI_SQUARED_MSK = (1u << GA_MUTATE_PROBABILITY_CHI_SQUARED)
+	GA_MUTATE_PROBABILITY_POISSON		= (1u << 0),
+	GA_MUTATE_PROBABILITY_EXPONENTIAL	= (1u << 1),
+	GA_MUTATE_PROBABILITY_GAMMA			= (1u << 2),
+	GA_MUTATE_PROBABILITY_WEIBULL		= (1u << 3),
+	GA_MUTATE_PROBABILITY_CHI_SQUARED	= (1u << 4),
+	GA_MUTATE_PROBABILITY_TOTAL_OPTIONS	= 5,
+	GA_MUTATE_PROBABILITY_DEFAULT		= GA_MUTATE_PROBABILITY_EXPONENTIAL
 };
 
 enum GA_METHOD_MutateType
 {
-	GA_MUTATE_BIT_FLIP,
-	GA_MUTATE_ADD_SUB,
-	GA_MUTATE_TOTAL_OPTIONS,
-	GA_MUTATE_DEFAULT = GA_MUTATE_BIT_FLIP,
-
-	GA_MUTATE_BIT_FLIP_MSK = (1u << GA_MUTATE_BIT_FLIP),
-	GA_MUTATE_ADD_SUB_MSK = (1u << GA_MUTATE_ADD_SUB)
+	GA_MUTATE_BIT_FLIP			= (1u << 0),
+	GA_MUTATE_ADD_SUB			= (1u << 1),
+	GA_MUTATE_TOTAL_OPTIONS		= 2,
+	GA_MUTATE_DEFAULT			= GA_MUTATE_BIT_FLIP
 };
 
 enum GA_METHOD_FitnessEvaluation
 {
-	GA_FITNESS_WEIGHTED_SUM,
-	GA_FITNESS_MEAN_SQUARE_ERROR,
-	GA_FITNESS_TOTAL_OPTIONS,
-	GA_FITNESS_DEFAULT = GA_FITNESS_WEIGHTED_SUM,
-
-	GA_FITNESS_WEIGHTED_SUM_MSK = (1u << GA_FITNESS_WEIGHTED_SUM),
-	GA_FITNESS_MEAN_SQUARE_ERROR_MSK = (1u << GA_FITNESS_MEAN_SQUARE_ERROR)
+	GA_FITNESS_WEIGHTED_SUM			= (1u << 0),
+	GA_FITNESS_MEAN_SQUARE_ERROR	= (1u << 1),
+	GA_FITNESS_TOTAL_OPTIONS		= 2,
+	GA_FITNESS_DEFAULT				= GA_FITNESS_WEIGHTED_SUM
 };
 
 enum GA_METHOD_ModelEvaluation
 {
-	GA_MODEL_STATE_SPACE,
-	GA_MODEL_NEURAL_NETWORK,
-	GA_MODEL_MATLAB,
-	GA_MODEL_TOTAL_OPTIONS,
-
-	GA_MODEL_STATE_SPACE_MSK = (1u << GA_MODEL_STATE_SPACE),
-	GA_MODEL_NEURAL_NETWORK_MSK = (1u << GA_MODEL_NEURAL_NETWORK)
+	GA_MODEL_STATE_SPACE		= (1u << 0),
+	GA_MODEL_NEURAL_NETWORK		= (1u << 1),
+	GA_MODEL_MATLAB				= (1u << 2),
+	GA_MODEL_TOTAL_OPTIONS		= 3 
 };
 
 enum GA_METHOD_Resolution
@@ -522,10 +489,10 @@ struct FCSOptimizer_BasicConstraints
 	RunTime timeConstraints;			/* Time based limitation given in minutes and seconds */
 
 	double overallPerformance = 0.95;	/* Exits the solver if a solution is found that meets "x" percent of the specified goals.
-										Essentially this is setting how good is "good enough" of a solution. */
+										   Essentially this is setting how good is "good enough" of a solution. */
 
 	int maxNumberOfThreads = 16;		/* Forcefully limit how many threads can be spawned for a given optimizer. It's useful to
-										specify this in multiples of 2. Currently the maximum value is hard limited to 16 threads. */
+										   specify this in multiples of 2. Currently the maximum value is hard limited to 16 threads. */
 
 	int systemPrecision = 3;			/* Limit how many decimal places are used in calculations. This can speed up result generation. */
 
@@ -540,10 +507,11 @@ struct FCSOptimizer_AdvConstraints
 	uint32_t populationSize = 20;			/* GA Population Size */
 	uint32_t generationLimit = 100;			/* GA Generation Limit before exit */
 
-	int iterations_before_refresh = 10;		/* Max number of iterations without progress using current GA Methods */
-	int refresh_parameter_number = 2;		/* Specifies how many methods to replace when refreshing */
+	int iterations_before_refresh = 5;		/* Max number of iterations without progress using current GA Methods */
 	int mutation_severity = 8;				/* Specifies how strong of a mutation can occur. Min: 1; Max: 16, increasing severity */
-	double mutation_threshold = 0.5;		/* Specifies probability threshold for mutation. Range: 0-1, lower #s == higher probability */
+
+	double mutation_threshold = 0.25;		/* Specifies probability threshold for mutation. Range: 0-1, lower #s == higher probability */
+	double reltol = 1e-2;					/* Specifies threshold for generational improvement of cost function before refresh is executed */
 
 											//Add more as needed
 	FCSOptimizer_TunerLimiterBehavior limitingBehavior = FCS_LIMITER_DEFAULT;

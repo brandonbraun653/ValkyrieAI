@@ -42,7 +42,7 @@ struct GA_BreedingDataInput
 											   Controls which half of the chromosome is actually swapped. If false, the upper half will
 											   be switched. The variable is true by default. */
 	
-	uint16_t crossoverPoint = 7;			/* Selects where to cut the gene for crossover (range 0-15). This effectively selects the 
+	uint16_t crossoverPoint = 9;			/* Selects where to cut the gene for crossover (range 0-15). This effectively selects the 
 											   number of bits to use, starting from the LSB. Leave empty if unused. */
 
 

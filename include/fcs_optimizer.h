@@ -6,6 +6,7 @@
 #include <random>
 #include <algorithm>
 #include <numeric>
+#include <cstdlib>
 #include <windows.h>
 #include "stdint.h"
 #include "math.h"
@@ -38,9 +39,6 @@
 #include "logger.h"
 #include "types.h"
 
-
-
-
 /* Forward Declarations */
 class FCSOptimizer;
 typedef boost::shared_ptr<FCSOptimizer> FCSOptimizerClass_sPtr;
@@ -68,15 +66,12 @@ struct FCSOptimizer_RuntimeConfig
 	GA_RNG_Distribution				rngDistribution;										/* Random Number Generator Distribution type */
 };
 
-
-/**
-* \brief Constrains the choices for the real time reconfiguration
-* //TODO: Add a better description once this idea is fully fleshed out 
-*/
 struct FCSOptimizer_AllowedRuntimeConfig
 {
-	uint32_t allowedBreedTypes;
-	uint32_t allowedFitnessTypes;
+	uint32_t allowedFitnessTypes = 0;
+	uint32_t allowedParentSelectTypes = 0;
+	uint32_t allowedBreedTypes = 0;
+	uint32_t allowedMutateTypes = 0;
 };
 
 enum FCSOptimizer_Commands
@@ -86,8 +81,6 @@ enum FCSOptimizer_Commands
 	STOP,
 	REPORT_STATUS
 };
-
-
 
 /*-----------------------------------------------
 * Input/Output/Referencing Containers 
@@ -124,8 +117,7 @@ struct FCSOptimizer_Init_t
 
 	FCSOptimizer_AdvConstraints advConvergenceParam;		/* Convergence parameters that allow tuning how the underlying Genetic Algorithm software executes */
 
-	FCSOptimizer_RuntimeConfig solverParam;					/* Configures how the optimizer internals operate at each step, to be updated dynamically by
-															the internal reconfiguration engine */
+	FCSOptimizer_RuntimeConfig solverParam;					/* Configures how the optimizer internals operate at each step */
 
 	FCSOptimizer_AllowedRuntimeConfig solverParamOptions;	/* Possible options to select from for each step of the algorithm */
 };
@@ -154,8 +146,6 @@ struct FCSOptimizer_Handle_t
 typedef boost::shared_ptr<FCSOptimizer_Handle_t> FCSOptimizer_Handle;
 
 
-
-
 //////////////////////////////////////////////////////////////////
 /* Helper Functions */
 //////////////////////////////////////////////////////////////////
@@ -177,18 +167,15 @@ typedef boost::container::vector<FCSOptimizer_PopulationMember> PopulationType;
 class FCSOptimizer : public SimpleLogger
 {
 public:
-	/** 
-	*	\brief Initialize the optimizer according to input settings 
+	/** Initialize the optimizer according to input settings 
 	*/
 	void init(FCSOptimizer_Init_t initializationSettings);
 
-	/**
-	*	\brief Run the optimizer until a solution is found or convergence criteria are met
+	/** Run the optimizer until a solution is found or convergence criteria are met
 	*/
 	void run();
 
-	/**
-	*	\brief External request for results
+	/** External request for results
 	* The function is designed with the intent of being called from an instance of the
 	* Valkyrie Engine to report result data back into an optimizer handle
 	*/
@@ -229,13 +216,13 @@ private:
 
 	struct RuntimeApproaches
 	{
-		boost::container::vector<GA_PopulationFilterBase_sPtr> populationFilterInstances;	/* Implementations of unique population filtering approaches */
-		boost::container::vector<GA_EvaluateModelBase_sPtr> evaluateModelInstances;			/* Implementations of unique model evaluation approaches */
-		boost::container::vector<GA_EvaluateFitnessBase_sPtr> evaluateFitnessInstances;		/* Implementations of unique fitness evaluation approaches */
-		boost::container::vector<GA_SelectParentBase_sPtr> selectParentInstances;			/* Implementations of unique parent selection approaches */
-		boost::container::vector<GA_BreedBase_sPtr> breedInstances;							/* Implementations of unique breeding approaches */
-		boost::container::vector<GA_MutateBase_sPtr> mutateInstances;						/* Implementations of unique mutation approaches */
-		boost::container::vector<GA_SortBase_sPtr> sortingInstances;			
+		boost::container::vector<GA_PopulationFilterBase_sPtr>	populationFilterInstances;	
+		boost::container::vector<GA_EvaluateModelBase_sPtr>		evaluateModelInstances;			
+		boost::container::vector<GA_EvaluateFitnessBase_sPtr>	evaluateFitnessInstances;		
+		boost::container::vector<GA_SelectParentBase_sPtr>		selectParentInstances;			
+		boost::container::vector<GA_BreedBase_sPtr>				breedInstances;							
+		boost::container::vector<GA_MutateBase_sPtr>			mutateInstances;						
+		boost::container::vector<GA_SortBase_sPtr>				sortingInstances;			
 	} runtimeStep;
 	
 	FCSOptimizer_RuntimeConfig currentSolverParam;	/* Keeps track of the current execution style implemented */
@@ -254,9 +241,6 @@ private:
 
 	/* Bred Chromosomes */
 	GA_BreedingDataOutput fcs_bredChromosomes;
-
-
-
 
 	/* Log of performance stats for each generation
 	Do not pre-allocate memory as it is "pushed back" to add new data. */
@@ -315,9 +299,16 @@ private:
 	/*-----------------------------
 	* Data Collection and Reporting
 	*----------------------------*/
-	void gatherStatisticalData();
+	void gatherAnalytics();
 	void logData();
 	
+	/*-----------------------------
+	* Misc Helper Functions
+	*----------------------------*/
+	int getBitPos(uint32_t mask)
+	{
+		return (int)log2(mask);
+	}
 
 	struct GlobalStatistics
 	{

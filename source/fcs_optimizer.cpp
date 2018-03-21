@@ -198,17 +198,13 @@ void FCSOptimizer::run()
 			checkConvergence(parents);							/* Given the new sorted population, see if we have a "winner" that met user goals sufficiently */
 			
 
-			/* Once the refresh counter reaches zero, the current state of the algorithm will be 
-			analyzed to determine if the solution is converging decently well. Assuming progress
-			has slowed down, a different combination of GA operators (mutation/breeding/etc) will
-			be selected at random and the algorithm will proceed as normal until then next refresh.*/
+			/* Check on convergence progress. Shake things up if not doing well enough. */
 			if (--refreshCounter == 0)
 			{
 				if (algorithmNeedsNewSteps())
 					updateAlgorithmSteps();
 				 
 				refreshCounter = settings.advConvergenceParam.iterations_before_refresh;
-				//std::cout << "I hit the refresh target!" << std::endl;
 			}
 		} 
 		else 
@@ -244,7 +240,7 @@ void FCSOptimizer::run()
 		/*-------------------------------------
 		* Do post-processing for reporting status to user
 		*-------------------------------------*/
-		//gatherStatisticalData();
+		//gatherAnalytics();
 
 		/* Allow other waiting threads to run */
 		currentGeneration += 1;
@@ -442,6 +438,12 @@ void FCSOptimizer::initRNG()
 		default: break;
 		}
 	}
+
+
+	/* Seed the C++ RNG for less critical number generation */
+	PID_RNG.Kp->acquireEngine();
+	srand(PID_RNG.Kp->getInt());
+	PID_RNG.Kp->releaseEngine();
 }
 
 void FCSOptimizer::initModel()
@@ -550,9 +552,10 @@ void FCSOptimizer::evaluateModel(PopulationType& population)
 	#endif
 
 	const GA_METHOD_ModelEvaluation modelType = currentSolverParam.modelType;
+	const int modelTypeIdx = getBitPos(modelType);
 
 	/* Ensure an instance of the mutation type exists before evaluation */
-	if (!runtimeStep.evaluateModelInstances[modelType])
+	if (!runtimeStep.evaluateModelInstances[modelTypeIdx])
 	{
 		switch (modelType)
 		{
@@ -560,14 +563,14 @@ void FCSOptimizer::evaluateModel(PopulationType& population)
 			#if FILE_LOGGING_ENABLED
 			logNormal("Creating new State Space Evaluator instance");
 			#endif
-			runtimeStep.evaluateModelInstances[modelType] = boost::make_shared<StateSpaceEvaluator>();
+			runtimeStep.evaluateModelInstances[modelTypeIdx] = boost::make_shared<StateSpaceEvaluator>();
 			break;
 
 		case GA_MODEL_NEURAL_NETWORK:
 			#if FILE_LOGGING_ENABLED
 			logNormal("Creating new Neural Network Evaluator instance");
 			#endif
-			runtimeStep.evaluateModelInstances[modelType] = boost::make_shared<NeuralNetworkEvaluator>();
+			runtimeStep.evaluateModelInstances[modelTypeIdx] = boost::make_shared<NeuralNetworkEvaluator>();
 			break;
 
 		case GA_MODEL_MATLAB:
@@ -617,7 +620,7 @@ void FCSOptimizer::evaluateModel(PopulationType& population)
 			//input.pid.Ki = 68.0;
 			//input.pid.Kd = 0.0;
 
-			runtimeStep.evaluateModelInstances[modelType]->evaluate(input, output);
+			runtimeStep.evaluateModelInstances[modelTypeIdx]->evaluate(input, output);
 
 			/* Pass on the resulting data to the optimizer's record of everything */
 			population[member].modelType = modelType;
@@ -626,33 +629,6 @@ void FCSOptimizer::evaluateModel(PopulationType& population)
 	}
 	else if (modelType == GA_MODEL_NEURAL_NETWORK)
 	{
-// 		NeuralNetworkModelInput input;
-// 		NeuralNetworkModelOutput output;
-// 
-// 		/* Simulation time constraints */
-// 		input.dt = 0.01;			//TODO: Replace with un-hardcoded version
-// 		input.startTime = 0.0;
-// 		input.endTime = 1.5;
-// 
-// 		/* Simulation Model */
-// 		//TODO: for version 3 of the software, add actual step struct with various parameters and conversion methods
-// 		//ie convert to string, matrix, etc.
-// 		input.simulationType = STEP;
-// 		input.step_magnitude = 10.0;
-// 		input.model = settings.neuralNetModel;
-// 
-// 		//TODO: This is extremely similar to the above loop. Probably could combine it easily.
-// 		for (int member = 0; member < settings.advConvergenceParam.populationSize; member++)
-// 		{
-// 			/* Swap out the PID values and simulate */
-// 			input.pid = population[member].dChrom;
-// 			runtimeStep.evaluateModelInstances[modelType]->evaluate(input, output);
-// 
-// 			/* Pass on the resulting data to the optimizer's record of everything */
-// 			population[member].modelType = modelType;
-// 			population[member].evaluationPerformance.stepPerformanceData = output.stepPerformance;
-// 		}
-
 		NN_JSONModel_sPtr model = boost::dynamic_pointer_cast<NN_JSONModel, NN_ModelBase>(settings.neuralNetModel);
 
 		json sim;
@@ -758,7 +734,7 @@ void FCSOptimizer::evaluateModel(PopulationType& population)
 	else
 	{
 		#if FILE_LOGGING_ENABLED
-		logError("Invalid model type to be evaluated! Type: " + std::to_string(modelType));
+		logError("Invalid model type to be evaluated! Type: " + std::to_string(modelTypeIdx));
 		#endif
 		throw std::runtime_error("Invalid model type");
 	}
@@ -774,8 +750,8 @@ void FCSOptimizer::evaluateFitness(PopulationType& population)
 	logNormal("Starting fitness evaluation...");
 	#endif
 
-	const GA_METHOD_ModelEvaluation modelType = currentSolverParam.modelType;
 	const GA_METHOD_FitnessEvaluation fitnessType = currentSolverParam.fitnessType;
+	int fitnessTypeIdx = getBitPos(fitnessType);
 
 	GA_EvaluateFitnessDataInput input;
 	GA_EvaluateFitnessDataOutput output;
@@ -787,7 +763,7 @@ void FCSOptimizer::evaluateFitness(PopulationType& population)
 	/*-----------------------------
 	* Ensure a fitness evaluation instance exists 
 	*----------------------------*/
-	if (!runtimeStep.evaluateFitnessInstances[fitnessType])
+	if (!runtimeStep.evaluateFitnessInstances[fitnessTypeIdx])
 	{
 		switch (fitnessType)
 		{
@@ -795,14 +771,14 @@ void FCSOptimizer::evaluateFitness(PopulationType& population)
 			#if FILE_LOGGING_ENABLED
 			logNormal("Creating weighted sum fitness evaluator");
 			#endif
-			runtimeStep.evaluateFitnessInstances[fitnessType] = boost::make_shared<WeightedSum>();
+			runtimeStep.evaluateFitnessInstances[fitnessTypeIdx] = boost::make_shared<WeightedSum>();
 			break;
 
 		case GA_FITNESS_MEAN_SQUARE_ERROR:
 			#if FILE_LOGGING_ENABLED
 			logNormal("Creating mean squared error fitness evaluator");
 			#endif
-			runtimeStep.evaluateFitnessInstances[fitnessType] = boost::make_shared<MeanSquareError>();
+			runtimeStep.evaluateFitnessInstances[fitnessTypeIdx] = boost::make_shared<MeanSquareError>();
 			break;
 
 		//Add more as needed here
@@ -833,7 +809,7 @@ void FCSOptimizer::evaluateFitness(PopulationType& population)
 			//NOTE: Eventually I am going to need to specify what kind of simulation was performed...
 
 			/* Evaluate fitness */
-			runtimeStep.evaluateFitnessInstances[fitnessType]->evaluateFitness(input, output);
+			runtimeStep.evaluateFitnessInstances[fitnessTypeIdx]->evaluateFitness(input, output);
 
 				
 			/* Copy the output results */
@@ -933,7 +909,7 @@ void FCSOptimizer::checkConvergence(PopulationType& population)
 	/*-----------------------------------------------
 	* Break based on finding a good solution 
 	*-----------------------------------------------*/
-	if (stats.maxCoeff(0) > 0.95) //TODO: Make this a user parameter
+	if (stats.maxCoeff(0) > settings.basicConvergenceParam.overallPerformance)
 	{
 		#if (CONSOLE_LOGGING_ENABLED == 1)
 		std::cout << "\nFound a good enough solution. Done." << std::endl;
@@ -950,6 +926,7 @@ void FCSOptimizer::selectParents(PopulationType& population)
 	#endif
 
 	const GA_METHOD_ParentSelection selectType = currentSolverParam.selectType;
+	const int selectTypeIdx = getBitPos(selectType);
 
 	GA_SelectParentDataInput input; 
 	GA_SelectParentDataOutput output; 
@@ -958,36 +935,36 @@ void FCSOptimizer::selectParents(PopulationType& population)
 	output.parentSelections.resize(settings.advConvergenceParam.populationSize);
 
 	/* Ensure an instance of the selection type exists before calling the selection function */
-	if (!runtimeStep.selectParentInstances[selectType])
+	if (!runtimeStep.selectParentInstances[selectTypeIdx])
 	{
 		#if FILE_LOGGING_ENABLED
-		logNormal("Creating new selection instance of type: " + std::to_string(selectType));
+		logNormal("Creating new selection instance of type: " + std::to_string(selectTypeIdx));
 		#endif
 
 		switch (selectType)
 		{
 		case GA_SELECT_RANDOM:
-			runtimeStep.selectParentInstances[selectType] = boost::make_shared<RandomSelection>(settings.advConvergenceParam.populationSize);
+			runtimeStep.selectParentInstances[selectTypeIdx] = boost::make_shared<RandomSelection>(settings.advConvergenceParam.populationSize);
 			break;
 
 		case GA_SELECT_RANKED:
-			runtimeStep.selectParentInstances[selectType] = boost::make_shared<RankedSelection>();
+			runtimeStep.selectParentInstances[selectTypeIdx] = boost::make_shared<RankedSelection>();
 			break;
 
 		case GA_SELECT_ROULETTE:
-			runtimeStep.selectParentInstances[selectType] = boost::make_shared<RouletteSelection>();
+			runtimeStep.selectParentInstances[selectTypeIdx] = boost::make_shared<RouletteSelection>();
 			break;
 
 		case GA_SELECT_STOCHASTIC_SAMPLING:
-			runtimeStep.selectParentInstances[selectType] = boost::make_shared<StochasticSelection>();
+			runtimeStep.selectParentInstances[selectTypeIdx] = boost::make_shared<StochasticSelection>();
 			break;
 
 		case GA_SELECT_TOURNAMENT:
-			runtimeStep.selectParentInstances[selectType] = boost::make_shared<TournamentSelection>(settings.advConvergenceParam.populationSize);
+			runtimeStep.selectParentInstances[selectTypeIdx] = boost::make_shared<TournamentSelection>(settings.advConvergenceParam.populationSize);
 			break;
 
 		case GA_SELECT_ELITIST:
-			runtimeStep.selectParentInstances[selectType] = boost::make_shared<ElitistSelection>();
+			runtimeStep.selectParentInstances[selectTypeIdx] = boost::make_shared<ElitistSelection>();
 			break;
 
 		//Add more as needed here
@@ -1028,7 +1005,7 @@ void FCSOptimizer::selectParents(PopulationType& population)
 	}
 
 	
-	runtimeStep.selectParentInstances[selectType]->selectParent(input, output);
+	runtimeStep.selectParentInstances[selectTypeIdx]->selectParent(input, output);
 
 	
 	fcs_parentSelections = output.parentSelections;
@@ -1045,33 +1022,34 @@ void FCSOptimizer::breedGeneration(PopulationType& population)
 	#endif
 
 	const GA_METHOD_Breed breedType = currentSolverParam.breedType;
+	const int breedTypeIdx = getBitPos(breedType);
 
 	GA_BreedingDataInput input;
 	GA_BreedingDataOutput output;
 
 	/* Ensure an instance of the breeding type exists before calling the breed function */
-	if (!runtimeStep.breedInstances[breedType])
+	if (!runtimeStep.breedInstances[breedTypeIdx])
 	{
 		#if FILE_LOGGING_ENABLED
-		logNormal("Creating new breeding method instance of type: " + std::to_string(breedType));
+		logNormal("Creating new breeding method instance of type: " + std::to_string(breedTypeIdx));
 		#endif
 
 		switch (breedType)
 		{
 		case GA_BREED_SIMPLE_CROSSOVER:
-			runtimeStep.breedInstances[breedType] = boost::make_shared<SimpleCrossover>();
+			runtimeStep.breedInstances[breedTypeIdx] = boost::make_shared<SimpleCrossover>();
 			break;
 
 		case GA_BREED_DYNAMIC_CROSSOVER:
-			runtimeStep.breedInstances[breedType] = boost::make_shared<DynamicCrossover>();
+			runtimeStep.breedInstances[breedTypeIdx] = boost::make_shared<DynamicCrossover>();
 			break;
 
 		case GA_BREED_FIXED_POINT_CROSSOVER:
-			runtimeStep.breedInstances[breedType] = boost::make_shared<FixedPointCrossover>();
+			runtimeStep.breedInstances[breedTypeIdx] = boost::make_shared<FixedPointCrossover>();
 			break;
 
 		case GA_BREED_SIMULATED_BINARY_CROSSOVER:
-			runtimeStep.breedInstances[breedType] = boost::make_shared<SimulatedBinaryCrossover>();
+			runtimeStep.breedInstances[breedTypeIdx] = boost::make_shared<SimulatedBinaryCrossover>();
 			break;
 
 		//Add more as needed here
@@ -1115,7 +1093,7 @@ void FCSOptimizer::breedGeneration(PopulationType& population)
 	input.mapCoeff_Ki = &mapCoefficients_Ki;
 	input.mapCoeff_Kd = &mapCoefficients_Kd;
 
-	runtimeStep.breedInstances[breedType]->breed(input, output);
+	runtimeStep.breedInstances[breedTypeIdx]->breed(input, output);
 
 	fcs_bredChromosomes = output;
 
@@ -1132,24 +1110,25 @@ void FCSOptimizer::mutateGeneration(PopulationType& population)
 
 	const GA_METHOD_MutateType mutateType = currentSolverParam.mutateType;
 	const size_t popSize = settings.advConvergenceParam.populationSize;
+	const int mutateTypeIdx = getBitPos(mutateType);
 
 	GA_MutateDataInput input;
 	GA_MutateDataOutput output;
 
 	/* Ensure an instance of the mutation type exists before calling the mutate function */
-	if (!runtimeStep.mutateInstances[mutateType])
+	if (!runtimeStep.mutateInstances[mutateTypeIdx])
 	{
 		#if FILE_LOGGING_ENABLED
-		logNormal("Creating new mutation instance of type: " + std::to_string(mutateType));
+		logNormal("Creating new mutation instance of type: " + std::to_string(mutateTypeIdx));
 		#endif
 		switch (mutateType)
 		{
 		case GA_MUTATE_BIT_FLIP:
-			runtimeStep.mutateInstances[mutateType] = boost::make_shared<BitFlipMutator>();
+			runtimeStep.mutateInstances[mutateTypeIdx] = boost::make_shared<BitFlipMutator>();
 			break;
 
 		case GA_MUTATE_ADD_SUB:
-			runtimeStep.mutateInstances[mutateType] = boost::make_shared<AddSubMutator>();
+			runtimeStep.mutateInstances[mutateTypeIdx] = boost::make_shared<AddSubMutator>();
 			break;
 
 		//Add more as needed here
@@ -1163,12 +1142,10 @@ void FCSOptimizer::mutateGeneration(PopulationType& population)
 	}
 
 
-	input.mutateProbType = currentSolverParam.mutateProbabilityType;
-	input.optimizerChromType = currentSolverParam.chromType;			/* Final desired chromosome type */
-	input.chromType = fcs_bredChromosomes.chromType;					/* Current input data chromosome type*/
-
-	//TODO: I need the user to specify these parameters!!!
-	input.mutationProbabilityThreshold = 0.25;
+	input.mutateProbType				= currentSolverParam.mutateProbabilityType;
+	input.optimizerChromType			= currentSolverParam.chromType;			/* Final desired chromosome type */
+	input.chromType						= fcs_bredChromosomes.chromType;					/* Current input data chromosome type*/
+	input.mutationProbabilityThreshold	= settings.advConvergenceParam.mutation_threshold;
 
 	if (input.chromType == MAPPING_TYPE_REAL)
 		input.d_chrom = fcs_bredChromosomes.d_chrom;
@@ -1181,7 +1158,7 @@ void FCSOptimizer::mutateGeneration(PopulationType& population)
 	input.mapCoeff_Kd = &mapCoefficients_Kd;
 
 
-	runtimeStep.mutateInstances[mutateType]->mutate(input, output);
+	runtimeStep.mutateInstances[mutateTypeIdx]->mutate(input, output);
 
 
 	//Put the mutated data back into the population (should be children)
@@ -1315,13 +1292,14 @@ PopulationType FCSOptimizer::sortPopulation(PopulationType* parents, PopulationT
 	#endif
 
 	const GA_METHOD_Sorting sortType = currentSolverParam.sortingType;
+	const int sortTypeIdx = getBitPos(sortType);
 	const int popSize = settings.advConvergenceParam.populationSize;
 
 	GA_SortingInput input;
 	GA_SortingOutput output;
 
 	/* Ensure an instance of the mutation type exists before calling the mutate function */
-	if (!runtimeStep.mutateInstances[sortType])
+	if (!runtimeStep.mutateInstances[sortTypeIdx])
 	{
 		#if FILE_LOGGING_ENABLED
 		logNormal("Creating new sorting instance of type: " + std::to_string(sortType));
@@ -1329,7 +1307,7 @@ PopulationType FCSOptimizer::sortPopulation(PopulationType* parents, PopulationT
 		switch (sortType)
 		{
 		case GA_SORT_FAST_NONDOMINATED:
-			runtimeStep.sortingInstances[sortType] = boost::make_shared<FastNonDominatedSort>();
+			runtimeStep.sortingInstances[sortTypeIdx] = boost::make_shared<FastNonDominatedSort>();
 			break;
 
 			//Add more as needed here
@@ -1363,7 +1341,7 @@ PopulationType FCSOptimizer::sortPopulation(PopulationType* parents, PopulationT
 	}
 
 	/* Execute the sorting algorithm */
-	runtimeStep.sortingInstances[sortType]->sort(input, output);
+	runtimeStep.sortingInstances[sortTypeIdx]->sort(input, output);
 
 
 	/* Assign new parents from output. Only the top 'popSize' results will be selected. */
@@ -1403,17 +1381,58 @@ PopulationType FCSOptimizer::sortPopulation(PopulationType* parents, PopulationT
 
 bool FCSOptimizer::algorithmNeedsNewSteps()
 {
-	//Calculate average slope of global fitness and sub scores??
-	return false;
+	/* Performs a simple check against the highest performing member of the 
+	last two generations. If they improved greater than reltol, everything is good.
+	Keep in mind this is a MAXIMIZATION problem, not minimization. */
+	double lastVal = fcs_generationalStats[currentGeneration - 1].maxCoeff[0];
+	double currVal = fcs_generationalStats[currentGeneration].maxCoeff[0];
+
+	if ((currVal - lastVal) < settings.advConvergenceParam.reltol)
+		return true;
+	else
+		return false;
 }
 
 void FCSOptimizer::updateAlgorithmSteps()
 {
-	
+	#if FILE_LOGGING_ENABLED
+	logNormal("Updating algorithm steps:");
+	#endif
+
+	uint32_t randMask = 0;
+
+	/*--------------------------------
+	* Fitness Selection Type
+	*--------------------------------*/
+	randMask = (1u << (rand() % GA_FITNESS_TOTAL_OPTIONS));
+	if (settings.solverParamOptions.allowedFitnessTypes & randMask)
+		settings.solverParam.fitnessType = (GA_METHOD_FitnessEvaluation)randMask;
+
+	/*--------------------------------
+	* Parent Selection Type
+	*--------------------------------*/
+	randMask = (1u << (rand() % GA_SELECT_TOTAL_OPTIONS));
+	if (settings.solverParamOptions.allowedParentSelectTypes & randMask)
+		settings.solverParam.selectType = (GA_METHOD_ParentSelection)randMask;
+
+	/*--------------------------------
+	* Breed Type
+	*--------------------------------*/
+	randMask = (1u << (rand() % GA_BREED_TOTAL_OPTIONS));
+	if (settings.solverParamOptions.allowedBreedTypes & randMask)
+		settings.solverParam.breedType = (GA_METHOD_Breed)randMask;
+
+	/*--------------------------------
+	* Mutate Type
+	*--------------------------------*/
+	randMask = (1u << (rand() % GA_MUTATE_TOTAL_OPTIONS));
+	if (settings.solverParamOptions.allowedMutateTypes & randMask)
+		settings.solverParam.mutateType = (GA_METHOD_MutateType)randMask;
+
 }
 
 
-void FCSOptimizer::gatherStatisticalData()
+void FCSOptimizer::gatherAnalytics()
 {
 	double KP_Val, KI_Val, KD_Val;
 
@@ -1483,18 +1502,6 @@ void FCSOptimizer::gatherStatisticalData()
 	averageTS.push_back(avgTSFit);
 	averageTR.push_back(avgTRFit);
 
-	
-	//std::cout
-	//	<< "Kp Variance: " << boost::accumulators::variance(GenerationalChromStats.Kp[currentGeneration]) << ", " << IdealChromVariance.Kp << "\n"
-	//	<< "Ki Variance: " << boost::accumulators::variance(GenerationalChromStats.Ki[currentGeneration]) << ", " << IdealChromVariance.Ki << "\n"
-	//	<< "Kd Variance: " << boost::accumulators::variance(GenerationalChromStats.Kd[currentGeneration]) << ", " << IdealChromVariance.Kd
-	//	<< std::endl;
-
-	std::cout
-		<< "Kp Variance: " << boost::accumulators::variance(GlobalChromStats.Kp) << ", " << IdealChromVariance.Kp << "\n"
-		<< "Ki Variance: " << boost::accumulators::variance(GlobalChromStats.Ki) << ", " << IdealChromVariance.Ki << "\n"
-		<< "Kd Variance: " << boost::accumulators::variance(GlobalChromStats.Kd) << ", " << IdealChromVariance.Kd
-		<< std::endl;
 }
 
 void FCSOptimizer::logData()

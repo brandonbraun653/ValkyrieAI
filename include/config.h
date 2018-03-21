@@ -6,7 +6,7 @@
 /*-----------------------------------------------
 * Global Genetic Algorithm "Stuff"
 *-----------------------------------------------*/
-#define DEBUGGING_ENABLED					0		/* Turns on sections of code that provide extra variables for debugging */
+#define DEBUGGING_ENABLED					1		/* Turns on sections of code that provide extra variables for debugging */
 
 #define FILE_LOGGING_ENABLED				1		/* Turns on global file logs of things like warnings, errors, data outputs, etc. */
 
