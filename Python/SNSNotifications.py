@@ -8,8 +8,8 @@ BRANDON = "+19182064787"
 class TextMSG:
     def __init__(self):
         self._client = boto3.client('sns', region_name="us-east-1",
-                                    aws_access_key_id="AKIAICWLZE36TEYYJJFA",
-                                    aws_secret_access_key="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")
+                                    aws_access_key_id="",
+                                    aws_secret_access_key="")
 
     def send_msg(self, phone_number, msg):
         self._client.publish(PhoneNumber=phone_number, Message=msg)
