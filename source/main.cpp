@@ -22,10 +22,14 @@ int main()
 	/*-----------------------------
 	* CREATE OPTIMIZERS
 	*----------------------------*/
-	DroneTuner.newOptimizer(dynamicInit());
-	//DroneTuner.newOptimizer(staticInit1());
-	//DroneTuner.newOptimizer(staticInit2());
-	//DroneTuner.newOptimizer(staticInit3());
+// 	DroneTuner.newOptimizer(dynamicInit());
+// 	DroneTuner.newOptimizer(staticInit1());
+// 	DroneTuner.newOptimizer(staticInit2());
+// 	DroneTuner.newOptimizer(staticInit3());
+
+	DroneTuner.newOptimizer(rollTunerVer1_Init());
+	//DroneTuner.newOptimizer(pitchTunerVer1_Init());
+	//DroneTuner.newOptimizer(yawTunerVer1_Init());
 
 
 	/*-----------------------------

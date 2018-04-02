@@ -9,7 +9,8 @@ FCSOptimizer_Init_t rollTunerVer1_Init()
 	FCSOptimizer_Init_t initStruct;
 	initStruct.optimizerName = "ROLL";
 	initStruct.messageQueueName = "rollCMD";
-	initStruct.logPath = "rollVer1Log.txt";
+	initStruct.logName = "rollVer1Log.txt";
+	initStruct.logDir = "C:\\Users\\Valkyrie\\Desktop\\TEMP\\AILogs\\";
 
 	/*-----------------------------
 	* STEP CHOOSER
@@ -44,22 +45,22 @@ FCSOptimizer_Init_t rollTunerVer1_Init()
 	initStruct.pidControlSettings.tuningLimits.Ki = { 0.0, 100.0 };
 	initStruct.pidControlSettings.tuningLimits.Kd = { 0.0, 100.0 };
 
-	initStruct.pidControlSettings.performanceGoals.percentOvershoot_goal = 0.10;
-	initStruct.pidControlSettings.performanceGoals.riseTime_goal = 0.50;
-	initStruct.pidControlSettings.performanceGoals.settlingTime_goal = 1.0;
-	initStruct.pidControlSettings.performanceGoals.steadyStateError_goal = 0.05;
+	initStruct.pidControlSettings.performanceGoals.percentOvershoot_goal = 0.30;
+	initStruct.pidControlSettings.performanceGoals.riseTime_goal = 1.0;
+	initStruct.pidControlSettings.performanceGoals.settlingTime_goal = 3.0;
+	initStruct.pidControlSettings.performanceGoals.steadyStateError_goal = 0.10;
 
-	initStruct.pidControlSettings.performanceTolerance.percentOvershoot_pcntTol = 0.1;
-	initStruct.pidControlSettings.performanceTolerance.riseTime_pcntTol = 0.1;
-	initStruct.pidControlSettings.performanceTolerance.settlingTime_pcntTol = 0.1;
-	initStruct.pidControlSettings.performanceTolerance.steadyStateError_pcntTol = 0.1;
+	initStruct.pidControlSettings.performanceTolerance.percentOvershoot_pcntTol = 0.2;
+	initStruct.pidControlSettings.performanceTolerance.riseTime_pcntTol = 0.2;
+	initStruct.pidControlSettings.performanceTolerance.settlingTime_pcntTol = 0.2;
+	initStruct.pidControlSettings.performanceTolerance.steadyStateError_pcntTol = 0.2;
 
 	/*-----------------------------
 	* ADVANCED PARAMETER SETTINGS
 	*----------------------------*/
-	initStruct.advConvergenceParam.iterations_before_refresh = 5;
-	initStruct.advConvergenceParam.populationSize = 10;
-	initStruct.advConvergenceParam.generationLimit = 15;
+	initStruct.advConvergenceParam.iterations_before_refresh = 10;
+	initStruct.advConvergenceParam.populationSize = 25;
+	initStruct.advConvergenceParam.generationLimit = 50;
 	initStruct.advConvergenceParam.limitingBehavior = FCS_LIMITER_REGENERATE_CHROMOSOME;
 
 	/*-----------------------------
@@ -91,7 +92,8 @@ FCSOptimizer_Init_t pitchTunerVer1_Init()
 	FCSOptimizer_Init_t initStruct;
 	initStruct.optimizerName = "PITCH";
 	initStruct.messageQueueName = "pitchCMD";
-	initStruct.logPath = "pitchVer1Log.txt";
+	initStruct.logName = "pitchVer1Log.txt";
+	initStruct.logDir = "C:\\Users\\Valkyrie\\Desktop\\TEMP\\AILogs\\";
 
 	/*-----------------------------
 	* STEP CHOOSER
@@ -109,15 +111,20 @@ FCSOptimizer_Init_t pitchTunerVer1_Init()
 	/*-----------------------------
 	* DYNAMIC RECONFIGURATION OPTIONS
 	*----------------------------*/
+	initStruct.solverParamOptions.allowedParentSelectTypes = (
+		GA_SELECT_RANDOM |
+		GA_SELECT_TOURNAMENT);
+
 	initStruct.solverParamOptions.allowedBreedTypes = (
 		GA_BREED_SIMPLE_CROSSOVER |
-		GA_BREED_SIMULATED_BINARY_CROSSOVER |
-		GA_BREED_DYNAMIC_CROSSOVER |
 		GA_BREED_FIXED_POINT_CROSSOVER);
 
 	initStruct.solverParamOptions.allowedFitnessTypes = (
-		GA_FITNESS_WEIGHTED_SUM |
-		GA_FITNESS_MEAN_SQUARE_ERROR);
+		GA_FITNESS_WEIGHTED_SUM);
+
+	initStruct.solverParamOptions.allowedMutateTypes = (
+		GA_MUTATE_BIT_FLIP |
+		GA_MUTATE_ADD_SUB);
 
 	/*-----------------------------
 	* PID SETTINGS
@@ -126,10 +133,10 @@ FCSOptimizer_Init_t pitchTunerVer1_Init()
 	initStruct.pidControlSettings.tuningLimits.Ki = { 0.0, 100.0 };
 	initStruct.pidControlSettings.tuningLimits.Kd = { 0.0, 100.0 };
 
-	initStruct.pidControlSettings.performanceGoals.percentOvershoot_goal = 0.10;
-	initStruct.pidControlSettings.performanceGoals.riseTime_goal = 0.50;
-	initStruct.pidControlSettings.performanceGoals.settlingTime_goal = 1.0;
-	initStruct.pidControlSettings.performanceGoals.steadyStateError_goal = 0.05;
+	initStruct.pidControlSettings.performanceGoals.percentOvershoot_goal = 0.20;
+	initStruct.pidControlSettings.performanceGoals.riseTime_goal = 0.75;
+	initStruct.pidControlSettings.performanceGoals.settlingTime_goal = 1.5;
+	initStruct.pidControlSettings.performanceGoals.steadyStateError_goal = 0.1;
 
 	initStruct.pidControlSettings.performanceTolerance.percentOvershoot_pcntTol = 0.1;
 	initStruct.pidControlSettings.performanceTolerance.riseTime_pcntTol = 0.1;
@@ -139,9 +146,9 @@ FCSOptimizer_Init_t pitchTunerVer1_Init()
 	/*-----------------------------
 	* ADVANCED PARAMETER SETTINGS
 	*----------------------------*/
-	initStruct.advConvergenceParam.iterations_before_refresh = 5;
-	initStruct.advConvergenceParam.populationSize = 10;
-	initStruct.advConvergenceParam.generationLimit = 15;
+	initStruct.advConvergenceParam.iterations_before_refresh = 10;
+	initStruct.advConvergenceParam.populationSize = 25;
+	initStruct.advConvergenceParam.generationLimit = 50;
 	initStruct.advConvergenceParam.limitingBehavior = FCS_LIMITER_REGENERATE_CHROMOSOME;
 
 	/*-----------------------------
@@ -173,7 +180,8 @@ FCSOptimizer_Init_t yawTunerVer1_Init()
 	FCSOptimizer_Init_t initStruct;
 	initStruct.optimizerName = "YAW";
 	initStruct.messageQueueName = "yawCMD";
-	initStruct.logPath = "yawVer1Log.txt";
+	initStruct.logName = "yawVer1Log.txt";
+	initStruct.logDir = "C:\\Users\\Valkyrie\\Desktop\\TEMP\\AILogs\\";
 
 	/*-----------------------------
 	* STEP CHOOSER
@@ -191,15 +199,20 @@ FCSOptimizer_Init_t yawTunerVer1_Init()
 	/*-----------------------------
 	* DYNAMIC RECONFIGURATION OPTIONS
 	*----------------------------*/
+	initStruct.solverParamOptions.allowedParentSelectTypes = (
+		GA_SELECT_RANDOM |
+		GA_SELECT_TOURNAMENT);
+
 	initStruct.solverParamOptions.allowedBreedTypes = (
 		GA_BREED_SIMPLE_CROSSOVER |
-		GA_BREED_SIMULATED_BINARY_CROSSOVER |
-		GA_BREED_DYNAMIC_CROSSOVER |
 		GA_BREED_FIXED_POINT_CROSSOVER);
 
 	initStruct.solverParamOptions.allowedFitnessTypes = (
-		GA_FITNESS_WEIGHTED_SUM |
-		GA_FITNESS_MEAN_SQUARE_ERROR);
+		GA_FITNESS_WEIGHTED_SUM);
+
+	initStruct.solverParamOptions.allowedMutateTypes = (
+		GA_MUTATE_BIT_FLIP |
+		GA_MUTATE_ADD_SUB);
 
 	/*-----------------------------
 	* PID SETTINGS
@@ -208,22 +221,22 @@ FCSOptimizer_Init_t yawTunerVer1_Init()
 	initStruct.pidControlSettings.tuningLimits.Ki = { 0.0, 100.0 };
 	initStruct.pidControlSettings.tuningLimits.Kd = { 0.0, 100.0 };
 
-	initStruct.pidControlSettings.performanceGoals.percentOvershoot_goal = 0.10;
-	initStruct.pidControlSettings.performanceGoals.riseTime_goal = 0.50;
+	initStruct.pidControlSettings.performanceGoals.percentOvershoot_goal = 0.30;
+	initStruct.pidControlSettings.performanceGoals.riseTime_goal = 1.5;
 	initStruct.pidControlSettings.performanceGoals.settlingTime_goal = 1.0;
 	initStruct.pidControlSettings.performanceGoals.steadyStateError_goal = 0.05;
 
 	initStruct.pidControlSettings.performanceTolerance.percentOvershoot_pcntTol = 0.1;
-	initStruct.pidControlSettings.performanceTolerance.riseTime_pcntTol = 0.1;
-	initStruct.pidControlSettings.performanceTolerance.settlingTime_pcntTol = 0.1;
-	initStruct.pidControlSettings.performanceTolerance.steadyStateError_pcntTol = 0.1;
+	initStruct.pidControlSettings.performanceTolerance.riseTime_pcntTol = 0.5;
+	initStruct.pidControlSettings.performanceTolerance.settlingTime_pcntTol = 0.25;
+	initStruct.pidControlSettings.performanceTolerance.steadyStateError_pcntTol = 0.25;
 
 	/*-----------------------------
 	* ADVANCED PARAMETER SETTINGS
 	*----------------------------*/
-	initStruct.advConvergenceParam.iterations_before_refresh = 5;
-	initStruct.advConvergenceParam.populationSize = 10;
-	initStruct.advConvergenceParam.generationLimit = 15;
+	initStruct.advConvergenceParam.iterations_before_refresh = 10;
+	initStruct.advConvergenceParam.populationSize = 25;
+	initStruct.advConvergenceParam.generationLimit = 50;
 	initStruct.advConvergenceParam.limitingBehavior = FCS_LIMITER_REGENERATE_CHROMOSOME;
 
 	/*-----------------------------
@@ -256,7 +269,7 @@ FCSOptimizer_Init_t rollTunerVer2_Init()
 	FCSOptimizer_Init_t initStruct;
 	initStruct.optimizerName = "ROLL";
 	initStruct.messageQueueName = "rollCMD";
-	initStruct.logPath = "rollVer1Log.txt";
+	initStruct.logName = "rollVer1Log.txt";
 
 	/*-----------------------------
 	* STEP CHOOSER
@@ -332,7 +345,8 @@ FCSOptimizer_Init_t dynamicInit()
 	FCSOptimizer_Init_t initStruct;
 	initStruct.optimizerName = "DynamicOptimizer";
 	initStruct.messageQueueName = "dynamic";
-	initStruct.logPath = "dynamicOptimizer.txt";
+	initStruct.logName = "dynamicOptimizer.txt";
+	initStruct.logDir = "C:\\Users\\Valkyrie\\Desktop\\TEMP\\AILogs\\";
 
 	/*-----------------------------
 	* STEP CHOOSER
@@ -362,14 +376,15 @@ FCSOptimizer_Init_t dynamicInit()
 		GA_FITNESS_WEIGHTED_SUM );
 
 	initStruct.solverParamOptions.allowedMutateTypes = (
-		GA_MUTATE_BIT_FLIP );
+		GA_MUTATE_BIT_FLIP |
+		GA_MUTATE_ADD_SUB);
 
 	/*-----------------------------
 	* PID SETTINGS
 	*----------------------------*/
 	initStruct.pidControlSettings.tuningLimits.Kp = { 0.0, 100.0 };
 	initStruct.pidControlSettings.tuningLimits.Ki = { 0.0, 100.0 };
-	initStruct.pidControlSettings.tuningLimits.Kd = { 0.0, 100.0 };
+	initStruct.pidControlSettings.tuningLimits.Kd = { 0.0, 10.0 };
 
 	initStruct.pidControlSettings.performanceGoals.percentOvershoot_goal = 0.10;
 	initStruct.pidControlSettings.performanceGoals.riseTime_goal = 0.50;
@@ -384,9 +399,10 @@ FCSOptimizer_Init_t dynamicInit()
 	/*-----------------------------
 	* ADVANCED PARAMETER SETTINGS
 	*----------------------------*/
-	initStruct.advConvergenceParam.iterations_before_refresh = 2;
-	initStruct.advConvergenceParam.populationSize = 10;
-	initStruct.advConvergenceParam.generationLimit = 100;
+	initStruct.advConvergenceParam.mutation_threshold = 0.1;
+	initStruct.advConvergenceParam.iterations_before_refresh = 10;
+	initStruct.advConvergenceParam.populationSize = 25;
+	initStruct.advConvergenceParam.generationLimit = 500;
 	initStruct.advConvergenceParam.limitingBehavior = FCS_LIMITER_REGENERATE_CHROMOSOME;
 
 	/*-----------------------------
@@ -416,7 +432,8 @@ FCSOptimizer_Init_t staticInit1()
 	FCSOptimizer_Init_t initStruct;
 	initStruct.optimizerName = "static1";
 	initStruct.messageQueueName = "static1";
-	initStruct.logPath = "static1.txt";
+	initStruct.logName = "static1.txt";
+	initStruct.logDir = "C:\\Users\\Valkyrie\\Desktop\\TEMP\\AILogs\\";
 
 	/*-----------------------------
 	* STEP CHOOSER
@@ -436,7 +453,7 @@ FCSOptimizer_Init_t staticInit1()
 	*----------------------------*/
 	initStruct.pidControlSettings.tuningLimits.Kp = { 0.0, 100.0 };
 	initStruct.pidControlSettings.tuningLimits.Ki = { 0.0, 100.0 };
-	initStruct.pidControlSettings.tuningLimits.Kd = { 0.0, 100.0 };
+	initStruct.pidControlSettings.tuningLimits.Kd = { 0.0, 10.0 };
 
 	initStruct.pidControlSettings.performanceGoals.percentOvershoot_goal = 0.10;
 	initStruct.pidControlSettings.performanceGoals.riseTime_goal = 0.50;
@@ -451,7 +468,7 @@ FCSOptimizer_Init_t staticInit1()
 	/*-----------------------------
 	* ADVANCED PARAMETER SETTINGS
 	*----------------------------*/
-	initStruct.advConvergenceParam.iterations_before_refresh = 2;
+	initStruct.advConvergenceParam.iterations_before_refresh = 150;
 	initStruct.advConvergenceParam.populationSize = 10;
 	initStruct.advConvergenceParam.generationLimit = 100;
 	initStruct.advConvergenceParam.limitingBehavior = FCS_LIMITER_REGENERATE_CHROMOSOME;
@@ -483,19 +500,21 @@ FCSOptimizer_Init_t staticInit2()
 	FCSOptimizer_Init_t initStruct;
 	initStruct.optimizerName = "static2";
 	initStruct.messageQueueName = "static2";
-	initStruct.logPath = "static2.txt";
+	initStruct.logName = "static2.txt";
+	initStruct.logDir = "C:\\Users\\Valkyrie\\Desktop\\TEMP\\AILogs\\";
 
 	/*-----------------------------
 	* STEP CHOOSER
 	*----------------------------*/
 	initStruct.solverParam.rngEngine = GA_MERSENNE_TWISTER;
 	initStruct.solverParam.rngDistribution = GA_DISTRIBUTION_UNIFORM_REAL;
-	initStruct.solverParam.breedType = GA_BREED_SIMPLE_CROSSOVER;
+	initStruct.solverParam.breedType = GA_BREED_FIXED_POINT_CROSSOVER;
 	initStruct.solverParam.fitnessType = GA_FITNESS_WEIGHTED_SUM;
 	initStruct.solverParam.selectType = GA_SELECT_TOURNAMENT;
 	initStruct.solverParam.filterType = GA_POPULATION_STATIC_FILTER;
 	initStruct.solverParam.resolutionType = GA_RESOLUTION_2DP;
-	initStruct.solverParam.mutateType = GA_MUTATE_BIT_FLIP;
+	//initStruct.solverParam.mutateType = GA_MUTATE_BIT_FLIP;
+	initStruct.solverParam.mutateType = GA_MUTATE_ADD_SUB;
 	initStruct.solverParam.mutateProbabilityType = GA_MUTATE_PROBABILITY_EXPONENTIAL;
 
 	/*-----------------------------
@@ -503,7 +522,7 @@ FCSOptimizer_Init_t staticInit2()
 	*----------------------------*/
 	initStruct.pidControlSettings.tuningLimits.Kp = { 0.0, 100.0 };
 	initStruct.pidControlSettings.tuningLimits.Ki = { 0.0, 100.0 };
-	initStruct.pidControlSettings.tuningLimits.Kd = { 0.0, 100.0 };
+	initStruct.pidControlSettings.tuningLimits.Kd = { 0.0, 10.0 };
 
 	initStruct.pidControlSettings.performanceGoals.percentOvershoot_goal = 0.10;
 	initStruct.pidControlSettings.performanceGoals.riseTime_goal = 0.50;
@@ -518,7 +537,7 @@ FCSOptimizer_Init_t staticInit2()
 	/*-----------------------------
 	* ADVANCED PARAMETER SETTINGS
 	*----------------------------*/
-	initStruct.advConvergenceParam.iterations_before_refresh = 2;
+	initStruct.advConvergenceParam.iterations_before_refresh = 150;
 	initStruct.advConvergenceParam.populationSize = 10;
 	initStruct.advConvergenceParam.generationLimit = 100;
 	initStruct.advConvergenceParam.limitingBehavior = FCS_LIMITER_REGENERATE_CHROMOSOME;
@@ -550,7 +569,8 @@ FCSOptimizer_Init_t staticInit3()
 	FCSOptimizer_Init_t initStruct;
 	initStruct.optimizerName = "static3";
 	initStruct.messageQueueName = "static3";
-	initStruct.logPath = "static3.txt";
+	initStruct.logName = "static3.txt";
+	initStruct.logDir = "C:\\Users\\Valkyrie\\Desktop\\TEMP\\AILogs\\";
 
 	/*-----------------------------
 	* STEP CHOOSER
@@ -570,7 +590,7 @@ FCSOptimizer_Init_t staticInit3()
 	*----------------------------*/
 	initStruct.pidControlSettings.tuningLimits.Kp = { 0.0, 100.0 };
 	initStruct.pidControlSettings.tuningLimits.Ki = { 0.0, 100.0 };
-	initStruct.pidControlSettings.tuningLimits.Kd = { 0.0, 100.0 };
+	initStruct.pidControlSettings.tuningLimits.Kd = { 0.0, 10.0 };
 
 	initStruct.pidControlSettings.performanceGoals.percentOvershoot_goal = 0.10;
 	initStruct.pidControlSettings.performanceGoals.riseTime_goal = 0.50;
@@ -585,7 +605,7 @@ FCSOptimizer_Init_t staticInit3()
 	/*-----------------------------
 	* ADVANCED PARAMETER SETTINGS
 	*----------------------------*/
-	initStruct.advConvergenceParam.iterations_before_refresh = 2;
+	initStruct.advConvergenceParam.iterations_before_refresh = 150;
 	initStruct.advConvergenceParam.populationSize = 10;
 	initStruct.advConvergenceParam.generationLimit = 100;
 	initStruct.advConvergenceParam.limitingBehavior = FCS_LIMITER_REGENERATE_CHROMOSOME;

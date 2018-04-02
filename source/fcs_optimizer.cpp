@@ -111,6 +111,7 @@ void FCSOptimizer::run()
 	#if (FCS_TRACE_EXECUTION_TIME == 1)
 	auto start = boost::chrono::high_resolution_clock::now();
 	#endif
+
 	//Do some initialization here 
 	refreshCounter = settings.advConvergenceParam.iterations_before_refresh;
 	unsigned int commandPriority;
@@ -240,14 +241,15 @@ void FCSOptimizer::run()
 		/*-------------------------------------
 		* Do post-processing for reporting status to user
 		*-------------------------------------*/
-		//gatherAnalytics();
+		gatherAnalytics();
 
 		/* Allow other waiting threads to run */
 		currentGeneration += 1;
 		boost::this_thread::yield();
 	}
 
-	//logData();
+	/* Dumps all data resulting from a training run into the specified log directory */
+	logData();
 
 	#if (FCS_TRACE_EXECUTION_TIME == 1)
 	auto stop = boost::chrono::high_resolution_clock::now();
@@ -266,21 +268,16 @@ void FCSOptimizer::init(FCSOptimizer_Init_t initializationSettings)
 	/*-----------------------------
 	* Order specific initialization sequence 
 	*----------------------------*/
-	logInit(settings.logPath);		/* Set up the logging system */
-	initMemory();					/* Allocate container sizes before algorithm begins */
-	initRNG();						/* Makes sure the RNG is well warmed up before use */
-	initModel();					/* Call the specific model initializer */
-	initPopulation();				/* Set up the initial population */
-	initStatistics();				/* Keep track of performance metrics */
+	logInit(settings.logDir + settings.logName);
+	initMemory();									/* Allocate container sizes before algorithm begins */
+	initRNG();										/* Makes sure the RNG is well warmed up before use */
+	initModel();									/* Call the specific model initializer */
+	initPopulation();								/* Set up the initial population */
+	initStatistics();								/* Keep track of performance metrics */
 
 	/*-----------------------------
 	* Non-Order Specific Initializations
 	*----------------------------*/
-	
-
-
-	//TODO: Set up the intelligent strategy selection engine here
-	std::cout << "You still haven't set up the intelligent selection strategy engine yet." << std::endl;
 	currentSolverParam = settings.solverParam;
 
 
@@ -306,11 +303,9 @@ void FCSOptimizer::init(FCSOptimizer_Init_t initializationSettings)
 	}
 	catch (interprocess_exception &ex)
 	{
-		//TODO: Use the console mutex here to make sure the output is readable 
 		std::cout << ex.what() << " in thread " << boost::this_thread::get_id() << std::endl;
 		std::cout << "Unable to properly use the queue. Ignoring all messages from main thread." << std::endl;
-
-		
+	
 		#if FILE_LOGGING_ENABLED
 		logError("Queue Setup Exception:");
 		logError(ex.what());
@@ -1506,9 +1501,31 @@ void FCSOptimizer::gatherAnalytics()
 
 void FCSOptimizer::logData()
 {
-	std::ofstream file;
+	#if FILE_LOGGING_ENABLED
+	logNormal("Dumping result data to file");
+	#endif
 
-	std::string filename = LOG_PATH_CONVERGENCE_DATA + "avgFit.csv";
+	std::ofstream file;
+	/*---------------------------------------------
+	* Peak Performers 
+	*----------------------------------------------*/
+	std::string filename = settings.logDir + settings.logName + "_bestPerformers.csv";
+	file.open(filename);
+
+	for (int i = 0; i < fcs_generationalStats.size() - 1; i++)
+	{
+		//The zero'th index is the best fit parameter metric
+		file << std::to_string(fcs_generationalStats[i].maxCoeff(0)) << ",";
+	}
+
+	file << std::to_string(fcs_generationalStats[fcs_generationalStats.size() - 1].maxCoeff(0)) << "\n";
+	file.close();
+
+
+	/*---------------------------------------------
+	* Average Fitness
+	*----------------------------------------------*/
+	filename = settings.logDir + settings.logName + "_avgFit.csv";
 	file.open(filename);
 
 	for (int i = 0; i < averageFitness.size()-1; i++)
@@ -1517,8 +1534,10 @@ void FCSOptimizer::logData()
 	file << std::to_string(averageFitness[averageFitness.size() - 1]) << "\n";
 	file.close();
 
-
-	filename = LOG_PATH_CONVERGENCE_DATA + "avgPOSFit.csv";
+	/*---------------------------------------------
+	* Average Percent Overshoot
+	*----------------------------------------------*/
+	filename = settings.logDir + settings.logName + "_avgPOSFit.csv";
 	file.open(filename);
 
 	for (int i = 0; i < averagePOS.size()-1; i++)
@@ -1527,8 +1546,10 @@ void FCSOptimizer::logData()
 	file << std::to_string(averagePOS[averagePOS.size() - 1]) << "\n";
 	file.close();
 
-
-	filename = LOG_PATH_CONVERGENCE_DATA + "avgSSERFit.csv";
+	/*---------------------------------------------
+	* Average Steady State Error
+	*----------------------------------------------*/
+	filename = settings.logDir + settings.logName + "_avgSSERFit.csv";
 	file.open(filename);
 
 	for (int i = 0; i < averageSSER.size()-1; i++)
@@ -1537,8 +1558,10 @@ void FCSOptimizer::logData()
 	file << std::to_string(averageSSER[averageSSER.size() - 1]) << "\n";
 	file.close();
 
-
-	filename = LOG_PATH_CONVERGENCE_DATA + "avgTSFit.csv";
+	/*---------------------------------------------
+	* Average Settling Time
+	*----------------------------------------------*/
+	filename = settings.logDir + settings.logName + "_avgTSFit.csv";
 	file.open(filename);
 
 	for (int i = 0; i < averageTS.size()-1; i++)
@@ -1547,8 +1570,10 @@ void FCSOptimizer::logData()
 	file << std::to_string(averageTS[averageTS.size() - 1]) << "\n";
 	file.close();
 
-
-	filename = LOG_PATH_CONVERGENCE_DATA + "avgTRFit.csv";
+	/*---------------------------------------------
+	* Average Rise Time
+	*----------------------------------------------*/
+	filename = settings.logDir + settings.logName + "_avgTRFit.csv";
 	file.open(filename);
 
 	for (int i = 0; i < averageTR.size()-1; i++)

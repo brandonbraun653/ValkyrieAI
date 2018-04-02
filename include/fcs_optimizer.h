@@ -30,7 +30,6 @@
 #include "igl/mat_min.h"
 #include "Eigen/Eigen"
 
-
 /* Local Includes */
 #include "config.h"
 #include "ga_steps.h"
@@ -91,7 +90,9 @@ struct FCSOptimizer_Init_t
 
 	std::string optimizerName;								/* This gives a user friendly name to the optimizer */
 
-	std::string logPath;									/* File to place log dumps */
+	std::string logDir;										/* Directory for all output logs */
+
+	std::string logName;									/* Base name from which all log filenames will be formed */
 
 	std::string resultsPath;								/* Path to directory for results reporting */
 

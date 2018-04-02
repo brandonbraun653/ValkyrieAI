@@ -85,15 +85,15 @@ public:
 	void mutate(const GA_MutateDataInput input, GA_MutateDataOutput& output) override;
 
 	BitFlipMutator();
-	~BitFlipMutator();
+	~BitFlipMutator() = default;
 private:
 	const int maxSeverity = 15;	//Set to 15 due to using uint16_t as chrom type
 	RNGManager_sPtr severityRNG;
 	boost::shared_ptr<MutateProbGenerator> mutateRNG;
 
-	void mutateKp() override;
-	void mutateKi() override;
-	void mutateKd() override;
+	void mutateKp() override {};
+	void mutateKi() override {};
+	void mutateKd() override {};
 };
 
 ///////////////////////////////////////////////////
@@ -105,11 +105,14 @@ public:
 	void mutate(const GA_MutateDataInput input, GA_MutateDataOutput& output) override;
 
 	AddSubMutator();
-	~AddSubMutator();
+	~AddSubMutator() = default;
 private:
-	
-	void mutateKp() override;
-	void mutateKi() override;
-	void mutateKd() override;
+	const int maxRange = 10;
+	RNGManager_sPtr severityRNG;
+	boost::shared_ptr<MutateProbGenerator> mutateRNG;
+
+	void mutateKp() override {};
+	void mutateKi() override {};
+	void mutateKd() override {};
 };
 #endif

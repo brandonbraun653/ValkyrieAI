@@ -65,7 +65,6 @@
 /*-----------------------------------------------
 * Data Output Paths
 *-----------------------------------------------*/
-const std::string LOG_PATH_CONVERGENCE_DATA = "C:/git/GitHub/ValkyrieAI/testing/matlab/DataDumps/";
 
 
 #endif /* CONFIG_H_ */

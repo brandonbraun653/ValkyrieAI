@@ -110,9 +110,6 @@ end
 if ~USE_RAW
     quad_initialization(0);
     
-    
-    
-    
     input = struct();
     input.startTime = 0.0;
     input.endTime = 10.0;
@@ -120,9 +117,9 @@ if ~USE_RAW
     input.stepMagnitude = 10;
     input.stepEnable = 0.1;
     
-    input.Kp = 1.5;
-    input.Ki = 3.0;
-    input.Kd = 0.01;
+    input.Kp = 81.19;
+    input.Ki = 1.15;
+    input.Kd = 34.92;
     
     sim_out = quad_simulation(input);
     
